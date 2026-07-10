@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/jscyril/echelon/internal/config"
 	"github.com/jscyril/echelon/internal/gateway"
@@ -47,7 +46,10 @@ func main() {
 	server := &http.Server{
 		Addr:              cfg.Address,
 		Handler:           app.Routes(),
-		ReadHeaderTimeout: 5 * time.Second,
+		ReadHeaderTimeout: cfg.ReadTimeout,
+		ReadTimeout:       cfg.ReadTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -63,7 +65,7 @@ func main() {
 
 	<-ctx.Done()
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {

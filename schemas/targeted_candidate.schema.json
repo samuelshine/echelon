@@ -24,5 +24,8 @@
     "language": {"const": "en"},
     "review_status": {"const": "pending"},
     "operational_content": {"const": false}
+    ,
+    "template_lineage": {"type": "string", "minLength": 1},
+    "generation_strategy": {"type": "string", "minLength": 1}
   }
 }

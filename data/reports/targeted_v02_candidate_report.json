@@ -1,0 +1,27 @@
+{
+  "benign": 600,
+  "candidates": 1200,
+  "family_counts": {
+    "defensive_cyber_benign_v02": 300,
+    "encoded_benign_control_v02": 200,
+    "malicious_code_intent_v02": 200,
+    "obfuscated_attack_v02": 200,
+    "system_prompt_benign_v02": 100,
+    "system_prompt_leakage_v02": 200
+  },
+  "largest_template_lineage": 10,
+  "malicious": 600,
+  "pending_review": 1200,
+  "report_version": "0.2.0",
+  "template_lineages": 280,
+  "training_eligible": false,
+  "transformation_counts": {
+    "base64": 80,
+    "hex": 80,
+    "reverse": 80,
+    "unicode_escape": 80,
+    "url": 80
+  },
+  "unique_ids": 1200,
+  "unique_texts": 1200
+}

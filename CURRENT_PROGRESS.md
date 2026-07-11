@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Targeted v0.1 semantic audit complete; admission failed
+**Phase:** 1 — Targeted v0.2 automated admission passed; human review pending
 
 **Branch:** `rnd`
 
-**Checkpoint:** Awaiting approval before redesigning and generating v0.2
+**Checkpoint:** Awaiting approval before human review/adjudication or further automation
 
 ## Completed in this step
 
@@ -80,6 +80,17 @@
 - Balanced transformed review samples at 40 per method overall: 20 malicious and 20 benign for each encoding/transformation.
 - Kept every v0.1 candidate ineligible for training.
 - Expanded the test suite to 35 passing tests.
+- Generated a smaller v0.2 pilot with 1,200 unique rows, balanced 600 benign/600 malicious.
+- Added 280 explicit template lineages with a strict maximum of 10 rows per lineage.
+- Broadened human-authored frame pools and recorded five generation strategies.
+- Replaced the universal encoding wrapper with separate, varied benign and malicious wrapper pools.
+- Passed the semantic admission gate: largest component 34 rows (2.83%) and zero mixed-safety components.
+- Reduced mean internal nearest similarity from `0.9763` to `0.9150`.
+- Confirmed external novelty: 1,199 rows below `0.90`, one boundary row, and none at or above `0.94` against the existing corpus.
+- Improved unencoded-family distinct-bigram ratios to `0.1289–0.1683`, approximately an order-of-magnitude gain over v0.1.
+- Produced a v0.2 private review queue with 100 rows per family and balanced transformation sampling.
+- Kept all 1,200 candidates pending human review and ineligible for training.
+- Expanded the test suite to 39 passing tests.
 
 ## Current policy decisions
 
@@ -117,10 +128,11 @@
 - Synthetic composition can create template/style shortcuts even when every string is unique; generator-family and semantic-cluster analysis is required.
 - `operational_content=false` is a generator invariant, not a human safety certification.
 - Unique strings did not prevent semantic/template collapse; v0.1 must not be salvaged by random row splitting.
+- Automated semantic admission does not certify label correctness, naturalness, or non-operationality; v0.2 still needs human review.
 
 ## Next action after approval
 
-Use the stratified review findings to redesign v0.2 around broader human seed pools, multiple independent paraphrase processes, family-specific encoding wrappers, and strict template-lineage caps. Generate a smaller pilot, re-run semantic admission gates, and scale only if the largest component remains below 10% with no mixed-safety clusters. No model training begins until an accepted batch and human-review gates pass.
+Complete dual human review of the 600-row v0.2 stratified queue, adjudicate disagreements, and estimate acceptance/error rates by family and transformation. If quality targets pass, review or regenerate the remaining rows using the same lineage controls; normalize only accepted candidates and re-run full-corpus grouping. No model training begins until reviewed data and leakage gates pass.
 
 ## Bugs
 

@@ -1,0 +1,89 @@
+{
+  "admission_gate": {
+    "passed": true,
+    "reasons": []
+  },
+  "candidates": 1200,
+  "cross_label_existing_neighbors_at_threshold": 0,
+  "internal_nearest_similarity": {
+    "max": 1.0,
+    "mean": 0.91497892,
+    "min": 0.77096367
+  },
+  "largest_group": 34,
+  "largest_group_fraction": 0.028333,
+  "lexical_by_family": {
+    "defensive_cyber_benign_v02": {
+      "bigrams": 3784,
+      "distinct_2": 0.14667,
+      "tokens": 4084,
+      "type_token_ratio": 0.053134,
+      "unique_bigrams": 555,
+      "unique_first_8_token_prefixes": 201,
+      "unique_tokens": 217
+    },
+    "encoded_benign_control_v02": {
+      "bigrams": 7892,
+      "distinct_2": 0.141156,
+      "tokens": 8092,
+      "type_token_ratio": 0.06525,
+      "unique_bigrams": 1114,
+      "unique_first_8_token_prefixes": 25,
+      "unique_tokens": 528
+    },
+    "malicious_code_intent_v02": {
+      "bigrams": 2840,
+      "distinct_2": 0.16831,
+      "tokens": 3040,
+      "type_token_ratio": 0.052632,
+      "unique_bigrams": 478,
+      "unique_first_8_token_prefixes": 182,
+      "unique_tokens": 160
+    },
+    "obfuscated_attack_v02": {
+      "bigrams": 7504,
+      "distinct_2": 0.142457,
+      "tokens": 7704,
+      "type_token_ratio": 0.063993,
+      "unique_bigrams": 1069,
+      "unique_first_8_token_prefixes": 25,
+      "unique_tokens": 493
+    },
+    "system_prompt_benign_v02": {
+      "bigrams": 1570,
+      "distinct_2": 0.134395,
+      "tokens": 1670,
+      "type_token_ratio": 0.065269,
+      "unique_bigrams": 211,
+      "unique_first_8_token_prefixes": 100,
+      "unique_tokens": 109
+    },
+    "system_prompt_leakage_v02": {
+      "bigrams": 2870,
+      "distinct_2": 0.12892,
+      "tokens": 3070,
+      "type_token_ratio": 0.05114,
+      "unique_bigrams": 370,
+      "unique_first_8_token_prefixes": 117,
+      "unique_tokens": 157
+    }
+  },
+  "mixed_safety_groups": 0,
+  "mixed_safety_rows": 0,
+  "model": "BAAI/bge-small-en-v1.5",
+  "model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "multi_record_groups": 71,
+  "nearest_existing_overlap_buckets": {
+    "boundary_0.90_0.94": 1,
+    "novel_below_0.90": 1199
+  },
+  "nearest_existing_similarity": {
+    "max": 0.90450907,
+    "mean": 0.74206251,
+    "min": 0.61144042
+  },
+  "report_version": "0.1.0",
+  "semantic_parent_groups": 458,
+  "status": "pending_human_review",
+  "threshold": 0.94
+}

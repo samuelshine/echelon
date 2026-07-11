@@ -4,3 +4,4 @@
 __pycache__/
 *.py[cod]
 /data/raw_v2/
+/data/normalized_v2/

@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Primary-source verification and pinned acquisition complete
+**Phase:** 1 — Normalization and exact deduplication complete
 
 **Branch:** `rnd`
 
-**Checkpoint:** Awaiting approval before normalization, provenance mapping, and grouped deduplication
+**Checkpoint:** Awaiting approval before semantic clustering, conflict adjudication, and final split materialization
 
 ## Completed in this step
 
@@ -34,6 +34,15 @@
 - Added atomic downloads, immutable-revision checks, API-license checks, gated-source rejection, process-unique temporary files, resumability, force replacement, and offline manifest verification.
 - Recovered from and detected a concurrent-transfer corruption event; forced a clean reacquisition and verified all final hashes and structures.
 - Expanded the test suite to nine passing tests.
+- Added source-specific normalization adapters and the normalized record schema dependency (`pyarrow`).
+- Preserved 16,116 regular/benign prompts—49.64% of the eligible corpus—with per-source reporting.
+- Guaranteed that no assistant response columns enter normalized prompt records.
+- Quarantined 503 evaluation-contaminated, 780 gated-upstream, 5,312 unverified-upstream-license, and 992 redacted/empty rows.
+- Collapsed 4,193 consistent normalized duplicate groups, removing 5,535 redundant rows.
+- Quarantined 391 benign-versus-malicious conflict groups containing 793 rows.
+- Produced 32,465 unique eligible records with all required fields, unique record IDs, and zero response fields.
+- Added `data/reports/normalization_report.json` with content-free source, label, benign, quarantine, duplicate, and split-design metrics.
+- Expanded the test suite to 16 passing tests.
 
 ## Current policy decisions
 
@@ -60,11 +69,14 @@
 - Neuralchemy is newly published and claims group-aware leakage control, but remains untrusted until independent lineage, label, and near-duplicate analysis completes.
 - Aegis prompt labels are human-authored, but its response labels and refusal augmentations must not leak into prompt-only features; only the main prompt-safety JSON files were acquired.
 - Do-Not-Answer contains model response columns that must be dropped during prompt normalization.
+- The eligible corpus is close to class-balanced, but malicious-code-specific and system-leakage supervision are underrepresented.
+- Exact normalization cannot detect paraphrase/template leakage; semantic clustering remains required before final splits.
+- The 391 safety-label conflict groups require policy-aware adjudication and must remain excluded until resolved.
 
 ## Next action after approval
 
-Build source-specific normalization adapters that preserve original splits and provenance, map labels into the Echelon multi-label schema, and generate a content-free quality report. Then perform exact/normalized cross-source deduplication and propose semantic/template grouping before creating any new train/validation/test split. No training begins in that step.
+Create privacy-safe semantic embeddings/fingerprints, cluster near-duplicate and template families, sample the 391 conflict groups for policy-aware adjudication, and construct group-stratified split manifests. Add a dedicated English benign-cyber hard-negative specification and annotation plan. No model training begins until split and coverage reports are approved.
 
 ## Bugs
 
-No known defect remains in the new audit/acquisition tools. The audit tool's non-zero exit on the legacy corpus is intentional because cross-split duplication is a blocking data-quality error. The existing `prepare_data.py` remains unsuitable: it discards provenance and randomly splits individual rows. Raw Parquet content has not yet been semantically validated because normalization dependencies are intentionally deferred to the next phase.
+No known defect remains in the new audit, acquisition, or normalization tools. The audit tool's non-zero exit on the legacy corpus is intentional because cross-split duplication is a blocking data-quality error. The existing `prepare_data.py` remains unsuitable: it discards provenance and randomly splits individual rows. Semantic near-duplicate detection and conflict adjudication are intentionally deferred to the next checkpoint.

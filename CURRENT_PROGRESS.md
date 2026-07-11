@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Semantic grouping and candidate split materialization complete
+**Phase:** 1 — Human-calibration and targeted-curation tooling complete
 
 **Branch:** `rnd`
 
-**Checkpoint:** Awaiting approval before human sampling/adjudication and targeted coverage generation
+**Checkpoint:** Awaiting approval before reviewed data creation/adjudication begins
 
 ## Completed in this step
 
@@ -54,6 +54,13 @@
 - Generated private exact and semantic adjudication queues under git-ignored `data/review_v2`.
 - Added an English native-speaker defensive-cyber gold-set specification covering 12 legitimate security-work categories and hard negatives.
 - Expanded the test suite to 22 passing tests, including Unicode JSONL framing and 80/10/10 allocation regression coverage.
+- Created a deterministic 450-pair semantic calibration queue spanning five similarity bands and all three safety-pair relationships.
+- Recorded candidate availability for every calibration stratum; even the smallest stratum contains 96 candidate pairs.
+- Added a reusable 48 MB embedding cache keyed by normalized-corpus SHA-256 and pinned model revision.
+- Added an adjudication-review JSON Schema and CLI enforcing two-reviewer agreement or expert resolution.
+- Added targeted English curation minimums for system leakage, malicious code, obfuscation, social engineering, and defensive cyber.
+- Required matched benign controls, multi-generator diversity, native-speaker gold review, parent-group isolation, and privacy screening.
+- Expanded the test suite to 27 passing tests.
 
 ## Current policy decisions
 
@@ -87,10 +94,11 @@
 - 734 long prompts use head-plus-tail semantic views; chunk-level similarity should be evaluated for hidden middle-section attacks.
 - The candidate test split is not yet the native-speaker English gold set; the separate gold set still needs collection and annotation.
 - Malicious-code and system-prompt-leakage labels remain underrepresented even after semantic grouping.
+- Human calibration and adjudication are designed but have not occurred; no unresolved item has been automatically promoted into the corpus.
 
 ## Next action after approval
 
-Human-review a stratified sample of semantic neighbor pairs around thresholds `0.90–0.97`, adjudicate the exact and semantic mixed-safety queues, and lock the semantic operating point. Then create targeted, native-speaker-reviewed English examples for defensive cyber, malicious code, system leakage, and encoded attacks, re-run grouping, and freeze dataset version `v1`. No model training begins until those gates pass.
+Run the 450-pair human calibration and conflict adjudication workflow, then create the first targeted English batch under the approved specifications. Re-run normalization and semantic grouping, measure post-dedup coverage, and freeze dataset version `v1` only after annotation-quality and leakage gates pass. No model training begins until that checkpoint is approved.
 
 ## Bugs
 

@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.build_semantic_splits import UnionFind, assign_splits, components, embedding_view, is_mixed_safety, load_jsonl
+from scripts.build_semantic_splits import UnionFind, assign_splits, calibration_band, components, embedding_view, is_mixed_safety, load_jsonl, pair_kind
 
 
 class SemanticSplitTests(unittest.TestCase):
@@ -46,6 +46,14 @@ class SemanticSplitTests(unittest.TestCase):
             path = Path(directory) / "records.jsonl"
             path.write_text(json.dumps({"text": "before\u2028after"}, ensure_ascii=False) + "\n", encoding="utf-8")
             self.assertEqual(load_jsonl(path)[0]["text"], "before\u2028after")
+
+    def test_calibration_bands_have_explicit_boundaries(self):
+        self.assertEqual(calibration_band(0.90), "0.90-0.92")
+        self.assertEqual(calibration_band(0.94), "0.94-0.96")
+        self.assertIsNone(calibration_band(0.8999))
+
+    def test_pair_kind_marks_mixed_safety(self):
+        self.assertEqual(pair_kind({"labels": ["benign"]}, {"labels": ["prompt_injection"]}), "mixed_safety")
 
 
 if __name__ == "__main__":

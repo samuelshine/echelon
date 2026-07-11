@@ -180,3 +180,11 @@ Semantic fingerprints use the English `BAAI/bge-small-en-v1.5` encoder pinned at
 The graph produced 27,904 groups, including 2,686 multi-record groups and a largest component of 166 records. It found 10,583 semantic edges plus 2,628 declared grouping edges. Another 156 mixed benign/malicious semantic groups containing 652 rows were quarantined for review. The remaining 31,813 rows were freshly repartitioned by complete group because the source datasets are training candidates rather than frozen benchmarks.
 
 The materialized split is 25,453 train (80.01%), 3,198 validation (10.05%), and 3,162 test (9.94%). Train contains 12,577 benign and 12,876 malicious prompts; validation contains 1,565 benign and 1,633 malicious; test contains 1,582 benign and 1,580 malicious. No semantic cluster crosses a split. These are candidate splits pending human review of threshold quality, mixed-safety clusters, and the English defensive-cyber gold-set addition.
+
+## Human calibration and targeted curation gate (2026-07-11)
+
+A private calibration queue contains 450 prompt pairs: 30 deterministic samples for every combination of five cosine bands (`0.90–0.92`, `0.92–0.94`, `0.94–0.96`, `0.96–0.98`, `0.98–1.00`) and three safety relationships (benign/benign, malicious/malicious, mixed). Reviewers judge semantic equivalence separately from whether safety labels should match. Threshold selection will use pairwise precision/recall and the cost of cross-split leakage versus over-grouping; `0.94` remains provisional until this review is complete.
+
+Exact and semantic conflict decisions require two independent reviewers. Matching decisions resolve an item; disagreement requires expert adjudication. The validation CLI rejects malformed label/decision combinations and produces content-free agreement/pending reports. Review queues remain git-ignored because they contain prompt text.
+
+Targeted English curation minimums are specified for system leakage, malicious-code intent, encoded attacks, subtle social engineering, and defensive cybersecurity. Each malicious family receives matched benign controls using the same vocabulary or transformation. Synthetic items may enter training only after review and semantic grouping; gold validation/test items require native-speaker authorship or substantial editing and remain inaccessible to training jobs.

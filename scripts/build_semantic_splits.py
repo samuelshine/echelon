@@ -18,6 +18,9 @@ REPORT_PATH = PROJECT_ROOT / "data" / "reports" / "semantic_split_report.json"
 MANIFEST_PATH = PROJECT_ROOT / "data" / "manifests" / "semantic_split_manifest.json"
 SPLIT_ROOT = PROJECT_ROOT / "data" / "splits_v2"
 REVIEW_PATH = PROJECT_ROOT / "data" / "review_v2" / "semantic_conflicts.jsonl"
+PAIR_REVIEW_PATH = PROJECT_ROOT / "data" / "review_v2" / "semantic_pair_calibration.jsonl"
+PAIR_REPORT_PATH = PROJECT_ROOT / "data" / "reports" / "semantic_calibration_queue_report.json"
+EMBEDDING_CACHE_PATH = PROJECT_ROOT / "data" / "normalized_v2" / "semantic_embeddings.npz"
 MODEL_ID = "BAAI/bge-small-en-v1.5"
 MODEL_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
 
@@ -54,6 +57,73 @@ def embedding_view(text: str, max_chars: int = 2400) -> tuple[str, bool]:
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
     # splitlines() also splits U+2028/U+2029, which are valid inside JSON strings.
     return [json.loads(line) for line in path.read_text(encoding="utf-8").split("\n") if line]
+
+
+def input_digest(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def pair_kind(left: dict[str, Any], right: dict[str, Any]) -> str:
+    left_benign = "benign" in left["labels"]
+    right_benign = "benign" in right["labels"]
+    if left_benign and right_benign:
+        return "benign_benign"
+    if not left_benign and not right_benign:
+        return "malicious_malicious"
+    return "mixed_safety"
+
+
+def calibration_band(similarity: float) -> str | None:
+    for lower, upper, label in (
+        (0.90, 0.92, "0.90-0.92"), (0.92, 0.94, "0.92-0.94"),
+        (0.94, 0.96, "0.94-0.96"), (0.96, 0.98, "0.96-0.98"),
+        (0.98, 1.000001, "0.98-1.00"),
+    ):
+        if lower <= similarity < upper:
+            return label
+    return None
+
+
+def sample_calibration_pairs(
+    records: list[dict[str, Any]], distances: np.ndarray, indices: np.ndarray,
+    per_band_kind: int = 30,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    candidates: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    seen: set[tuple[int, int]] = set()
+    for left, (row_distances, row_indices) in enumerate(zip(distances, indices)):
+        for distance, right_value in zip(row_distances[1:], row_indices[1:]):
+            right = int(right_value)
+            key = (min(left, right), max(left, right))
+            if key in seen:
+                continue
+            seen.add(key)
+            similarity = 1.0 - float(distance)
+            band = calibration_band(similarity)
+            if not band:
+                continue
+            kind = pair_kind(records[left], records[right])
+            pair_id = "pair_" + hashlib.sha256(
+                "\x1f".join(sorted((records[left]["record_id"], records[right]["record_id"]))).encode()
+            ).hexdigest()[:20]
+            candidates[(band, kind)].append({
+                "pair_id": pair_id, "band": band, "pair_kind": kind,
+                "cosine_similarity": round(similarity, 8),
+                "left": {"record_id": records[left]["record_id"], "text": records[left]["text"], "labels": records[left]["labels"]},
+                "right": {"record_id": records[right]["record_id"], "text": records[right]["text"], "labels": records[right]["labels"]},
+                "review": {"semantic_relation": None, "safety_relation": None, "reviewer_id": None, "notes": None},
+            })
+    selected = []
+    availability = {}
+    for key in sorted(candidates):
+        rows = sorted(candidates[key], key=lambda row: hashlib.sha256(row["pair_id"].encode()).hexdigest())
+        selected.extend(rows[:per_band_kind])
+        availability["/".join(key)] = len(rows)
+    selected.sort(key=lambda row: (row["band"], row["pair_kind"], row["pair_id"]))
+    return selected, availability
 
 
 def add_declared_group_edges(records: list[dict[str, Any]], union_find: UnionFind) -> int:
@@ -143,6 +213,9 @@ def main() -> int:
     parser.add_argument("--manifest", type=Path, default=MANIFEST_PATH)
     parser.add_argument("--split-root", type=Path, default=SPLIT_ROOT)
     parser.add_argument("--review-queue", type=Path, default=REVIEW_PATH)
+    parser.add_argument("--pair-review-queue", type=Path, default=PAIR_REVIEW_PATH)
+    parser.add_argument("--pair-report", type=Path, default=PAIR_REPORT_PATH)
+    parser.add_argument("--embedding-cache", type=Path, default=EMBEDDING_CACHE_PATH)
     parser.add_argument("--model", default=MODEL_ID)
     parser.add_argument("--model-revision", default=MODEL_REVISION)
     parser.add_argument("--threshold", type=float, default=0.94)
@@ -159,15 +232,38 @@ def main() -> int:
         view, was_truncated = embedding_view(record["text"])
         views.append(view)
         truncated += was_truncated
-    model = SentenceTransformer(args.model, revision=args.model_revision)
-    embeddings = model.encode(
-        views, batch_size=args.batch_size, show_progress_bar=True,
-        normalize_embeddings=True, convert_to_numpy=True,
-    ).astype(np.float32, copy=False)
+    source_digest = input_digest(args.input)
+    embeddings = None
+    if args.embedding_cache.is_file():
+        cached = np.load(args.embedding_cache, allow_pickle=False)
+        if str(cached["input_sha256"]) == source_digest and str(cached["model_revision"]) == args.model_revision:
+            embeddings = cached["embeddings"].astype(np.float32, copy=False)
+    if embeddings is None:
+        model = SentenceTransformer(args.model, revision=args.model_revision)
+        embeddings = model.encode(
+            views, batch_size=args.batch_size, show_progress_bar=True,
+            normalize_embeddings=True, convert_to_numpy=True,
+        ).astype(np.float32, copy=False)
+        args.embedding_cache.parent.mkdir(parents=True, exist_ok=True)
+        np.savez(args.embedding_cache, embeddings=embeddings, input_sha256=source_digest, model_revision=args.model_revision)
 
     neighbors = NearestNeighbors(n_neighbors=min(args.neighbors, len(records)), metric="cosine", algorithm="brute", n_jobs=-1)
     neighbors.fit(embeddings)
     distances, indices = neighbors.kneighbors(embeddings, return_distance=True)
+    calibration_pairs, pair_availability = sample_calibration_pairs(records, distances, indices)
+    args.pair_review_queue.parent.mkdir(parents=True, exist_ok=True)
+    with args.pair_review_queue.open("w", encoding="utf-8") as handle:
+        for pair in calibration_pairs:
+            handle.write(json.dumps(pair, ensure_ascii=False, sort_keys=True) + "\n")
+    pair_report = {
+        "report_version": "0.1.0", "queue_pairs": len(calibration_pairs),
+        "target_per_band_and_pair_kind": 30, "available_candidates": pair_availability,
+        "bands": ["0.90-0.92", "0.92-0.94", "0.94-0.96", "0.96-0.98", "0.98-1.00"],
+        "pair_kinds": ["benign_benign", "malicious_malicious", "mixed_safety"],
+        "required_judgments": ["semantic_relation", "safety_relation"],
+    }
+    args.pair_report.parent.mkdir(parents=True, exist_ok=True)
+    args.pair_report.write_text(json.dumps(pair_report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     union_find = UnionFind(len(records))
     semantic_edges = 0
     for left, (row_distances, row_indices) in enumerate(zip(distances, indices)):
@@ -220,6 +316,7 @@ def main() -> int:
     manifest = {
         "manifest_version": "0.1.0", "embedding_model": args.model,
         "embedding_model_revision": args.model_revision, "cosine_threshold": args.threshold,
+        "input_sha256": source_digest,
         "splits": manifest_splits,
     }
     args.manifest.parent.mkdir(parents=True, exist_ok=True)
@@ -229,6 +326,7 @@ def main() -> int:
         "embedding_model": args.model, "embedding_model_revision": args.model_revision,
         "embedding_license": "MIT", "cosine_threshold": args.threshold,
         "embedding_views_truncated_head_tail": truncated, "semantic_edges": semantic_edges,
+        "semantic_calibration_queue_pairs": len(calibration_pairs),
         "declared_group_edges": declared_edges, "total_groups": len(all_groups),
         "multi_record_groups": sum(len(group) > 1 for group in all_groups),
         "largest_group": max(map(len, all_groups), default=0),

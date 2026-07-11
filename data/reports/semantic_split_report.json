@@ -15,6 +15,7 @@
   "mixed_safety_rows_quarantined": 652,
   "multi_record_groups": 2686,
   "report_version": "0.1.0",
+  "semantic_calibration_queue_pairs": 450,
   "semantic_edges": 10583,
   "split_stats": {
     "test": {

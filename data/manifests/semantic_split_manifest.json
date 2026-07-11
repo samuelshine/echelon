@@ -2,6 +2,7 @@
   "cosine_threshold": 0.94,
   "embedding_model": "BAAI/bge-small-en-v1.5",
   "embedding_model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "input_sha256": "170c5d6718c625e6abe38d3730410f4e3ca88db4715cdf0b0fd1815a0fef0b1a",
   "manifest_version": "0.1.0",
   "splits": {
     "test": [

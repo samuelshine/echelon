@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://echelon.local/schemas/dataset-record.schema.json",
+  "title": "Echelon normalized prompt record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id", "text", "source_id", "source_item_id", "source_revision",
+    "split", "language", "labels", "severity", "annotation_confidence",
+    "template_family", "transformation_parent_id", "license_spdx"
+  ],
+  "properties": {
+    "record_id": {"type": "string", "minLength": 1},
+    "text": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "source_item_id": {"type": "string", "minLength": 1},
+    "source_revision": {"type": "string", "minLength": 1},
+    "split": {"enum": ["train", "validation", "test", "private_test"]},
+    "language": {"type": "string", "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)*$"},
+    "labels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "prompt_injection", "system_prompt_leakage", "malicious_code",
+          "toxicity_harm", "adversarial_obfuscation", "benign"
+        ]
+      }
+    },
+    "severity": {"enum": ["none", "low", "medium", "high", "critical"]},
+    "annotation_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "template_family": {"type": ["string", "null"]},
+    "semantic_cluster_id": {"type": ["string", "null"]},
+    "conversation_id": {"type": ["string", "null"]},
+    "transformation_parent_id": {"type": ["string", "null"]},
+    "transformations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string"}
+    },
+    "context": {"enum": ["unknown", "benign", "defensive", "dual_use", "malicious"]},
+    "license_spdx": {"type": "string", "minLength": 1},
+    "annotation_notes": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"labels": {"contains": {"const": "benign"}}}},
+      "then": {"properties": {"severity": {"const": "none"}}}
+    }
+  ]
+}

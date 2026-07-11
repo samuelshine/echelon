@@ -107,13 +107,15 @@ final_risk = calibrated_logistic(beta_0 + beta_1*logit(pre_judge_risk)
                                  + beta_3*disagreement)
 ```
 
-Initial routing hypothesis for validation—not production defaults:
+Initial shadow-mode routing hypothesis for validation—not production defaults:
 
-- `risk >= 0.85`: auto-block.
-- `0.40 <= risk < 0.85`: escalate to Layer 3.
-- `risk < 0.40`: pass, unless a separately approved critical policy rule applies.
+- `risk >= 0.90`: auto-block only after calibration and category-policy checks.
+- `0.35 <= risk < 0.90`: escalate to Layer 3.
+- `risk < 0.35`: pass, unless a separately approved critical policy rule applies.
 
-Use inclusive/exclusive boundaries explicitly to eliminate the `0.84–0.85` gap. Tune separate category thresholds where costs differ, and choose operating points from precision–recall curves plus a cost matrix. Return the maximum calibrated category risk and all category scores; never treat raw softmax confidence as calibrated risk.
+These wider initial escalation bounds favor recall while requiring stronger evidence for automatic blocking. They are scaffolding for shadow evaluation, not a claim of optimality. Final boundaries will be selected on source-disjoint validation data to minimize expected cost subject to per-category recall and benign false-positive constraints. Use inclusive/exclusive boundaries explicitly. Tune separate category thresholds where costs differ, and choose operating points from precision–recall curves plus a cost matrix. Return the maximum calibrated category risk and all category scores; never treat raw softmax confidence as calibrated risk.
+
+Legitimate cybersecurity is determined by intent and context, not a keyword allowlist. Defensive education, authorized testing, CTFs, code review, incident response, and vulnerability remediation form a dedicated benign/dual-use hard-negative slice. Requests for credential theft, persistence, evasion, destructive payloads, unauthorized exploitation, or operational malware remain malicious even when framed as “research.” The system measures cyber false positives separately and may use category-aware adjudication, but no user-supplied claim of authorization automatically suppresses risk.
 
 ## Phase 5 — Layer 2 training and evaluation pipeline
 
@@ -152,3 +154,7 @@ Production gates:
 6. **Orchestration checkpoint:** end-to-end cascade, configuration, tests, benchmarks, and shadow-mode plan.
 
 No Python implementation begins until the research checkpoint is approved.
+
+## Baseline corpus audit (2026-07-11)
+
+The pre-existing binary `data/processed` corpus is retained only as a legacy baseline. A read-only audit found 33,188 rows, 1,876 normalized duplicates within splits, 980 normalized fingerprint groups crossing train/validation/test boundaries, two prompts larger than 128 KiB, and no source/revision/language/taxonomy lineage. Consequently, existing results cannot be used as clean generalization evidence. The replacement data pipeline must ingest revision-pinned sources into `schemas/dataset_record.schema.json` and group splits before any transformations or balancing.

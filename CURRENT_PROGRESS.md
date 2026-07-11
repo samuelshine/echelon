@@ -2,9 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Research plan and architecture initialization  
-**Branch:** `rnd`  
-**Checkpoint:** Awaiting collaborator review before Python implementation
+**Phase:** 1 — Dataset governance and legacy-corpus audit complete
+
+**Branch:** `rnd`
+
+**Checkpoint:** Awaiting approval before source metadata verification and dataset acquisition
 
 ## Completed in this step
 
@@ -18,15 +20,22 @@
 - Proposed Layer 1 signals, calibrated Layer 2 scoring, Layer 3 fusion, and explicit routing boundaries.
 - Added evaluation, judge-hardening, orchestration, observability, and production-readiness phases.
 - Initialized the Medium article draft.
+- Recorded collaborator decisions: English native-speaker gold set, performance-led benchmark isolation, and low false positives for legitimate defensive cybersecurity.
+- Created a 15-source dataset registry with explicit training/evaluation/benign-control roles and approval gates.
+- Created a normalized multi-label record schema covering provenance, revision, language, severity, context, template family, semantic cluster, and transformation lineage.
+- Implemented a read-only, prompt-redacting registry/CSV audit CLI with machine-readable output and SHA-256 file manifests.
+- Added four passing unit tests for normalization, cross-split leakage, governance requirements, and oversized prompts.
+- Audited the existing 33,188-row processed corpus: 980 normalized groups cross splits; within-split duplicates total 1,876 (train 1,812, validation 33, test 31); two prompts exceed 128 KiB; all splits use the lineage-free legacy schema.
+- Marked the current processed corpus as legacy-only for future research claims.
 
-## Decisions pending collaborator approval
+## Current policy decisions
 
-- Whether `0.40` and `0.85` are acceptable starting escalation/block boundaries before empirical tuning.
-- The acceptable false-positive budget and minimum recall for each threat family.
-- Which languages and deployment hardware must be Tier 1.
-- Whether harmful cyber prompts should use stricter category-specific thresholds than general toxicity.
-- Whether Layer 3 should target a local Llama-family model, an API judge, or both behind one interface.
-- Which datasets may be downloaded after license/provenance review, especially large community/synthetic collections.
+- English is Tier 1 and receives native-speaker gold-set coverage.
+- Start shadow evaluation with `pass < 0.35`, `judge 0.35–<0.90`, and `block >= 0.90`; replace these with empirically optimized, calibrated per-category thresholds before enforcement.
+- Optimize for high malicious-intent recall while measuring a separate false-positive constraint on legitimate defensive/educational cybersecurity prompts.
+- Treat authorization claims as evidence for adjudication, never as an automatic allowlist.
+- Keep JailbreakBench, HarmBench, StrongREJECT, and CyberSecEval evaluation slices frozen unless future contamination analysis justifies a different source-level partition.
+- Compare local and API judges behind one provider-neutral interface later; selection remains a measured latency/privacy/quality decision.
 
 ## Known risks and open research questions
 
@@ -39,11 +48,12 @@
 - A judge can itself be prompt-injected, may drift by provider version, and creates privacy/latency/cost dependencies.
 - Base64/hex decoding can cause resource exhaustion or false positives unless strictly bounded and paired with benign encoded controls.
 - Long inputs may hide attacks beyond the classifier truncation boundary; chunking policy requires evaluation.
+- The legacy corpus has confirmed exact-normalized leakage across splits and cannot support trustworthy final metrics.
 
 ## Next action after approval
 
-Create the dataset registry/schema and research audit tooling only. That step will inventory source revisions, licenses, schemas, label distributions, hashes, and duplication without beginning model training. It will conclude with another interactive checkpoint.
+Verify primary-source metadata and immutable revisions for the highest-value registry entries, decide approve/reject status, then implement revision-pinned acquisition adapters. Acquisition must not overwrite the legacy processed files and must not begin training. That step concludes with another interactive checkpoint.
 
 ## Bugs
 
-No code was changed in this phase, so there are no implementation bugs yet.
+No known defect remains in the new audit tool. Its non-zero exit on the current corpus is intentional because cross-split duplication is a blocking data-quality error. The existing `prepare_data.py` remains unsuitable: it discards provenance and randomly splits individual rows.

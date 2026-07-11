@@ -35,8 +35,9 @@ class NormalizeDatasetsTests(unittest.TestCase):
                       text="same", severity="none", license_spdx="CC-BY-4.0")
         benign = base_record(source_item_id="1", labels=["benign"], **common)
         malicious = base_record(source_item_id="2", labels=["toxicity_harm"], **{**common, "severity": "high"})
-        kept, stats = deduplicate_records([benign, malicious])
+        kept, conflicts, stats = deduplicate_records([benign, malicious])
         self.assertEqual(kept, [])
+        self.assertEqual(len(conflicts), 1)
         self.assertEqual(stats["conflicting_rows_quarantined"], 2)
 
     def test_deduplication_merges_consistent_malicious_labels(self):
@@ -45,7 +46,7 @@ class NormalizeDatasetsTests(unittest.TestCase):
                             labels=["prompt_injection"], **common)
         second = base_record(source_id="neuralchemy_prompt_injection", source_item_id="2",
                              labels=["prompt_injection", "adversarial_obfuscation"], **common)
-        kept, _ = deduplicate_records([first, second])
+        kept, _, _ = deduplicate_records([first, second])
         self.assertEqual(kept[0]["labels"], ["adversarial_obfuscation", "prompt_injection"])
 
 

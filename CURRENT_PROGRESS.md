@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Normalization and exact deduplication complete
+**Phase:** 1 — Semantic grouping and candidate split materialization complete
 
 **Branch:** `rnd`
 
-**Checkpoint:** Awaiting approval before semantic clustering, conflict adjudication, and final split materialization
+**Checkpoint:** Awaiting approval before human sampling/adjudication and targeted coverage generation
 
 ## Completed in this step
 
@@ -43,6 +43,17 @@
 - Produced 32,465 unique eligible records with all required fields, unique record IDs, and zero response fields.
 - Added `data/reports/normalization_report.json` with content-free source, label, benign, quarantine, duplicate, and split-design metrics.
 - Expanded the test suite to 16 passing tests.
+- Selected the MIT-licensed 33.4M-parameter BGE-small English encoder and pinned revision `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a`.
+- Added semantic near-duplicate clustering at cosine `0.94`, combined with declared template and transformation-parent grouping.
+- Generated 10,583 semantic and 2,628 declared grouping edges across 32,465 records.
+- Produced 27,904 semantic components; 2,686 contain multiple records and the largest contains 166.
+- Quarantined 156 mixed benign/malicious semantic clusters containing 652 rows.
+- Materialized leakage-safe candidate splits: 25,453 train, 3,198 validation, and 3,162 test.
+- Verified that zero semantic cluster IDs cross split boundaries.
+- Preserved near-balanced benign/malicious composition in every split.
+- Generated private exact and semantic adjudication queues under git-ignored `data/review_v2`.
+- Added an English native-speaker defensive-cyber gold-set specification covering 12 legitimate security-work categories and hard negatives.
+- Expanded the test suite to 22 passing tests, including Unicode JSONL framing and 80/10/10 allocation regression coverage.
 
 ## Current policy decisions
 
@@ -72,10 +83,14 @@
 - The eligible corpus is close to class-balanced, but malicious-code-specific and system-leakage supervision are underrepresented.
 - Exact normalization cannot detect paraphrase/template leakage; semantic clustering remains required before final splits.
 - The 391 safety-label conflict groups require policy-aware adjudication and must remain excluded until resolved.
+- The `0.94` semantic threshold is conservative but not yet calibrated against a human-labeled prompt-pair sample.
+- 734 long prompts use head-plus-tail semantic views; chunk-level similarity should be evaluated for hidden middle-section attacks.
+- The candidate test split is not yet the native-speaker English gold set; the separate gold set still needs collection and annotation.
+- Malicious-code and system-prompt-leakage labels remain underrepresented even after semantic grouping.
 
 ## Next action after approval
 
-Create privacy-safe semantic embeddings/fingerprints, cluster near-duplicate and template families, sample the 391 conflict groups for policy-aware adjudication, and construct group-stratified split manifests. Add a dedicated English benign-cyber hard-negative specification and annotation plan. No model training begins until split and coverage reports are approved.
+Human-review a stratified sample of semantic neighbor pairs around thresholds `0.90–0.97`, adjudicate the exact and semantic mixed-safety queues, and lock the semantic operating point. Then create targeted, native-speaker-reviewed English examples for defensive cyber, malicious code, system leakage, and encoded attacks, re-run grouping, and freeze dataset version `v1`. No model training begins until those gates pass.
 
 ## Bugs
 

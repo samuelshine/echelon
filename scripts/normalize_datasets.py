@@ -194,17 +194,28 @@ def iter_do_not_answer(root: Path, revision: str) -> Iterator[tuple[dict[str, An
             ), None
 
 
-def deduplicate_records(records: Iterable[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, int]]:
+def deduplicate_records(records: Iterable[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, int]]:
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in records:
         groups[fingerprint(row["text"])].append(row)
     kept: list[dict[str, Any]] = []
+    conflicts: list[dict[str, Any]] = []
     stats = Counter()
     for rows in groups.values():
         benign_states = {"benign" in row["labels"] for row in rows}
         if len(benign_states) > 1:
             stats["conflicting_groups_quarantined"] += 1
             stats["conflicting_rows_quarantined"] += len(rows)
+            conflict_id = hashlib.sha256("\x1f".join(sorted(row["record_id"] for row in rows)).encode()).hexdigest()
+            conflicts.append({
+                "conflict_id": conflict_id,
+                "text": rows[0]["text"],
+                "records": [{
+                    "record_id": row["record_id"], "source_id": row["source_id"],
+                    "source_item_id": row["source_item_id"], "labels": row["labels"],
+                    "annotation_notes": row.get("annotation_notes"),
+                } for row in rows],
+            })
             continue
         canonical = min(rows, key=lambda row: (SOURCE_PRIORITY.get(row["source_id"], 99), row["record_id"]))
         if len(rows) > 1:
@@ -219,7 +230,7 @@ def deduplicate_records(records: Iterable[dict[str, Any]]) -> tuple[list[dict[st
         kept.append(canonical)
     stats["candidate_rows"] = sum(len(rows) for rows in groups.values())
     stats["deduplicated_rows"] = len(kept)
-    return kept, dict(sorted(stats.items()))
+    return kept, conflicts, dict(sorted(stats.items()))
 
 
 def build_report(
@@ -277,6 +288,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--raw-root", type=Path, default=RAW_ROOT)
     parser.add_argument("--output", type=Path, default=OUTPUT_ROOT / "eligible.jsonl")
     parser.add_argument("--report", type=Path, default=REPORT_PATH)
+    parser.add_argument("--conflict-queue", type=Path, default=PROJECT_ROOT / "data" / "review_v2" / "exact_conflicts.jsonl")
     parser.add_argument("--registry", type=Path, default=REGISTRY_PATH)
     args = parser.parse_args(argv)
 
@@ -297,7 +309,7 @@ def main(argv: list[str] | None = None) -> int:
             elif record:
                 candidate_records.append(record)
 
-    records, deduplication = deduplicate_records(candidate_records)
+    records, conflicts, deduplication = deduplicate_records(candidate_records)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix(args.output.suffix + ".part")
@@ -305,6 +317,11 @@ def main(argv: list[str] | None = None) -> int:
         for record in records:
             handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
     temporary.replace(args.output)
+
+    args.conflict_queue.parent.mkdir(parents=True, exist_ok=True)
+    with args.conflict_queue.open("w", encoding="utf-8") as handle:
+        for conflict in conflicts:
+            handle.write(json.dumps(conflict, ensure_ascii=False, sort_keys=True) + "\n")
 
     report = build_report(candidate_records, records, quarantined, deduplication)
     args.report.parent.mkdir(parents=True, exist_ok=True)

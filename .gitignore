@@ -5,3 +5,6 @@ __pycache__/
 *.py[cod]
 /data/raw_v2/
 /data/normalized_v2/
+/data/review_v2/
+/data/splits_v2/
+/models/research-embeddings/

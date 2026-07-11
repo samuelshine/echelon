@@ -158,3 +158,9 @@ No Python implementation begins until the research checkpoint is approved.
 ## Baseline corpus audit (2026-07-11)
 
 The pre-existing binary `data/processed` corpus is retained only as a legacy baseline. A read-only audit found 33,188 rows, 1,876 normalized duplicates within splits, 980 normalized fingerprint groups crossing train/validation/test boundaries, two prompts larger than 128 KiB, and no source/revision/language/taxonomy lineage. Consequently, existing results cannot be used as clean generalization evidence. The replacement data pipeline must ingest revision-pinned sources into `schemas/dataset_record.schema.json` and group splits before any transformations or balancing.
+
+## Approved acquisition set (2026-07-11)
+
+The first production-compatible raw snapshot contains four immutable Hugging Face revisions: NVIDIA Aegis/Nemotron Content Safety 2.0 (`CC-BY-4.0`), neuralchemy Prompt Injection Dataset (`Apache-2.0`, subject to downstream lineage/quality audit), jackhhao Jailbreak Classification (`Apache-2.0`), and LibrAI Do-Not-Answer (`Apache-2.0`). Thirteen artifacts totaling 32,789,495 bytes are recorded in `data/manifests/acquisition_manifest.json`; raw content is git-ignored. Hash, byte-size, JSON/CSV structure, and Parquet magic validation passed.
+
+ToxicChat and BeaverTails are excluded from the production training pool because their `CC-BY-NC-4.0` terms are noncommercial. WildGuardMix remains pending because its ODC-BY repository is gated by separate AI2 Responsible Use Guidelines that require manual acceptance. The deepset injection repository is rejected for automated acquisition until its conflicting Apache-2.0 versus CC-BY-4.0 metadata is resolved. Unlicensed mirrors are not used. Benchmark holdouts remain unacquired until their exact evaluation licenses, versions, and contamination strategy are recorded.

@@ -89,7 +89,7 @@ def audit_registry(path: Path) -> tuple[list[Finding], dict[str, Any]]:
                 findings.append(Finding("error", "approved_without_revision", location, "approved data needs an immutable revision"))
             if not dataset["license_spdx"]:
                 findings.append(Finding("error", "approved_without_license", location, "approved data needs an SPDX license"))
-        elif not dataset["revision"] or not dataset["license_spdx"]:
+        elif dataset["review_state"] == "pending" and (not dataset["revision"] or not dataset["license_spdx"]):
             findings.append(Finding("warning", "governance_pending", location, "revision/license review incomplete"))
 
     for dataset_id, count in ids.items():

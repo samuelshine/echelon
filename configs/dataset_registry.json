@@ -1,5 +1,5 @@
 {
-  "registry_version": "0.1.0",
+  "registry_version": "0.2.0",
   "policy": {
     "gold_language": "en",
     "allowed_roles": ["train_candidate", "evaluation_only", "benign_control"],
@@ -19,11 +19,11 @@
       "role": "train_candidate",
       "threat_coverage": ["prompt_injection"],
       "languages": ["en"],
-      "revision": null,
+      "revision": "4f61ecb038e9c3fb77e21034b22511b523772cdd",
       "license_spdx": null,
-      "review_state": "pending",
+      "review_state": "rejected",
       "holdout": false,
-      "notes": "Resolve conflicting repository and dataset-info license metadata before approval."
+      "notes": "Rejected from automated acquisition: repository says Apache-2.0 while embedded dataset_info says CC-BY-4.0; origin is also duplicated by an unlicensed mirror."
     },
     {
       "id": "neuralchemy_prompt_injection",
@@ -31,11 +31,17 @@
       "role": "train_candidate",
       "threat_coverage": ["prompt_injection", "adversarial_obfuscation"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "7d70432dfcf47a821612cbf9d34e9d9e3ad20e75",
+      "license_spdx": "Apache-2.0",
+      "review_state": "approved",
       "holdout": false,
-      "notes": "Audit original-source lineage, synthetic generation, near duplicates, and leakage claims."
+      "notes": "Approved for raw acquisition, not automatic trust. Audit original-source lineage, synthetic generation, near duplicates, and leakage claims before curation.",
+      "artifacts": [
+        "README.md",
+        "full/train-00000-of-00001.parquet",
+        "full/validation-00000-of-00001.parquet",
+        "full/test-00000-of-00001.parquet"
+      ]
     },
     {
       "id": "rossja_prompt_injection_index",
@@ -48,6 +54,23 @@
       "review_state": "pending",
       "holdout": false,
       "notes": "Treat as an index; approve each upstream dataset independently."
+    },
+    {
+      "id": "jackhhao_jailbreak_classification",
+      "uri": "hf://datasets/jackhhao/jailbreak-classification",
+      "role": "train_candidate",
+      "threat_coverage": ["prompt_injection"],
+      "languages": ["en"],
+      "revision": "2f2ceeb39658696fd3f462403562b6eea5306287",
+      "license_spdx": "Apache-2.0",
+      "review_state": "approved",
+      "holdout": false,
+      "notes": "Approved. Preserve publisher splits but cluster against other injection sources before final grouped splitting.",
+      "artifacts": [
+        "README.md",
+        "balanced/jailbreak_dataset_train_balanced.csv",
+        "balanced/jailbreak_dataset_test_balanced.csv"
+      ]
     },
     {
       "id": "tensor_trust",
@@ -91,11 +114,12 @@
       "role": "train_candidate",
       "threat_coverage": ["malicious_code", "toxicity_harm"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "d86bb8bedff51d25ac834ab7838f1cc61acb7a2c",
+      "license_spdx": "CC-BY-4.0",
+      "review_state": "approved",
       "holdout": false,
-      "notes": "Verify taxonomy compatibility and retain category granularity."
+      "notes": "Approved. Human prompt safety labels; retain category granularity and exclude response-derived shortcuts.",
+      "artifacts": ["README.md", "train.json", "validation.json", "test.json"]
     },
     {
       "id": "toxic_chat",
@@ -105,9 +129,9 @@
       "languages": ["en"],
       "revision": null,
       "license_spdx": null,
-      "review_state": "pending",
+      "review_state": "rejected",
       "holdout": false,
-      "notes": "Preserve source-aware official splits and toxicity subtype labels."
+      "notes": "CC-BY-NC-4.0 is incompatible with the production-oriented training pool; retain as an optional research-only source."
     },
     {
       "id": "beavertails",
@@ -117,9 +141,9 @@
       "languages": ["en"],
       "revision": null,
       "license_spdx": null,
-      "review_state": "pending",
+      "review_state": "rejected",
       "holdout": false,
-      "notes": "Downsample by category and exclude assistant-response shortcuts."
+      "notes": "CC-BY-NC-4.0 is incompatible with the production-oriented training pool; retain as an optional research-only source."
     },
     {
       "id": "do_not_answer",
@@ -127,11 +151,12 @@
       "role": "train_candidate",
       "threat_coverage": ["malicious_code", "toxicity_harm"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "74e74f2e4507ef256fe536f78a776f4a1ff67955",
+      "license_spdx": "Apache-2.0",
+      "review_state": "approved",
       "holdout": false,
-      "notes": "Retain risk-area taxonomy and validate prompt-only mapping."
+      "notes": "Approved. Retain risk-area taxonomy and ingest questions only; never use model response columns as prompt features.",
+      "artifacts": ["README.md", "data_en.csv"]
     },
     {
       "id": "echelon_benign_cyber",

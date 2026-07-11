@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Dataset governance and legacy-corpus audit complete
+**Phase:** 1 — Primary-source verification and pinned acquisition complete
 
 **Branch:** `rnd`
 
-**Checkpoint:** Awaiting approval before source metadata verification and dataset acquisition
+**Checkpoint:** Awaiting approval before normalization, provenance mapping, and grouped deduplication
 
 ## Completed in this step
 
@@ -27,6 +27,13 @@
 - Added four passing unit tests for normalization, cross-split leakage, governance requirements, and oversized prompts.
 - Audited the existing 33,188-row processed corpus: 980 normalized groups cross splits; within-split duplicates total 1,876 (train 1,812, validation 33, test 31); two prompts exceed 128 KiB; all splits use the lineage-free legacy schema.
 - Marked the current processed corpus as legacy-only for future research claims.
+- Verified immutable Hugging Face revisions and license metadata from primary repository APIs.
+- Approved and acquired four production-compatible sources: Aegis 2.0, neuralchemy Prompt Injection, jackhhao Jailbreak Classification, and Do-Not-Answer.
+- Downloaded 13 artifacts totaling 32,789,495 bytes into git-ignored `data/raw_v2`; wrote a tracked SHA-256/size manifest.
+- Structurally verified 25,007/1,245/1,964 Aegis train/validation/test records, 1,044/262 jackhhao rows, 939 Do-Not-Answer rows, and valid `PAR1` boundaries on all three neuralchemy Parquet files.
+- Added atomic downloads, immutable-revision checks, API-license checks, gated-source rejection, process-unique temporary files, resumability, force replacement, and offline manifest verification.
+- Recovered from and detected a concurrent-transfer corruption event; forced a clean reacquisition and verified all final hashes and structures.
+- Expanded the test suite to nine passing tests.
 
 ## Current policy decisions
 
@@ -36,6 +43,7 @@
 - Treat authorization claims as evidence for adjudication, never as an automatic allowlist.
 - Keep JailbreakBench, HarmBench, StrongREJECT, and CyberSecEval evaluation slices frozen unless future contamination analysis justifies a different source-level partition.
 - Compare local and API judges behind one provider-neutral interface later; selection remains a measured latency/privacy/quality decision.
+- Exclude CC-BY-NC sources from the production training pool; do not bypass gated dataset terms.
 
 ## Known risks and open research questions
 
@@ -49,11 +57,14 @@
 - Base64/hex decoding can cause resource exhaustion or false positives unless strictly bounded and paired with benign encoded controls.
 - Long inputs may hide attacks beyond the classifier truncation boundary; chunking policy requires evaluation.
 - The legacy corpus has confirmed exact-normalized leakage across splits and cannot support trustworthy final metrics.
+- Neuralchemy is newly published and claims group-aware leakage control, but remains untrusted until independent lineage, label, and near-duplicate analysis completes.
+- Aegis prompt labels are human-authored, but its response labels and refusal augmentations must not leak into prompt-only features; only the main prompt-safety JSON files were acquired.
+- Do-Not-Answer contains model response columns that must be dropped during prompt normalization.
 
 ## Next action after approval
 
-Verify primary-source metadata and immutable revisions for the highest-value registry entries, decide approve/reject status, then implement revision-pinned acquisition adapters. Acquisition must not overwrite the legacy processed files and must not begin training. That step concludes with another interactive checkpoint.
+Build source-specific normalization adapters that preserve original splits and provenance, map labels into the Echelon multi-label schema, and generate a content-free quality report. Then perform exact/normalized cross-source deduplication and propose semantic/template grouping before creating any new train/validation/test split. No training begins in that step.
 
 ## Bugs
 
-No known defect remains in the new audit tool. Its non-zero exit on the current corpus is intentional because cross-split duplication is a blocking data-quality error. The existing `prepare_data.py` remains unsuitable: it discards provenance and randomly splits individual rows.
+No known defect remains in the new audit/acquisition tools. The audit tool's non-zero exit on the legacy corpus is intentional because cross-split duplication is a blocking data-quality error. The existing `prepare_data.py` remains unsuitable: it discards provenance and randomly splits individual rows. Raw Parquet content has not yet been semantically validated because normalization dependencies are intentionally deferred to the next phase.

@@ -3,3 +3,4 @@
 *.safetensors
 __pycache__/
 *.py[cod]
+/data/raw_v2/

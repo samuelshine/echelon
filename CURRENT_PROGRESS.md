@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Human-calibration and targeted-curation tooling complete
+**Phase:** 1 — Targeted v0.1 semantic audit complete; admission failed
 
 **Branch:** `rnd`
 
-**Checkpoint:** Awaiting approval before reviewed data creation/adjudication begins
+**Checkpoint:** Awaiting approval before redesigning and generating v0.2
 
 ## Completed in this step
 
@@ -61,6 +61,25 @@
 - Added targeted English curation minimums for system leakage, malicious code, obfuscation, social engineering, and defensive cyber.
 - Required matched benign controls, multi-generator diversity, native-speaker gold review, parent-group isolation, and privacy screening.
 - Expanded the test suite to 27 passing tests.
+- Added a versioned targeted-candidate schema and deterministic controlled-composition generator.
+- Generated 6,000 unique English candidates: 3,000 benign controls and 3,000 malicious-intent prompts.
+- Added 1,500 defensive-cyber benign prompts and 500 benign system-prompt/documentation controls.
+- Added 1,000 benign encoded controls matched to 1,000 obfuscated attacks across five equally represented transformations.
+- Added 1,000 system-leakage and 1,000 malicious-code-intent base candidates using inert placeholders and no payload responses.
+- Verified 6,000 unique IDs/fingerprints and zero exact-normalized overlap with the existing eligible corpus.
+- Marked all 6,000 rows pending review and explicitly ineligible for training.
+- Produced a content-free composition report and SHA-256 artifact manifest.
+- Expanded the test suite to 31 passing tests.
+- Embedded and audited all 6,000 candidates against the existing corpus and internally using the pinned BGE model.
+- Confirmed strong external novelty: 5,987 candidates below `0.90`, 13 in `0.90–0.94`, and zero at or above `0.94` against existing records.
+- Confirmed zero cross-label existing neighbors at the `0.94` threshold.
+- Detected severe internal template collapse: mean nearest-neighbor similarity `0.9763` and a 4,635-row mixed-safety component.
+- Failed v0.1 admission because the largest component is 77.25% of the batch and crosses benign/malicious labels.
+- Produced family-level lexical diversity metrics showing low distinct-bigram ratios despite string uniqueness.
+- Generated a private 600-row review queue with exactly 100 prompts per family.
+- Balanced transformed review samples at 40 per method overall: 20 malicious and 20 benign for each encoding/transformation.
+- Kept every v0.1 candidate ineligible for training.
+- Expanded the test suite to 35 passing tests.
 
 ## Current policy decisions
 
@@ -95,10 +114,13 @@
 - The candidate test split is not yet the native-speaker English gold set; the separate gold set still needs collection and annotation.
 - Malicious-code and system-prompt-leakage labels remain underrepresented even after semantic grouping.
 - Human calibration and adjudication are designed but have not occurred; no unresolved item has been automatically promoted into the corpus.
+- Synthetic composition can create template/style shortcuts even when every string is unique; generator-family and semantic-cluster analysis is required.
+- `operational_content=false` is a generator invariant, not a human safety certification.
+- Unique strings did not prevent semantic/template collapse; v0.1 must not be salvaged by random row splitting.
 
 ## Next action after approval
 
-Run the 450-pair human calibration and conflict adjudication workflow, then create the first targeted English batch under the approved specifications. Re-run normalization and semantic grouping, measure post-dedup coverage, and freeze dataset version `v1` only after annotation-quality and leakage gates pass. No model training begins until that checkpoint is approved.
+Use the stratified review findings to redesign v0.2 around broader human seed pools, multiple independent paraphrase processes, family-specific encoding wrappers, and strict template-lineage caps. Generate a smaller pilot, re-run semantic admission gates, and scale only if the largest component remains below 10% with no mixed-safety clusters. No model training begins until an accepted batch and human-review gates pass.
 
 ## Bugs
 

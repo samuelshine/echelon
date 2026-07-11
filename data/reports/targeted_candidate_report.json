@@ -1,0 +1,38 @@
+{
+  "benign": 3000,
+  "candidates": 6000,
+  "exact_normalized_overlap_with_existing": 0,
+  "family_counts": {
+    "defensive_cyber_benign": 1500,
+    "encoded_benign_control": 1000,
+    "malicious_code_intent": 1000,
+    "obfuscated_attack": 1000,
+    "system_prompt_benign_control": 500,
+    "system_prompt_leakage": 1000
+  },
+  "label_occurrences": {
+    "adversarial_obfuscation": 1000,
+    "benign": 3000,
+    "malicious_code": 1500,
+    "prompt_injection": 1500,
+    "system_prompt_leakage": 1500
+  },
+  "length_chars": {
+    "max": 1298,
+    "mean": 219.99,
+    "min": 81
+  },
+  "malicious": 3000,
+  "operational_content_rows": 0,
+  "pending_human_review": 6000,
+  "report_version": "0.1.0",
+  "transformation_counts": {
+    "base64": 400,
+    "hex": 400,
+    "reverse": 400,
+    "unicode_escape": 400,
+    "url": 400
+  },
+  "unique_candidate_ids": 6000,
+  "unique_normalized_fingerprints": 6000
+}

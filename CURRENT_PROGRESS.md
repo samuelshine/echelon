@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Targeted v0.2 automated admission passed; human review pending
+**Phase:** 1 — Local dual-review gate ready; human judgments pending
 
 **Branch:** `rnd`
 
-**Checkpoint:** Awaiting approval before human review/adjudication or further automation
+**Checkpoint:** Reviewer tooling verified; awaiting independent human review execution
 
 ## Completed in this step
 
@@ -130,10 +130,24 @@
 - Unique strings did not prevent semantic/template collapse; v0.1 must not be salvaged by random row splitting.
 - Automated semantic admission does not certify label correctness, naturalness, or non-operationality; v0.2 still needs human review.
 
+## Local reviewer workflow completed (2026-07-14)
+
+- Added a local-only Flask interface backed by SQLite for the 600-row v0.2 review queue.
+- Bound the review database to queue SHA-256 `11f0ca2e3de5564276533d0a88ec53e66aeaa611478e628839379f1175566e91`.
+- Blinded primary reviewers to proposed labels, nearest-neighbor prompt text, embedded review scaffolding, and prior decisions.
+- Required two distinct primary reviewers; matching decision plus exact label set is necessary but not sufficient for admission.
+- Added mandatory naturalness, intent correctness, label correctness, and non-operational-content quality gates.
+- Restricted expert adjudication to genuine disagreements after two primary reviews and required a third distinct reviewer.
+- Added token-protected APIs, loopback-only serving, disabled debug mode, no-store responses, CSP, anti-framing, and content-type hardening.
+- Added an offline JSONL decision importer and a gated accepted-candidate exporter.
+- Added a content-free human-review report. The dry run has 600 unreviewed items, zero review records, and zero training-eligible items.
+- Added the operator guide `docs/REVIEWER_WORKFLOW.md`.
+- Expanded the suite to 49 tests: 48 pass and the Flask HTTP integration test is skipped because Flask is declared but not installed in the current interpreter. All store, policy, transactional importer, and admission tests pass with resource warnings promoted to errors.
+
 ## Next action after approval
 
-Complete dual human review of the 600-row v0.2 stratified queue, adjudicate disagreements, and estimate acceptance/error rates by family and transformation. If quality targets pass, review or regenerate the remaining rows using the same lineage controls; normalize only accepted candidates and re-run full-corpus grouping. No model training begins until reviewed data and leakage gates pass.
+Run the actual review with two independent English native-speaker primary reviewers, route disagreements to a qualified third expert, and import their decisions. Then compute agreement, rejection, correction, and acceptance rates by family and transformation. No automated agent can substitute for these human judgments, and no accepted record proceeds to training until the subsequent normalization and semantic regrouping gate passes.
 
 ## Bugs
 
-No known defect remains in the new audit, acquisition, or normalization tools. The audit tool's non-zero exit on the legacy corpus is intentional because cross-split duplication is a blocking data-quality error. The existing `prepare_data.py` remains unsuitable: it discards provenance and randomly splits individual rows. Semantic near-duplicate detection and conflict adjudication are intentionally deferred to the next checkpoint.
+No known defect remains in the new audit, acquisition, normalization, semantic grouping, or review-policy tools. Flask is absent from the current interpreter, so its HTTP integration test is skipped; `Flask>=3.0.0` is already declared in `requirements.txt` and is required to launch the interface. The audit tool's non-zero exit on the legacy corpus is intentional because cross-split duplication is a blocking data-quality error. The existing `prepare_data.py` remains unsuitable: it discards provenance and randomly splits individual rows.

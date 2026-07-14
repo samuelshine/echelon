@@ -1,0 +1,29 @@
+{
+  "by_family": {
+    "defensive_cyber_benign_v02": {
+      "unreviewed": 100
+    },
+    "encoded_benign_control_v02": {
+      "unreviewed": 100
+    },
+    "malicious_code_intent_v02": {
+      "unreviewed": 100
+    },
+    "obfuscated_attack_v02": {
+      "unreviewed": 100
+    },
+    "system_prompt_benign_v02": {
+      "unreviewed": 100
+    },
+    "system_prompt_leakage_v02": {
+      "unreviewed": 100
+    }
+  },
+  "items": 600,
+  "queue_sha256": "11f0ca2e3de5564276533d0a88ec53e66aeaa611478e628839379f1175566e91",
+  "review_records": 0,
+  "status": {
+    "unreviewed": 600
+  },
+  "training_eligible_items": 0
+}

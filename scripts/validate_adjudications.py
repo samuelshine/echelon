@@ -18,8 +18,11 @@ VALID_LABELS = {
 
 def validate_review(review: dict[str, Any], line_number: int) -> list[str]:
     errors = []
-    for field in ("item_id", "reviewer_id", "decision", "labels", "rationale_code"):
+    for field in ("item_id", "reviewer_id", "decision", "rationale_code"):
         if not review.get(field):
+            errors.append(f"line {line_number}: missing {field}")
+    for field in ("labels", "naturalness", "intent_correct", "labels_correct", "non_operational", "is_expert_adjudication"):
+        if field not in review:
             errors.append(f"line {line_number}: missing {field}")
     if review.get("decision") not in VALID_DECISIONS:
         errors.append(f"line {line_number}: invalid decision")
@@ -32,6 +35,11 @@ def validate_review(review: dict[str, Any], line_number: int) -> list[str]:
         errors.append(f"line {line_number}: malicious decision requires non-benign labels")
     if review.get("decision") == "exclude" and labels:
         errors.append(f"line {line_number}: exclude decision must have no labels")
+    if not isinstance(review.get("naturalness"), int) or isinstance(review.get("naturalness"), bool) or not 1 <= review.get("naturalness", 0) <= 5:
+        errors.append(f"line {line_number}: naturalness must be an integer from 1 to 5")
+    for field in ("intent_correct", "labels_correct", "non_operational", "is_expert_adjudication"):
+        if not isinstance(review.get(field), bool):
+            errors.append(f"line {line_number}: {field} must be boolean")
     return errors
 
 
@@ -41,13 +49,17 @@ def summarize(reviews: list[dict[str, Any]]) -> dict[str, Any]:
         by_item[review["item_id"]].append(review)
     status = Counter()
     for item_reviews in by_item.values():
-        reviewers = {review["reviewer_id"] for review in item_reviews}
-        verdicts = {(review["decision"], tuple(sorted(review["labels"]))) for review in item_reviews}
-        if len(reviewers) < 2:
+        primary = [review for review in item_reviews if not review.get("is_expert_adjudication")]
+        experts = [review for review in item_reviews if review.get("is_expert_adjudication")]
+        primary_reviewers = {review["reviewer_id"] for review in primary}
+        verdicts = {(review["decision"], tuple(sorted(review["labels"]))) for review in primary}
+        if not primary_reviewers:
+            status["unreviewed"] += 1
+        elif len(primary_reviewers) < 2:
             status["pending_second_review"] += 1
         elif len(verdicts) == 1:
             status["resolved_by_agreement"] += 1
-        elif any(review.get("is_expert_adjudication") for review in item_reviews):
+        elif any(review["reviewer_id"] not in primary_reviewers for review in experts):
             status["resolved_by_expert"] += 1
         else:
             status["needs_expert_adjudication"] += 1

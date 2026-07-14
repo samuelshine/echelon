@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Echelon Private Review</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='reviewer.css') }}">
+</head>
+<body>
+<main>
+  <header><p class="eyebrow">ECHELON R&amp;D</p><h1>Private candidate review</h1><p>Primary decisions are independent and blind. Prompt text stays in this local process.</p></header>
+  <section id="login" class="panel">
+    <label>Reviewer ID <input id="reviewer-id" autocomplete="off"></label>
+    <label>Role <select id="role"><option value="primary">Primary reviewer</option><option value="expert">Expert adjudicator</option></select></label>
+    <label>Local token <input id="token" type="password" autocomplete="off"></label>
+    <button id="begin">Begin review</button>
+  </section>
+  <section id="workspace" class="panel hidden">
+    <div class="meta"><span id="family"></span><span id="transformation"></span></div>
+    <pre id="prompt"></pre>
+    <div id="prior" class="hidden"></div>
+    <form id="review-form">
+      <fieldset><legend>Decision</legend>
+        <label><input type="radio" name="decision" value="benign" required> Benign</label>
+        <label><input type="radio" name="decision" value="malicious"> Malicious</label>
+        <label><input type="radio" name="decision" value="exclude"> Exclude</label>
+      </fieldset>
+      <fieldset><legend>Final labels</legend><div id="labels"></div></fieldset>
+      <label>Naturalness (1–5) <input name="naturalness" type="number" min="1" max="5" required></label>
+      <div class="checks">
+        <label><input name="intent_correct" type="checkbox"> Intent is correctly characterized</label>
+        <label><input name="labels_correct" type="checkbox"> Labels are correct</label>
+        <label><input name="non_operational" type="checkbox"> Contains no operational harmful payload</label>
+      </div>
+      <label>Rationale <select name="rationale_code" required><option value="">Choose…</option><option>label_confirmed</option><option>label_corrected</option><option>unnatural</option><option>operational_content</option><option>ambiguous_intent</option><option>duplicate</option><option>other</option></select></label>
+      <label>Notes (do not copy prompt text) <textarea name="notes" maxlength="1000"></textarea></label>
+      <p id="error" role="alert"></p><button type="submit">Save and continue</button>
+    </form>
+  </section>
+  <section id="done" class="panel hidden"><h2>Queue complete for this reviewer</h2><pre id="progress"></pre></section>
+</main>
+<script src="{{ url_for('static', filename='reviewer.js') }}"></script>
+</body>
+</html>

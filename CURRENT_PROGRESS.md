@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Local dual-review gate ready; human judgments pending
+**Phase:** 1 — Distributed dual-review kits ready; human judgments pending
 
 **Branch:** `rnd`
 
-**Checkpoint:** Reviewer tooling verified; awaiting independent human review execution
+**Checkpoint:** Two private primary kits verified; awaiting secure distribution and human completion
 
 ## Completed in this step
 
@@ -146,8 +146,24 @@
 
 ## Next action after approval
 
-Run the actual review with two independent English native-speaker primary reviewers, route disagreements to a qualified third expert, and import their decisions. Then compute agreement, rejection, correction, and acceptance rates by family and transformation. No automated agent can substitute for these human judgments, and no accepted record proceeds to training until the subsequent normalization and semantic regrouping gate passes.
+Securely send `data/review_v2/distributed_kits_v02/reviewer_a` and `reviewer_b` to two independent English native-speaker reviewers. They complete all 600 items locally, validate prompt-free exports, and wait until both report completion before pushing separate branches. Validate the pair, generate the conflict-only expert kit, collect a third distinct expert submission, and run the final cohort gate. No accepted record proceeds to training until normalization and semantic regrouping pass.
 
 ## Bugs
 
 No known defect remains in the new audit, acquisition, normalization, semantic grouping, or review-policy tools. Flask is absent from the current interpreter, so its HTTP integration test is skipped; `Flask>=3.0.0` is already declared in `requirements.txt` and is required to launch the interface. The audit tool's non-zero exit on the legacy corpus is intentional because cross-split duplication is a blocking data-quality error. The existing `prepare_data.py` remains unsuitable: it discards provenance and randomly splits individual rows.
+
+## Distributed review workflow completed (2026-07-15)
+
+- Added primary-kit generation with exactly two distinct locked reviewer identities.
+- Removed indirect label leakage from both kits and live primary assignments: family, context, proposed labels, generator metadata, nearest neighbors, and review scaffolding are hidden.
+- Generated two private 600-item kits under ignored `data/review_v2/distributed_kits_v02`.
+- Added a prompt-free tracked manifest with 600 allowed IDs and canonical queue SHA-256 `11f0ca2e3de5564276533d0a88ec53e66aeaa611478e628839379f1175566e91`.
+- Added complete-only, privacy-screened submission export; prompt text, notes, timestamps, and local database details cannot enter the output schema.
+- Added individual, paired-primary, expert, and final-cohort validation commands.
+- Added conflict-only expert-kit generation and exact expert coverage checks.
+- Added identity locking in the local app and enforced a third expert distinct from both primary reviewers.
+- Added a CI workflow for every JSON submission under `review_submissions/v0.2`.
+- Added `docs/DISTRIBUTED_REVIEW.md` with coordinator, primary, expert, push, validation, and import commands plus a copy/paste reviewer briefing.
+- Bound primary submissions to deterministic blinded-queue SHA-256 `fafc411907234ed8b21122a0e2084e2f2eccf5b9871ce3c4259519348b69ea1` in addition to the canonical queue hash.
+- Expanded the suite to 60 tests: 59 pass; one Flask HTTP integration test is skipped because Flask is not installed in the current interpreter.
+- Kept all candidates ineligible. No human decisions or training admissions were fabricated.

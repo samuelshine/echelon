@@ -1,0 +1,11 @@
+{
+  "canonical_queue_sha256": "11f0ca2e3de5564276533d0a88ec53e66aeaa611478e628839379f1175566e91",
+  "human_review_records": 0,
+  "items_per_primary_kit": 600,
+  "primary_review_queue_sha256": "fafc411907234ed8b21122a0e2084e2f2eccf5b9871ce3c4259519348b69ea1",
+  "primary_kits": 2,
+  "prompt_fields_in_git_submissions": false,
+  "status": "ready_for_secure_distribution",
+  "training_eligible_items": 0,
+  "workflow_version": "1.0.0"
+}

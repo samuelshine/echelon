@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Echelon prompt-free distributed review submission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "role", "reviewer_id", "canonical_queue_sha256",
+    "review_queue_sha256", "item_count", "reviews"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "role": {"enum": ["primary", "expert"]},
+    "reviewer_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$"},
+    "canonical_queue_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "review_queue_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "item_count": {"type": "integer", "minimum": 0},
+    "reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "item_id", "reviewer_id", "decision", "labels", "rationale_code",
+          "naturalness", "intent_correct", "labels_correct", "non_operational",
+          "is_expert_adjudication"
+        ],
+        "properties": {
+          "item_id": {"type": "string", "minLength": 1},
+          "reviewer_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{2,63}$"},
+          "decision": {"enum": ["benign", "malicious", "exclude"]},
+          "labels": {
+            "type": "array", "uniqueItems": true,
+            "items": {"enum": ["prompt_injection", "system_prompt_leakage", "malicious_code", "toxicity_harm", "adversarial_obfuscation", "benign"]}
+          },
+          "rationale_code": {"enum": ["label_confirmed", "label_corrected", "unnatural", "operational_content", "ambiguous_intent", "duplicate", "other"]},
+          "naturalness": {"type": "integer", "minimum": 1, "maximum": 5},
+          "intent_correct": {"type": "boolean"},
+          "labels_correct": {"type": "boolean"},
+          "non_operational": {"type": "boolean"},
+          "is_expert_adjudication": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

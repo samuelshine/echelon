@@ -2,6 +2,8 @@
 
 This workflow keeps prompt text, reviewer decisions, and accepted candidates in `data/review_v2/`, which is excluded from Git. Only content-free aggregate reports belong in version control. It does not create human judgments and it cannot admit an unreviewed candidate.
 
+For reviewers working on different systems, use the distributed procedure in `docs/DISTRIBUTED_REVIEW.md`. Do not copy SQLite databases or canonical prompt queues into Git.
+
 ## Policy
 
 - Two distinct primary reviewers independently label every candidate. Primary reviewers cannot see proposed labels, nearest-neighbor text, or another reviewer's decision.

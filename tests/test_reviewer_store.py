@@ -45,6 +45,8 @@ class ReviewerStoreTests(unittest.TestCase):
         self.assertNotIn("proposed_labels", item["item"])
         self.assertNotIn("nearest_existing", item["item"])
         self.assertNotIn("review", item["item"])
+        self.assertNotIn("family", item["item"])
+        self.assertNotIn("context", item["item"])
         save_review(self.db, self.review())
         second = next_item(self.db, "r2")
         self.assertNotIn("primary_reviews", second["item"])

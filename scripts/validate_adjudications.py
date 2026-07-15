@@ -14,6 +14,10 @@ VALID_LABELS = {
     "prompt_injection", "system_prompt_leakage", "malicious_code",
     "toxicity_harm", "adversarial_obfuscation", "benign",
 }
+VALID_RATIONALE_CODES = {
+    "label_confirmed", "label_corrected", "unnatural", "operational_content",
+    "ambiguous_intent", "duplicate", "other",
+}
 
 
 def validate_review(review: dict[str, Any], line_number: int) -> list[str]:
@@ -26,6 +30,8 @@ def validate_review(review: dict[str, Any], line_number: int) -> list[str]:
             errors.append(f"line {line_number}: missing {field}")
     if review.get("decision") not in VALID_DECISIONS:
         errors.append(f"line {line_number}: invalid decision")
+    if review.get("rationale_code") not in VALID_RATIONALE_CODES:
+        errors.append(f"line {line_number}: invalid rationale_code")
     labels = set(review.get("labels") or [])
     if labels - VALID_LABELS:
         errors.append(f"line {line_number}: invalid labels")

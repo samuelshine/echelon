@@ -174,10 +174,11 @@ def next_item(db_path: Path, reviewer_id: str, expert: bool = False) -> dict[str
             payload = json.loads(item["payload"])
             # Primary review is blind to proposed labels, nearest-neighbor text, and all prior decisions.
             if not expert:
-                payload.pop("proposed_labels", None)
-                payload.pop("nearest_existing", None)
-                payload.pop("review", None)
-                return {"item": payload, "primary_reviews": len(primary)}
+                visible = {
+                    key: payload[key] for key in ("candidate_id", "item_id", "text", "language", "transformation")
+                    if key in payload
+                }
+                return {"item": visible, "primary_reviews": len(primary)}
             return {"item": payload, "primary_reviews": primary}
     return None
 
@@ -224,6 +225,26 @@ def import_reviews(db_path: Path, reviews: Iterable[dict[str, Any]]) -> dict[str
             _save_review(connection, review)
             counts["imported"] += 1
     return dict(counts)
+
+
+def database_metadata(db_path: Path) -> dict[str, Any]:
+    with closing(connect(db_path)) as connection:
+        meta = connection.execute("SELECT * FROM queue_meta WHERE singleton=1").fetchone()
+        if not meta:
+            raise ValueError("database is not initialized")
+        return {
+            "queue_sha256": meta["queue_sha256"],
+            "queue_path": meta["queue_path"],
+            "items": connection.execute("SELECT COUNT(*) FROM items").fetchone()[0],
+        }
+
+
+def reviews_for_reviewer(db_path: Path, reviewer_id: str) -> list[dict[str, Any]]:
+    with closing(connect(db_path)) as connection:
+        rows = connection.execute(
+            "SELECT * FROM reviews WHERE reviewer_id=? ORDER BY item_id", (reviewer_id,)
+        ).fetchall()
+        return [_deserialize_review(row) for row in rows]
 
 
 def decision_report(db_path: Path) -> dict[str, Any]:

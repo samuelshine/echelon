@@ -7,6 +7,17 @@ LABELS.forEach(label => {
   $('labels').appendChild(node);
 });
 
+fetch('/api/config').then(response => response.json()).then(config => {
+  if (config.assigned_reviewer_id) {
+    $('reviewer-id').value = config.assigned_reviewer_id;
+    $('reviewer-id').disabled = true;
+  }
+  if (config.assigned_role) {
+    $('role').value = config.assigned_role;
+    $('role').disabled = true;
+  }
+});
+
 function headers() { return {'Content-Type':'application/json', 'X-Review-Token':$('token').value}; }
 async function loadNext() {
   state.expert = $('role').value === 'expert';

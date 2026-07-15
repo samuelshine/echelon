@@ -16,6 +16,10 @@ fetch('/api/config').then(response => response.json()).then(config => {
     $('role').value = config.assigned_role;
     $('role').disabled = true;
   }
+  if (config.local_token) {
+    $('token').value = config.local_token;
+    $('token').disabled = true;
+  }
 });
 
 function headers() { return {'Content-Type':'application/json', 'X-Review-Token':$('token').value}; }

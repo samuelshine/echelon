@@ -1,8 +1,46 @@
 # Echelon Distributed Review v0.2
 
-This procedure supports independent reviewers in different locations. Private kits contain prompt text and must travel through an access-controlled, encrypted channel. Git receives only prompt-free JSON submissions after both primary reviewers finish.
+This procedure supports independent reviewers in different locations. The repository contains only authenticated encrypted primary kits; their passphrases travel separately through an access-controlled channel. Decrypted prompts, local databases, and passphrases never enter Git. Git receives prompt-free JSON submissions only after both primary reviewers finish.
 
-## Coordinator: build and distribute primary kits
+## Recommended clone-and-run workflow
+
+After the coordinator pushes the encrypted kits to `rnd`, each reviewer needs only repository access and their separately delivered passphrase.
+
+Reviewer A:
+
+```bash
+git clone <PRIVATE_REPOSITORY_URL> echelon
+cd echelon
+git switch rnd
+python3 scripts/review_bootstrap.py reviewer_a
+```
+
+Reviewer B:
+
+```bash
+git clone <PRIVATE_REPOSITORY_URL> echelon
+cd echelon
+git switch rnd
+python3 scripts/review_bootstrap.py reviewer_b
+```
+
+On Windows, replace `python3` with `py`. The bootstrap creates `.review-venv`, installs only the pinned reviewer dependencies, prompts invisibly for the assigned passphrase, authenticates and decrypts the assigned AES-256-GCM kit into ignored local storage, and starts the interface at `http://127.0.0.1:5080`. Reviewer identity, role, and local browser token are filled automatically.
+
+After finishing all 600 items and stopping the server with `Ctrl+C`, export with the same command plus `--export`:
+
+```bash
+python3 scripts/review_bootstrap.py reviewer_a --export
+```
+
+or:
+
+```bash
+python3 scripts/review_bootstrap.py reviewer_b --export
+```
+
+The coordinator retrieves the two different passphrases from the git-ignored local file `data/review_v2/distributed_kit_passphrases.json` and sends each reviewer only their own value. Never send both passphrases to one reviewer.
+
+## Coordinator: rebuilding primary kits
 
 Choose pseudonymous IDs that match `[a-z0-9][a-z0-9_-]{2,63}`. Do not use names or email addresses.
 
@@ -16,7 +54,7 @@ python -m scripts.build_review_kits \
   --public-manifest data/manifests/targeted_v02_distributed_review_manifest.json
 ```
 
-Send each reviewer only their directory from `data/review_v2/distributed_kits_v02`. Use a private encrypted Drive folder or another approved secure-transfer channel. Never attach a kit to an issue, pull request, chat room, or repository commit. The two kits contain identical blinded prompts but different locked reviewer identities.
+Plaintext kit directories remain private and git-ignored. `scripts/build_sealed_review_kits.py` converts them to authenticated encrypted `.echelonkit` artifacts for Git while writing independent passphrases to a git-ignored coordinator file. Never commit or transmit a plaintext kit directory.
 
 Before review begins, require each person to confirm that they are an English native speaker, understand the policy in `docs/BENIGN_CYBER_GOLDSET_SPEC.md`, will work independently, and will not copy prompt text into notes.
 

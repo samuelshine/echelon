@@ -8,3 +8,4 @@ __pycache__/
 /data/review_v2/
 /data/splits_v2/
 /models/research-embeddings/
+/.review-venv/

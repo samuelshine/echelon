@@ -1,0 +1,25 @@
+{
+  "artifacts": [
+    {
+      "bytes": 249796,
+      "path": "review_kits/v0.2/reviewer_a.echelonkit",
+      "reviewer_id": "reviewer_a",
+      "sha256": "ffe57aae488f53bf8a85501d2f11f42b886a894890afea2a4615b9b7e31f9358"
+    },
+    {
+      "bytes": 249796,
+      "path": "review_kits/v0.2/reviewer_b.echelonkit",
+      "reviewer_id": "reviewer_b",
+      "sha256": "435023f1be963b7296446a1dae40e37e828f4781b4caed72067c72772131d202"
+    }
+  ],
+  "cipher": "AES-256-GCM",
+  "kdf": {
+    "name": "scrypt",
+    "n": 32768,
+    "p": 1,
+    "r": 8
+  },
+  "passphrases_in_manifest": false,
+  "schema_version": "1.0.0"
+}

@@ -26,6 +26,7 @@ tqdm>=4.65.0
 sentencepiece>=0.1.99
 protobuf
 tiktoken
+cryptography>=42,<46
 
 # Web Serving & Explainability
 Flask>=3.0.0

@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Distributed dual-review kits ready; human judgments pending
+**Phase:** 1 — Encrypted clone-and-run reviewer kits ready; human judgments pending
 
 **Branch:** `rnd`
 
-**Checkpoint:** Two private primary kits verified; awaiting secure distribution and human completion
+**Checkpoint:** Repository-contained ciphertext verified; awaiting passphrase distribution and human completion
 
 ## Completed in this step
 
@@ -146,7 +146,7 @@
 
 ## Next action after approval
 
-Securely send `data/review_v2/distributed_kits_v02/reviewer_a` and `reviewer_b` to two independent English native-speaker reviewers. They complete all 600 items locally, validate prompt-free exports, and wait until both report completion before pushing separate branches. Validate the pair, generate the conflict-only expert kit, collect a third distinct expert submission, and run the final cohort gate. No accepted record proceeds to training until normalization and semantic regrouping pass.
+Push the encrypted kits and bootstrap tooling on `rnd`. Give each independent English native-speaker reviewer repository access and only their assigned passphrase from git-ignored `data/review_v2/distributed_kit_passphrases.json`. Reviewer A runs `python3 scripts/review_bootstrap.py reviewer_a`; Reviewer B runs the corresponding `reviewer_b` command. They finish and export locally, wait until both report completion, and then push only their prompt-free JSON. No accepted record proceeds to training until expert adjudication, normalization, and semantic regrouping pass.
 
 ## Bugs
 
@@ -165,5 +165,16 @@ No known defect remains in the new audit, acquisition, normalization, semantic g
 - Added a CI workflow for every JSON submission under `review_submissions/v0.2`.
 - Added `docs/DISTRIBUTED_REVIEW.md` with coordinator, primary, expert, push, validation, and import commands plus a copy/paste reviewer briefing.
 - Bound primary submissions to deterministic blinded-queue SHA-256 `fafc411907234ed8b21122a0e2084e2f2eccf5b9871ce3c4259519348b69ea1` in addition to the canonical queue hash.
-- Expanded the suite to 60 tests: 59 pass; one Flask HTTP integration test is skipped because Flask is not installed in the current interpreter.
+- Expanded the suite to 64 tests: 63 pass; one Flask HTTP integration test is skipped because Flask is not installed in the current interpreter.
 - Kept all candidates ineligible. No human decisions or training admissions were fabricated.
+
+## Encrypted clone-and-run bootstrap completed (2026-07-15)
+
+- Added two authenticated AES-256-GCM `.echelonkit` artifacts to `review_kits/v0.2`.
+- Derived independent encryption keys using scrypt (`N=32768`, `r=8`, `p=1`) with unique salts and 32-byte random passphrases.
+- Stored passphrases only in git-ignored `data/review_v2/distributed_kit_passphrases.json`; no secret was printed during generation or testing.
+- Added a cross-platform one-command bootstrap that creates an isolated `.review-venv`, installs only Flask and cryptography, prompts invisibly for the passphrase, authenticates the kit, materializes it under ignored storage, and starts the locked loopback interface.
+- Added one-command complete-only export using the same bootstrap plus `--export`.
+- Added wrong-passphrase, wrong-reviewer, ciphertext-tampering, round-trip, and materialized-hash tests.
+- Verified both real ciphertexts decrypt to exactly 600 assigned rows without printing secrets.
+- Kept plaintext queues, passphrases, runtime databases, and virtual environments excluded from Git.

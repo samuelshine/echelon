@@ -16,11 +16,13 @@ from reviewer.store import decision_report, initialize_database, next_item, queu
 def create_app(
     db_path: Path, review_token: str, expert_token: str,
     assigned_reviewer_id: str | None = None, assigned_role: str | None = None,
+    expose_local_token: bool = False,
 ) -> Flask:
     app = Flask(__name__)
     app.config.update(
         DB_PATH=db_path, REVIEW_TOKEN=review_token, EXPERT_TOKEN=expert_token,
         ASSIGNED_REVIEWER_ID=assigned_reviewer_id, ASSIGNED_ROLE=assigned_role,
+        EXPOSE_LOCAL_TOKEN=expose_local_token,
     )
 
     def assignment_matches(reviewer_id: str, expert: bool) -> bool:
@@ -86,6 +88,7 @@ def create_app(
         return jsonify(
             assigned_reviewer_id=app.config["ASSIGNED_REVIEWER_ID"],
             assigned_role=app.config["ASSIGNED_ROLE"],
+            local_token=app.config["REVIEW_TOKEN"] if app.config["EXPOSE_LOCAL_TOKEN"] else None,
         )
 
     return app

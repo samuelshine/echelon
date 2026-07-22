@@ -1,0 +1,15 @@
+{
+  "benchmark_version": "1.0.0",
+  "fixture_count": 6,
+  "iterations": 30000,
+  "latency_us": {
+    "max": 340.083,
+    "median": 27.958,
+    "p95": 38.75,
+    "p99": 40.083
+  },
+  "prompt_content_in_report": false,
+  "ruleset_sha256": "f5865809c99910802715b7f6f3bc56bf98dcc7a353c7109ce068721fd92e57fd",
+  "throughput_prompts_per_second": 33572.0,
+  "warmup": 2000
+}

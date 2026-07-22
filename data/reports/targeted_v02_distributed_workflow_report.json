@@ -9,5 +9,6 @@
   "prompt_fields_in_git_submissions": false,
   "status": "ready_for_secure_distribution",
   "training_eligible_items": 0,
+  "pipeline_foundations_ready": true,
   "workflow_version": "1.0.0"
 }

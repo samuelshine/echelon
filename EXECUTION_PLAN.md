@@ -234,3 +234,19 @@ The tracked public manifest binds all submissions to canonical queue SHA-256 `11
 Primary review kits are now stored in Git only as authenticated AES-256-GCM ciphertext. Independent 32-byte random passphrases derive encryption keys through scrypt with `N=32768`, `r=8`, `p=1`, and unique 16-byte salts. Reviewer identity and artifact version are authenticated as associated data. Wrong passphrases, reviewer swaps, or any ciphertext modification fail before prompt materialization. Passphrases remain in a git-ignored coordinator file and travel separately from repository access.
 
 The reviewer entrypoint is reduced to one cross-platform bootstrap command after cloning. It creates an ignored isolated environment, installs pinned Flask and cryptography dependencies, prompts without echo, decrypts only the assigned kit into ignored local storage, initializes the hash-bound SQLite database, and starts the role-locked loopback application. A second invocation with `--export` requires complete 600-item coverage and emits only the prompt-free validated submission.
+
+## Phase 3 — Dataset-independent detection foundations (2026-07-22)
+
+Layer 1 is implemented as a dependency-free bounded heuristic engine with Aho–Corasick phrases, regex rules, safe deobfuscation, risk math, evidence contracts, and a reproducible microbenchmark. Its thresholds remain shadow scaffolding pending reviewed calibration.
+
+Layer 2 now has a provider-neutral local Transformers adapter, explicit calibrated/uncalibrated score state, category-aware results, temperature fitting, threshold optimization, ECE/Brier metrics, slice metrics, and a group-safe split validator. The legacy trainer is guarded by a manifest requiring human review, privacy review, semantic split verification, dataset hash, and complete split counts. No pending candidate manifest satisfies this gate.
+
+Layer 3 now has a strict JSON-only judge contract, controlled rationale codes, an untrusted-data system instruction, an HTTPS-only generic adapter with timeout, and a deterministic mock. The cascade supports shadow and enforcement modes, immediate blocks only when explicitly configured, strongest-route shadow reporting, and fail-to-escalate behavior for unavailable layers. Fixture-only tests and benchmarks are permitted; model training, threshold claims, and production enforcement remain blocked until human-reviewed data exists.
+
+## Layer 1 implementation result (2026-07-22)
+
+The heuristic layer is implemented independently of pending human labels. It provides typed immutable results, five category scores, one overall risk score, explicit routing, content-free evidence, bounded input statistics, duration, and an exact ruleset hash. Literal matching uses a prebuilt Aho–Corasick automaton; regular expressions are precompiled and bounded. Unicode normalization, entropy, control/format characters, length truncation, and Base64/hex/URL/Unicode-escape/reversal decoding are covered.
+
+Risk aggregation uses correlation groups to prevent overlapping literal and regex rules from double-counting one behavior. Distinct group weights combine with noisy-or per category; overall risk adds only 12% of the second-highest category plus a bounded obfuscation corroboration term. Shadow routing remains `pass < 0.35`, `escalate 0.35–<0.90`, and `block >= 0.90`. These are not production-calibrated probabilities or approved enforcement thresholds.
+
+Resource limits cap scanning at 100,000 characters, decoder inputs at 4,096 characters, decoded output at 8,192 bytes, decoded candidates at six, and regex repetition counting at three. Decoder output is never executed or logged. A 30,000-iteration full-path microbenchmark measured median `27.958 us`, p95 `38.750 us`, p99 `40.083 us`, and approximately `33,572` prompts/second on the development machine. Final SLOs require deployment-hardware measurement.

@@ -1,14 +1,18 @@
-# Echelon — Prompt Injection Detection (R&D)
+# Echelon — Three-Fold Prompt Security Ingress (R&D)
 
-Fine-tuning **DistilBERT** for binary classification of prompt injection attacks and malicious prompts. This R&D branch serves as a sandbox for experimenting with different training approaches, datasets, and model configurations.
+Echelon is a staged prompt-security ingress pipeline: deterministic Layer 1 heuristics, a local semantic Layer 2 classifier, and a strict Layer 3 judge for gray-area prompts. This R&D branch is also the data-governance and evaluation workspace for the pending English human-review gate.
+
+Training remains intentionally blocked until the distributed reviewers complete their 600-item queue, disagreements receive expert adjudication, and the accepted corpus passes normalization and semantic split validation.
 
 ## 📁 Project Structure
 
 ```
 echelon/
 ├── configs/
-│   ├── training_config.yaml     # DistilBERT configuration
-│   └── deberta_config.yaml      # DeBERTa configuration
+│   ├── layer1_rules.json        # Deterministic rules and risk thresholds
+│   ├── pipeline.yaml            # Cascade shadow/enforcement policy
+│   ├── training_config.yaml      # Guarded legacy training configuration
+│   └── deberta_config.yaml       # Guarded DeBERTa configuration
 ├── data/
 │   ├── raw/                     # Downloaded source data
 │   │   ├── deepset/
@@ -28,15 +32,34 @@ echelon/
 │   └── prompt-injection-deberta/
 │       └── ...                  # Same structure for DeBERTa
 ├── scripts/
-│   ├── download_data.py         # Download all datasets
-│   ├── prepare_data.py          # Merge, deduplicate, split
-│   └── train.py                 # Fine-tune DistilBERT
+│   ├── run_pipeline.py          # Three-fold local smoke/inference CLI
+│   ├── benchmark_pipeline.py    # Fixture-only end-to-end benchmark
+│   ├── check_training_gate.py   # Fail-closed manifest check
+│   └── train.py                 # Refuses data without reviewed manifest
 ├── notebooks/                   # EDA & experimentation
 ├── requirements.txt
 └── README.md
 ```
 
-## 🚀 Quick Start
+## Quick Start: pipeline smoke run
+
+This uses a fixture-only semantic score and does not train or download a model:
+
+```bash
+printf '%s' 'Summarize this meeting agenda.' | python -m scripts.run_pipeline --fixture-risk 0.10 --judge mock
+```
+
+For a real local model artifact, select it explicitly; model loading is local-only:
+
+```bash
+python -m scripts.run_pipeline \
+  --model-dir models/prompt-injection-distilbert/best \
+  --mode shadow < prompt.txt
+```
+
+See [`docs/PIPELINE_DESIGN.md`](docs/PIPELINE_DESIGN.md) for routing, calibration, judge, privacy, and failure-policy details.
+
+## Legacy data/training commands
 
 ### 1. Install Dependencies
 
@@ -61,6 +84,8 @@ python scripts/prepare_data.py
 ```
 
 ### 4. Train Model
+
+The old random-split workflow is retained only for historical comparison. `scripts/train.py` now refuses to run unless the configuration points to a manifest marked human-reviewed, privacy-reviewed, and semantically split. Do not use `scripts/prepare_data.py` for production training.
 
 You can fine-tune either DistilBERT (default) or DeBERTa by passing the respective configuration file:
 

@@ -2,11 +2,11 @@
 
 ## Status
 
-**Phase:** 1 — Encrypted clone-and-run reviewer kits ready; human judgments pending
+**Phase:** 3 — Layer 1 heuristic engine complete; human dataset review remains in parallel
 
 **Branch:** `rnd`
 
-**Checkpoint:** Repository-contained ciphertext verified; awaiting passphrase distribution and human completion
+**Checkpoint:** Layer 1 verified; awaiting approval before Layer 2 infrastructure
 
 ## Completed in this step
 
@@ -144,7 +144,7 @@
 - Added the operator guide `docs/REVIEWER_WORKFLOW.md`.
 - Expanded the suite to 49 tests: 48 pass and the Flask HTTP integration test is skipped because Flask is declared but not installed in the current interpreter. All store, policy, transactional importer, and admission tests pass with resource warnings promoted to errors.
 
-## Next action after approval
+## Parallel reviewer operation
 
 Push the encrypted kits and bootstrap tooling on `rnd`. Give each independent English native-speaker reviewer repository access and only their assigned passphrase from git-ignored `data/review_v2/distributed_kit_passphrases.json`. Reviewer A runs `python3 scripts/review_bootstrap.py reviewer_a`; Reviewer B runs the corresponding `reviewer_b` command. They finish and export locally, wait until both report completion, and then push only their prompt-free JSON. No accepted record proceeds to training until expert adjudication, normalization, and semantic regrouping pass.
 
@@ -178,3 +178,36 @@ No known defect remains in the new audit, acquisition, normalization, semantic g
 - Added wrong-passphrase, wrong-reviewer, ciphertext-tampering, round-trip, and materialized-hash tests.
 - Verified both real ciphertexts decrypt to exactly 600 assigned rows without printing secrets.
 - Kept plaintext queues, passphrases, runtime databases, and virtual environments excluded from Git.
+
+## Layer 1 heuristic engine completed (2026-07-22)
+
+- Added shared immutable contracts for evidence, category scores, input statistics, routes, and layer results.
+- Added a dependency-free Aho–Corasick matcher built once per ruleset.
+- Added precompiled bounded regex rules for injection, leakage, malicious code, role-play bypass, delimiters, and targeted harm.
+- Added NFKC normalization, case folding, entropy, Unicode control/format-character, and exact 100,000-character head/tail bounds.
+- Added bounded Base64, hex, URL-percent, Unicode-escape, and reversal decoding with no execution or decoded-content logging.
+- Added five per-category risk scores plus one overall `[0,1]` risk and explicit pass/escalate/block thresholds.
+- Added correlation groups so overlapping phrase and regex evidence contributes only once at its strongest weight.
+- Preserved legitimate defensive-cyber handling: the authorized reverse-shell incident-response regression passes at risk `0.24`.
+- Verified combined injection plus system-leakage risk `0.9808` blocks and explicit ransomware/evasion/credential-theft risk `0.999232` blocks.
+- Added content-free CLI evaluation and a reproducible microbenchmark command.
+- Recorded 30,000-iteration latency: median `27.958 us`, p95 `38.750 us`, p99 `40.083 us`, throughput `33,572 prompts/s`.
+- Added 22 Layer 1 tests covering scoring, boundary behavior, benign controls, all decoders, Unicode, long inputs, privacy, fuzzing, configuration failures, and automaton overlap.
+- Kept rules and thresholds in shadow status pending reviewed-data calibration.
+
+## Next action after approval
+
+Distribute the encrypted reviewer kits and complete dual human review. After the accepted subset exists, normalize it, rebuild semantic groups/splits, generate the approved training manifest, and only then run Layer 2 calibration/training. The Layer 2/3/cascade code is ready for fixture and local-artifact smoke tests but makes no production quality claim.
+
+## Non-data-dependent pipeline foundations completed (2026-07-22)
+
+- Added typed `ThresholdPolicy`, Layer 2 result, judge result, and pipeline decision contracts.
+- Added lazy local-only Hugging Face semantic adapter; it never downloads model weights implicitly.
+- Added calibrated/uncalibrated score tracking and deterministic binary temperature fitting.
+- Added dependency-light precision, recall, F1, benign false-positive rate, Brier score, ECE, slice metrics, and constrained threshold selection.
+- Added strict Layer 3 judge schema validation, controlled rationale codes, hardened untrusted-prompt context, timeout-bounded HTTPS JSON adapter, and deterministic mock judge.
+- Added shadow/enforcement cascade orchestration with Layer 1/2/3 routing, strongest-observed shadow reporting, fail-to-escalate behavior, and content-free serialized results.
+- Added fixture-only pipeline CLI and benchmark. The 5,000-iteration run measured median `33.750 us`, p95 `40.000 us`, p99 `43.916 us`, and `30,991 prompts/s` on this development machine.
+- Added split-group validation and wired a fail-closed reviewed training manifest gate into both legacy training configurations and `scripts/train.py`.
+- The pending v0.2 candidate manifest is correctly refused by the training gate.
+- Expanded the suite to 114 tests: 109 pass; one Flask and four cryptography integration tests are skipped in the base interpreter because those optional packages are absent. The full cryptography-enabled run previously passed all sealed-kit tests.

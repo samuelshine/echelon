@@ -1,0 +1,18 @@
+{
+  "benchmark_version": "1.0.0",
+  "fixture_count": 5,
+  "iterations": 5000,
+  "latency_us": {
+    "max": 258.959,
+    "median": 33.75,
+    "p95": 40.0,
+    "p99": 43.916
+  },
+  "prompt_content_in_report": false,
+  "routes": {
+    "block": 2000,
+    "pass": 3000
+  },
+  "throughput_prompts_per_second": 30991.06,
+  "warmup": 250
+}

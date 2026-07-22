@@ -35,6 +35,7 @@ early_stopping:
   patience: 2
 
 data:
+  training_manifest: "data/manifests/layer2_training_manifest.json"
   train_path: "data/processed/train.csv"
   val_path: "data/processed/val.csv"
   test_path: "data/processed/test.csv"

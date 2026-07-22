@@ -25,6 +25,7 @@ import matplotlib
 matplotlib.use("Agg")  # non-interactive backend
 import matplotlib.pyplot as plt
 import seaborn as sns
+from echelon.training_gate import TrainingGateError, validate_training_manifest
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -293,6 +294,14 @@ def main() -> None:
 
     # ── Config ──
     cfg = load_config(args.config)
+    manifest_path = cfg.get("data", {}).get("training_manifest")
+    if not manifest_path:
+        raise SystemExit("Refusing to train: config must declare data.training_manifest")
+    try:
+        manifest = validate_training_manifest(PROJECT_ROOT / manifest_path)
+    except TrainingGateError as exc:
+        raise SystemExit(f"Refusing to train: {exc}") from exc
+    log.info("Training gate passed for %s reviewed rows", manifest["rows"])
     device = get_device()
 
     # ── Load Data ──

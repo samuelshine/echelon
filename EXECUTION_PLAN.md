@@ -134,19 +134,26 @@ interface PromptEvent {
 
 | Phase | Deliverable | Status |
 |---|---|---|
-| **0 — Foundation** | Repo scaffolding, tooling, design tokens, app shell, mock API + typed schemas | ▶ Next |
-| **1 — Global Dashboard** | KPI row + core charts against mock data | Planned |
-| **2 — Threat Audit Log** | Virtualized table, filters, drill-down + raw JSON | Planned |
-| **3 — The Cascade Visualizer** | Signature 3-fold risk component (reused in A & B) | Planned |
-| **4 — Configuration & Thresholds** | Toggles + threshold editor + what-if preview | Planned |
-| **5 — API & Access Management** | Key lifecycle + rate limits | Planned |
-| **6 — Live data & polish** | Live-tail, command palette, a11y pass, perf pass, theming | Planned |
-| **7 — Wire to real backend** | Swap mock for real Echelon API / OpenAPI client | Planned |
+| **0 — Foundation** | Repo scaffolding, tooling, design tokens, app shell, mock API + typed schemas | ✅ Done |
+| **1 — Global Dashboard** | KPI row + core charts against mock data | ✅ Done |
+| **2 — Threat Audit Log** | Virtualized table, filters, drill-down + raw JSON | ✅ Done |
+| **3 — The Cascade Visualizer** | Signature 3-fold risk component (reused in A & B) | ✅ Done |
+| **4 — Configuration & Thresholds** | Toggles + threshold editor + what-if preview | ✅ Done |
+| **5 — API & Access Management** | Key lifecycle + rate limits | ✅ Done |
+| **6 — Live data & polish** | Live-tail, command palette, a11y pass, perf pass, theming | ✅ Done |
+| **7 — Wire to real backend** | Swap mock for real Echelon API / OpenAPI client | ▶ Next |
+
+> **Milestone:** all four core modules from the brief (Global Dashboard · Threat Audit · Configuration & Thresholds · API & Access) are built, verified, and previewable. Phases 6–7 are enhancement + integration.
+
+> **Hardening pass (post-Phase 6):** Vitest suite (24 tests) covering the what-if guardrail, log filters, and formatters · all `npm audit` advisories resolved via `overrides` (0 vulnerabilities) · focus-traps added to the drawer + command palette. Remaining before Phase 7: none blocking.
 
 ---
 
-## 6. Open Questions for the Team
-1. **Framework preference** — Next.js (recommended) vs. a pure Vite SPA?
-2. **Visual language** — dark-first "security console," or a neutral light-first analytics look with a dark mode? (My recommendation: dark-first, discussed in the checkpoint.)
-3. **Real-time transport** — will the backend expose SSE, WebSocket, or polling-only for live logs?
-4. Is there an **existing OpenAPI spec** for the Echelon API, or do we design against mocks first?
+## 6. Decisions Made (Checkpoint 1)
+1. **Framework** — ✅ Next.js 15 (App Router) + React 19 + TypeScript.
+2. **Visual language** — ✅ Classical / modern / minimalist. Committed direction: **"The Assay Ledger"** — cool paper `#F6F6F3`, engraved ink, deep-petrol brand `#1C3B4A`, desaturated severity scale, Fraunces × Inter × JetBrains Mono. Signature component: the **Cascade Assay Strip**.
+3. **Data source** — ✅ Realistic Zod-typed mocks now; swap for real API later behind the same contract.
+
+## 7. Still Open (for the backend team)
+- **Real-time transport** — will the backend expose SSE, WebSocket, or polling-only for live logs? (Abstracting behind a `useLiveTail` hook to de-risk.)
+- **OpenAPI spec** — none yet; designing against Zod mocks that mirror the intended contract.

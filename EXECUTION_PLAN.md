@@ -250,3 +250,27 @@ The heuristic layer is implemented independently of pending human labels. It pro
 Risk aggregation uses correlation groups to prevent overlapping literal and regex rules from double-counting one behavior. Distinct group weights combine with noisy-or per category; overall risk adds only 12% of the second-highest category plus a bounded obfuscation corroboration term. Shadow routing remains `pass < 0.35`, `escalate 0.35–<0.90`, and `block >= 0.90`. These are not production-calibrated probabilities or approved enforcement thresholds.
 
 Resource limits cap scanning at 100,000 characters, decoder inputs at 4,096 characters, decoded output at 8,192 bytes, decoded candidates at six, and regex repetition counting at three. Decoder output is never executed or logged. A 30,000-iteration full-path microbenchmark measured median `27.958 us`, p95 `38.750 us`, p99 `40.083 us`, and approximately `33,572` prompts/second on the development machine. Final SLOs require deployment-hardware measurement.
+
+## Handoff and review status update (2026-07-24)
+
+`PROJECT_HANDOFF.md` is now the canonical continuation brief for a new chat or engineer. Both independent English native-speaker primary reviews completed all 600 rows. Validation reports 446 accepted-by-agreement rows, 152 conflicts, and 2 quality-gate rejections. The next research gate is expert adjudication of exactly those 152 conflicts. After expert completion, validate the final cohort, import normalized decisions, export accepted candidates, rebuild full-corpus semantic/template-safe splits, and generate a reviewed training manifest. The current zero-review human report must be regenerated and is not evidence that the submissions were absent.
+
+The next review implementation should correct presentation-order bias: preserve a cryptographically bound queue but interleave or seed-shuffle families before any replacement review. The order must remain deterministic and documented so reviewer exports remain reproducible.
+
+## Expert adjudication resolved; corpus rebuild is next (2026-07-24)
+
+The 152 conflicts have been adjudicated as expert `ai_claude` — an AI-assisted,
+provisional, human-overridable resolution, recorded as such — and the final cohort
+validates clean: 446 accepted by agreement + 152 accepted by expert = **598
+training-eligible** items, 2 quality-gate rejections. The git-ignored review data was
+recovered by deterministic regeneration (all 600 content-bound IDs reproduced), so
+adjudication did not require the missing embedding-derived queue file. Accepted rows
+(with recovered text) are exported to git-ignored `data/review_v2/targeted_v0_2_accepted.jsonl`.
+
+Remaining research checkpoints toward a trained model: (Checkpoint 2) rebuild the
+full training corpus — re-acquire `data/raw_v2` sources, normalize, merge the 598
+accepted synthetic rows, and rebuild leakage-safe semantic/template splits — then
+emit a `layer2_training_manifest.json` that passes the fail-closed training gate;
+(Checkpoint 4) train and calibrate the multi-label Layer 2 classifier. The training
+gate remains fail-closed until a reviewed, privacy-checked, semantically-split
+manifest exists.

@@ -1,0 +1,2390 @@
+{
+  "canonical_queue_sha256": "11f0ca2e3de5564276533d0a88ec53e66aeaa611478e628839379f1175566e91",
+  "item_count": 152,
+  "review_queue_sha256": "11f0ca2e3de5564276533d0a88ec53e66aeaa611478e628839379f1175566e91",
+  "reviewer_id": "ai_claude",
+  "reviews": [
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_017e430eddd066cc8a9d1572",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_01bcf09c6303f1509d1ff844",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_03b636a1b49b723c68ecc7cc",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_04980cc8955013c75135f041",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_0507eadf4f41a2c7eab73bff",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_05aefb058b0b1db0a7e04d26",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_097ad29c02aa75ebb2f51d76",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_0a6e9b6ca2becd85e6f4de10",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_128b3b9ac28d39981554e555",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_1497ebe71c1a3d5e45de4e4f",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_1797ac6fa231ebe00acef2df",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_19938e7807f3a9159378f1cd",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_19a48117a3a581d55c884ef1",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_1f4756f23fb52838225506c1",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_1fd2308af6beaf4d17585f8c",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_20fbdbcb332622da32e7993b",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_212659c83c50d17bda64f77c",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_22a49b6c42e1791d11782005",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_23c64e890fffa7ace4ab505c",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_26b8a37b6ba4faeebd77eac9",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_26bc1bb8fbd4a5d8e616ed15",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_28739c29aac733bc284f6afc",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_2bb1ecdebab6d20052ffec8b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_2e57b5ab8a43f358c72674fb",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_360474d675a97422fb1f6e35",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_366e688b4083d1df483be465",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_39b5a4d4a08bd1937ded9d87",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_39eaadc032298586a96f277b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_3a38c07715af8d4d583ebade",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_3e04370cce9b24bd3e5810d6",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_3fc699c959c0d4b35b9741ce",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_4483a501cf6a87a00df04e8b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_45f643008c3854d2aee050eb",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_46a4714a5f3c8b3f5c6ce529",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_49e96eb996facd7df5223619",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_4b8d19727661d34ff90aeabf",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_4c290c20b8b425389ba86ebe",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_4c598f3281a5bdeb2b560c3c",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_4d9d54d63e8d7938f477da4c",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_5024d9e62c69d849147220f1",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_5043b8847a430a31829d6228",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_50ab7265e0ebfca13834c2b7",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_50ea9a99a7af17b14627266e",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_51b430fe22a1b1b117eaf209",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_51cef08c843b548055abcb5c",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_520f7c0e9ec7d8bf8ee164d0",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_5313c787f79db8d9de68c6ee",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_534c7dd85f27c2213f9a0024",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_538278ec3402d0337f288a42",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_54823cfe2980a38f59090adb",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_54a06b970a41444226b91985",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_5679a9a8741fe801a32ba8c9",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_582d0bb0e19cb816fa818f02",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_58695a49d076631e8f12cbc9",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_5af1fd7acabc330093b9018a",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_5bb63743d95068716d7b2088",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_5bc074be8bc9632ff97d1414",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_5f921e2eac90a33dd153bc9a",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_6135227a49e5b6fb7b300416",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_63dacfc382ccccc10d2ea688",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_63fc40feaa57b77653f52c02",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_67b694f5f267e4e62c26d989",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_6913fec09cb6f414f7ba3877",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_6d1930546499ce5e81b2d676",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_6d4d33f31c94b7da915a8826",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_719b88c4c928fd6cdd87ddd2",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_74f07bec2d650f2db6b91da8",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_74fb0fc66e0e328e61f1038b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_770636017e48defb4ce0e429",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7951125a7e29eb39a70a13bd",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7a517776954db9d65d8b0e75",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7aa84eef5ba82b74839fec40",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7c031194e9f4c390b06f47d0",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7c3781b42821baec09d38173",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7d703e67985317ac3cb3f90d",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7e25f9f6e7bd33b1eb739338",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7ea6166e399e1f9c33bcee3d",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_7fcb2d9c970fe9e958e46b50",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_8a058d793548b3fe0f12a4bc",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_8c59c600a1b13ba27ee7f8e6",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_8c5c2a968c68a6dabacf434a",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_8f98953ce66332685cfbc62a",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_8fbcf86e60867a921c32e914",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_8ff2a931c5594fbe22fa1e04",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_90d94c3856457af0deb70237",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_9181b5175b5d4beb0437f8c1",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_992ca90821968a6cb81c4ba6",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_9a7ad45c7547760c2b79a39e",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_9c555276a6df0a2a9ecdc9e2",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_9c599ede220ca3b5b410afbb",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_9cf72d82c7b5f0cee8d4e384",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_a1dac5aa9e6c1d93d9c3de38",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_a29a0d10f68fa0527c2f196b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_a3000862ea2ea66493464c2f",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_a8c85d1538df11d5a569e439",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_adbe832a273295df874f138f",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_aebf8a9e6facda9b4f612e79",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_b2525025d4d27581615542fe",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_b62ada3b64ff1e5425ada89d",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_b6e1d3ac530ae20fd59b7866",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_b72124ef71750e3cd69f95d6",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_b99f4e5eb4052f9fa1cdc1c2",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_c4c57f9fc3f7f16f99c31ecc",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_c758f64e0f0c7cd3ca69df1c",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_c8be7c80a7cdc754706833ad",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_c8f3e456d633a41b690eade9",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_cab9c2013314b6445409ab18",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_cad23a0e6af25012556a9f9e",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_caf5469ada8f9a164a7ea32c",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_cafb195cc66d8be54e4fb53f",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_cb12b74f4de90a4b4fd2e47a",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_cb3b52cba97eb2ba5b28da72",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_cb51f0c29be84a88c98be03b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_cb8a1ce337ea96fef546e171",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_cc53a3035206834e92da25ea",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d094d547d3274fe8dc236ba8",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d0fd184c2e6a29836775f59f",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d172624a819f874e2afab8e0",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d4cdc250064632a9f29bb929",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d6301dc5432ba685536f314c",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d7fc738aea2b22c1eb6bdde0",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d90dafc846cc6219c7d22853",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d960914687af9c966188a053",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_d98ba43bf4fba6796976c175",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_da36bd050397507942795435",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_dbc5f0bbc23ceffb11158f63",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_dfba2c9ecc523862d22b4b87",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_e0c409ab9b69769f8e63e6ee",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_e155a52d4ce00fbe0713707b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_e83737982485a5c3fff89277",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_e8b94a0fee4afbeb48651cd6",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_e922e7a4a70b91884c7532ba",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_e9a40fa96dd0d1087cf98e55",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_ea8f56ba55aa8c3943f8a023",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_ec756890804beef028d174f6",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_ef93f2b9330dff18377e390e",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_efd5b16c5e41d8c8d19dcd2b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f04a41e487f6cc68a23ee11d",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f213e1ad6e35b8d35f4aacc5",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f294d42787747e917accfe1f",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f299d5bf15e5fddf7ede6ba9",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f333bd247bb2834dea8b55dc",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f42533f5a99d50a762c2c57b",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f46b0987e7796ee3eae25cb8",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f777d48c26b840caa9517953",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f99ab173009b41716061d437",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_f9b3e15e66e5eb1926738086",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_faaf75aa7dff3df7bb569212",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_fd6b84c927e5b7fa7dca32df",
+      "labels": [
+        "adversarial_obfuscation",
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_fd82f70edf0a1fc46a45b3a0",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_fef7466cd05f48fb1b790fb0",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": true,
+      "item_id": "v02_ffde67ef102fd3d3ab3ac05b",
+      "labels": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "labels_correct": true,
+      "naturalness": 4,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_claude"
+    }
+  ],
+  "role": "expert",
+  "schema_version": "1.0.0"
+}

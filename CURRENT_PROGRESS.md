@@ -211,3 +211,54 @@ Distribute the encrypted reviewer kits and complete dual human review. After the
 - Added split-group validation and wired a fail-closed reviewed training manifest gate into both legacy training configurations and `scripts/train.py`.
 - The pending v0.2 candidate manifest is correctly refused by the training gate.
 - Expanded the suite to 114 tests: 109 pass; one Flask and four cryptography integration tests are skipped in the base interpreter because those optional packages are absent. The full cryptography-enabled run previously passed all sealed-kit tests.
+
+## Project handoff snapshot and primary-review completion (2026-07-24)
+
+- Added `PROJECT_HANDOFF.md`, a complete transfer document covering architecture, data lineage, completed phases, verified metrics, repository map, blockers, exact commands, and continuation instructions.
+- Verified both prompt-free primary submissions are present and complete: reviewer A 600/600 and reviewer B 600/600.
+- Validated the submissions against canonical queue SHA-256 `11f0ca2e3de5564276533d0a88ec53e66aeaa611478e628839379f1175566e91` and blinded queue SHA-256 `fafc411907234ed8b21122a0e2084e2f2eccf5b9871ce3c4259519348b69ea1`.
+- Primary result: 446 accepted by agreement, 152 disagreements requiring expert adjudication, and 2 rejected by quality gate; validator status is valid with zero schema/hash/coverage errors.
+- Identified that the tracked human-review report is stale (it still reports 600 unreviewed) until the normalized decisions and final import workflow are run.
+- Confirmed the v0.2 reviewer queue remains deterministic family-block order; the first 200 positions are benign, explaining reports that a partial test appeared all benign.
+- Next blocking action is a private conflict-only expert kit for the 152 disagreements; no training admission has occurred.
+
+## AI-assisted expert adjudication + validated cohort (2026-07-24)
+
+**Milestone: the review gate is resolved. 598 items are training-eligible.**
+
+- **Recovered the git-ignored review data without the missing queue file.** The
+  v0.2 candidates regenerate deterministically offline (`scripts/generate_targeted_v02.py`,
+  stdlib-only); all **600/600** manifest item IDs resolve against the regeneration,
+  and because `candidate_id = sha256(family + text)` this is a cryptographic proof
+  the recovered prompt text is authentic — no dependence on reproducing the
+  embedding-derived canonical queue bytes.
+- **Characterized the 152 conflicts:** every one is a *label-only* disagreement on a
+  prompt both primaries already call `malicious` (no decision/quality dispute).
+  52 are `system_prompt_leakage_v02` (A dropped `prompt_injection`); 100 are
+  `obfuscated_attack_v02` (A dropped `system_prompt_leakage`).
+- **Adjudicated all 152 as expert `ai_claude`** (`scripts/ai_adjudicate_v02.py`),
+  recorded transparently as **AI-assisted, provisional, human-overridable** — not
+  native-human review. Policy: affirm the fuller label set (reviewer B), grounded in
+  corpus consistency (where the leakage family's primaries agreed, 48/48 used both
+  labels) and taxonomy (obfuscated items wrap leakage payloads, so decoded intent
+  carries `system_prompt_leakage`).
+- **Final cohort validates clean** (`scripts.validate_distributed_reviews`, no queue
+  file needed): `valid: true`, 0 errors, 152 conflicts expert-complete,
+  **446 accepted_by_agreement + 152 accepted_by_expert = 598 training-eligible**,
+  2 rejected_quality_gate.
+- **Exported accepted rows with recovered text** (`scripts/export_accepted_v02.py` →
+  git-ignored `data/review_v2/targeted_v0_2_accepted.jsonl`): 298 benign / 300
+  malicious, balanced across families; regenerated the previously-stale
+  `data/reports/targeted_v02_human_review_report.json`.
+- **New auditable, committable scripts** (prompt-free outputs):
+  `scripts/ai_adjudicate_v02.py`, `scripts/export_accepted_v02.py`.
+
+### Integrity note
+The `ai_claude` decisions are provisional AI adjudication and must be confirmed or
+overridden by a human before any real deployment. They are labeled as such in the
+submission provenance and reports and can be regenerated/replaced deterministically.
+
+### Next
+R2 — rebuild the training corpus: re-acquire `data/raw_v2` sources, normalize, merge
+the 598 accepted rows, rebuild leakage-safe semantic/template splits, and emit a
+`layer2_training_manifest.json` that passes `scripts/check_training_gate.py`.

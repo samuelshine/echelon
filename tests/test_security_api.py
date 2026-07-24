@@ -63,6 +63,14 @@ class SecurityApiContractTest(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertLess(resp.get_json()["malicious_probability"], 0.35)
 
+    def test_sparse_category_is_downweighted_in_block_signal(self):
+        # A high malicious_code score (low-precision category) must not by itself
+        # push the block signal to >=0.90; it should escalate to the judge instead.
+        api._services = fake_services({"malicious_code": 0.94})
+        body = self.client.post("/classify", json={"text": "detection runbook, detection only"}).get_json()
+        self.assertLess(body["malicious_probability"], 0.90)
+        self.assertAlmostEqual(body["labels"]["malicious_code"], 0.94, places=5)  # raw score preserved
+
     def test_missing_text_is_rejected(self):
         api._services = fake_services({"prompt_injection": 0.5})
         resp = self.client.post("/classify", json={"request_id": "r3"})

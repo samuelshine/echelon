@@ -21,13 +21,14 @@ stand-in (MockJudge) fed by real Layer 1 + Layer 2 context; set ECHELON_JUDGE_EN
 
 from __future__ import annotations
 
+import dataclasses
 import os
 from functools import lru_cache
 from pathlib import Path
 
 from flask import Flask, jsonify, request
 
-from echelon.contracts import Route
+from echelon.contracts import Route, ThresholdPolicy
 from echelon.layer1 import HeuristicAnalyzer
 from echelon.layer2 import Layer2Classifier, Layer2Config, MultiLabelTransformersAdapter
 from echelon.layer3 import HttpJsonJudgeAdapter, Layer3Judge, MockJudge
@@ -35,6 +36,27 @@ from echelon.layer3 import HttpJsonJudgeAdapter, Layer3Judge, MockJudge
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL_DIR = PROJECT_ROOT / "models" / "layer2-threat-distilbert" / "best"
 MAX_TEXT_BYTES = 200_000
+
+# Per-category reliability applied to the BLOCK signal only (raw scores are still
+# reported in `labels` for transparency). The trained model has low precision and
+# tiny support on these two categories, which produced defensive-cyber false blocks;
+# down-weighting their contribution to the aggregate escalates such prompts to the
+# judge instead of hard-blocking. See models/layer2-threat-distilbert/metrics.json.
+CATEGORY_RELIABILITY = {
+    "prompt_injection": 1.0,
+    "toxicity_harm": 1.0,
+    "adversarial_obfuscation": 1.0,
+    "system_prompt_leakage": 0.7,
+    "malicious_code": 0.7,
+}
+
+
+def _mitigated_scores(scores):
+    return {k: v * CATEGORY_RELIABILITY.get(k, 1.0) for k, v in scores.items()}
+
+
+def _aggregate(scores):
+    return max(_mitigated_scores(scores).values(), default=0.0)
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 1_048_576  # 1 MiB request cap
@@ -91,8 +113,9 @@ def classify():
         app.logger.error("classify failed", exc_info=False)
         return jsonify({"error": "classifier unavailable"}), 503
     # EXACTLY the fields of core.Classification (malicious_probability, labels).
+    # Block signal is reliability-weighted; labels report the raw per-category scores.
     return jsonify({
-        "malicious_probability": round(float(result.risk_score), 6),
+        "malicious_probability": round(float(_aggregate(result.category_scores)), 6),
         "labels": {k: round(float(v), 6) for k, v in result.category_scores.items()},
     })
 
@@ -107,6 +130,13 @@ def judge():
         analyzer, classifier, judge_layer = _services()
         layer1 = analyzer.analyze(text)
         layer2 = classifier.analyze(text)
+        # Apply the same reliability weighting so the judge's view matches /classify.
+        weighted = _mitigated_scores(layer2.category_scores)
+        aggregate = max(weighted.values(), default=0.0)
+        layer2 = dataclasses.replace(
+            layer2, category_scores=weighted, risk_score=aggregate,
+            route=ThresholdPolicy().route(aggregate),
+        )
         verdict = judge_layer.analyze(text, layer1, layer2)
     except Exception:
         app.logger.error("judge failed", exc_info=False)

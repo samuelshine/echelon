@@ -274,3 +274,15 @@ emit a `layer2_training_manifest.json` that passes the fail-closed training gate
 (Checkpoint 4) train and calibrate the multi-label Layer 2 classifier. The training
 gate remains fail-closed until a reviewed, privacy-checked, semantically-split
 manifest exists.
+
+## Curation checkpoint 2 satisfied — training corpus rebuilt (2026-07-24)
+
+The full corpus has been faithfully reconstructed from raw sources and merged with
+the reviewed rows: 32,465 eligible source records + 598 reviewed v0.2 rows = 33,063,
+repartitioned by complete semantic/template group into train 25,918 / validation
+3,272 / test 3,221 (32,411; 652 mixed-safety quarantined) with **zero** semantic
+clusters crossing a split. `data/manifests/layer2_training_manifest.json` now passes
+the fail-closed gate (`eligible: true`, dataset_sha256 `b4b71f07…`). The prior
+`human_review_complete` block is cleared; the manifest's provenance sidecar records
+that the source corpus is governance-approved and the 152-conflict adjudication is
+AI-assisted/provisional. Remaining: Layer 2 training + calibration (Checkpoint 4).

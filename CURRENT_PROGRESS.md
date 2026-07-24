@@ -262,3 +262,32 @@ submission provenance and reports and can be regenerated/replaced deterministica
 R2 — rebuild the training corpus: re-acquire `data/raw_v2` sources, normalize, merge
 the 598 accepted rows, rebuild leakage-safe semantic/template splits, and emit a
 `layer2_training_manifest.json` that passes `scripts/check_training_gate.py`.
+
+## Reviewed training corpus rebuilt; training gate OPEN (2026-07-24)
+
+**Milestone: the fail-closed training gate now passes.** The reconstruction is
+faithful and the reviewed rows are merged.
+
+- **Re-acquired** the 4 registry-approved sources at pinned revisions
+  (`scripts/acquire_datasets.py`, ~33 MB): Aegis 2.0, neuralchemy, jackhhao, Do-Not-Answer.
+- **Normalized** to `data/normalized_v2/eligible.jsonl` = **32,465** eligible records —
+  exactly reproducing the documented counts and quarantines (503 eval-contam, 780
+  gated, 5,312 unverified-license, 992 redacted). Ran on the py3.13 ML venv (pyarrow).
+- **Merged** the 598 AI/human-reviewed v0.2 rows with final adjudicated labels and
+  template/transformation lineage (`scripts/build_training_corpus.py`) →
+  `eligible_reviewed.jsonl` = **33,063** rows, all tagged `training_eligible`.
+- **Rebuilt leakage-safe splits** (`scripts/build_semantic_splits.py`, BGE-small
+  embeddings on MPS): **train 25,918 / validation 3,272 / test 3,221 = 32,411**
+  (652 mixed-safety rows quarantined); **0 semantic clusters cross a split**.
+- **Emitted `data/manifests/layer2_training_manifest.json`** (`scripts/build_training_manifest.py`)
+  with the gate flags + an independent `validate_split_rows` leakage re-check.
+  `scripts/check_training_gate.py` → **`eligible: true`, rows 32,411**,
+  dataset_sha256 `b4b71f07…`. Honest provenance in `data/reports/layer2_training_provenance.json`
+  (source-corpus governance + AI-assisted provisional adjudication).
+- New scripts: `build_training_corpus.py`, `build_training_manifest.py`.
+
+Environment note: system Python is 3.14 (no torch wheels); ML steps run in a
+py3.13 venv (torch 2.13 + MPS, sentence-transformers, transformers 5).
+
+### Next
+R3 — train + calibrate the multi-label Layer 2 classifier on the reviewed splits (MPS).

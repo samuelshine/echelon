@@ -1,0 +1,65 @@
+{
+  "cosine_threshold": 0.94,
+  "declared_group_edges": 2998,
+  "embedding_license": "MIT",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "embedding_views_truncated_head_tail": 734,
+  "input_records": 33063,
+  "largest_group": 166,
+  "leakage_check": {
+    "publisher_splits": "repartitioned_by_complete_semantic_group",
+    "semantic_cluster_ids_crossing_splits": 0
+  },
+  "mixed_safety_groups_quarantined": 156,
+  "mixed_safety_rows_quarantined": 652,
+  "multi_record_groups": 2782,
+  "report_version": "0.1.0",
+  "semantic_calibration_queue_pairs": 450,
+  "semantic_edges": 11197,
+  "split_stats": {
+    "test": {
+      "benign": 1613,
+      "groups": 2771,
+      "label_occurrences": {
+        "adversarial_obfuscation": 70,
+        "benign": 1613,
+        "malicious_code": 2,
+        "prompt_injection": 280,
+        "system_prompt_leakage": 40,
+        "toxicity_harm": 1347
+      },
+      "malicious": 1608,
+      "rows": 3221
+    },
+    "train": {
+      "benign": 12822,
+      "groups": 22276,
+      "label_occurrences": {
+        "adversarial_obfuscation": 402,
+        "benign": 12822,
+        "malicious_code": 98,
+        "prompt_injection": 2387,
+        "system_prompt_leakage": 327,
+        "toxicity_harm": 10957
+      },
+      "malicious": 13096,
+      "rows": 25918
+    },
+    "validation": {
+      "benign": 1587,
+      "groups": 2798,
+      "label_occurrences": {
+        "adversarial_obfuscation": 58,
+        "benign": 1587,
+        "prompt_injection": 342,
+        "system_prompt_leakage": 46,
+        "toxicity_harm": 1391
+      },
+      "malicious": 1685,
+      "rows": 3272
+    }
+  },
+  "status": "materialized_pending_human_review",
+  "total_groups": 28001
+}

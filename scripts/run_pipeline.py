@@ -10,7 +10,10 @@ from pathlib import Path
 
 from echelon.contracts import Route, ThresholdPolicy
 from echelon.layer1 import HeuristicAnalyzer
-from echelon.layer2 import Layer2Classifier, Layer2Config, StaticModelAdapter, TransformersModelAdapter
+from echelon.layer2 import (
+    Layer2Classifier, Layer2Config, MultiLabelTransformersAdapter,
+    StaticModelAdapter, TransformersModelAdapter,
+)
 from echelon.layer3 import Layer3Judge, MockJudge
 from echelon.pipeline import EchelonPipeline, PipelineConfig
 
@@ -20,6 +23,7 @@ def main() -> int:
     parser.add_argument("--text", help="prompt text; stdin is preferred to avoid shell history")
     parser.add_argument("--rules", type=Path)
     parser.add_argument("--model-dir", type=Path, help="local Hugging Face model directory")
+    parser.add_argument("--multilabel", action="store_true", help="load model-dir as a calibrated multi-label threat classifier")
     parser.add_argument("--fixture-risk", type=float, help="development-only static Layer 2 risk")
     parser.add_argument("--judge", choices=("none", "mock"), default="none")
     parser.add_argument("--mode", choices=("shadow", "enforce"), default="shadow")
@@ -29,7 +33,7 @@ def main() -> int:
     policy = ThresholdPolicy()
     analyzer = HeuristicAnalyzer(args.rules) if args.rules else HeuristicAnalyzer()
     if args.model_dir:
-        adapter = TransformersModelAdapter(args.model_dir)
+        adapter = MultiLabelTransformersAdapter(args.model_dir) if args.multilabel else TransformersModelAdapter(args.model_dir)
     elif args.fixture_risk is not None:
         if not 0.0 <= args.fixture_risk <= 1.0:
             parser.error("--fixture-risk must be between 0 and 1")

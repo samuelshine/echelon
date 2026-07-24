@@ -106,6 +106,57 @@ class TransformersModelAdapter:
         return ModelOutput(scores, calibrated=False, model_id=self._model_id, model_revision=self._revision)
 
 
+class MultiLabelTransformersAdapter:
+    """Local multi-label threat classifier with per-category temperature calibration.
+
+    Serves the artifact produced by scripts/train_layer2_multilabel.py: a DistilBERT
+    head over the five Echelon threat categories with sigmoid outputs. Never downloads
+    implicitly (local_files_only). No prompt text or raw logits are retained.
+    """
+
+    def __init__(self, model_dir: Path, *, max_length: int = 256, local_files_only: bool = True):
+        import json
+
+        if not model_dir.exists():
+            raise FileNotFoundError(f"Layer 2 model directory does not exist: {model_dir}")
+        try:
+            import torch
+            from transformers import AutoModelForSequenceClassification, AutoTokenizer
+        except ImportError as exc:
+            raise RuntimeError("torch and transformers are required for the local Layer 2 adapter") from exc
+        self._torch = torch
+        self._tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=local_files_only)
+        self._model = AutoModelForSequenceClassification.from_pretrained(model_dir, local_files_only=local_files_only)
+        self._model.eval()
+        self._max_length = max_length
+        self._model_id = str(model_dir)
+        self._revision = str(getattr(self._model.config, "_commit_hash", None) or "local")
+        self._id2label = {int(i): str(label) for i, label in self._model.config.id2label.items()}
+        known = {category.value for category in ThreatCategory}
+        if set(self._id2label.values()) - known:
+            raise ValueError(f"model labels are not Echelon threat categories: {sorted(self._id2label.values())}")
+        calibration_path = model_dir / "calibration.json"
+        self._temperatures = {}
+        if calibration_path.is_file():
+            payload = json.loads(calibration_path.read_text())
+            self._temperatures = {str(k): float(v) for k, v in payload.get("temperatures", {}).items()}
+        self._calibrated = bool(self._temperatures)
+
+    def predict(self, text: str) -> ModelOutput:
+        if not isinstance(text, str):
+            raise TypeError("prompt must be a string")
+        inputs = self._tokenizer(text, return_tensors="pt", truncation=True, max_length=self._max_length)
+        with self._torch.inference_mode():
+            logits = self._model(**inputs).logits[0].tolist()
+        scores: dict[str, float] = {}
+        for index, logit in enumerate(logits):
+            category = self._id2label[index]
+            temperature = self._temperatures.get(category, 1.0)
+            scaled = max(-60.0, min(60.0, float(logit) / temperature))
+            scores[category] = 1.0 / (1.0 + math.exp(-scaled))
+        return ModelOutput(scores, calibrated=self._calibrated, model_id=self._model_id, model_revision=self._revision)
+
+
 @dataclass(frozen=True, slots=True)
 class Layer2Config:
     thresholds: ThresholdPolicy = ThresholdPolicy()

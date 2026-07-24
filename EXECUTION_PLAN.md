@@ -286,3 +286,15 @@ the fail-closed gate (`eligible: true`, dataset_sha256 `b4b71f07…`). The prior
 `human_review_complete` block is cleared; the manifest's provenance sidecar records
 that the source corpus is governance-approved and the 152-conflict adjudication is
 AI-assisted/provisional. Remaining: Layer 2 training + calibration (Checkpoint 4).
+
+## Layer 2 checkpoint — trained, calibrated, and served (2026-07-25)
+
+A multi-label DistilBERT detector over the five threat categories is trained on the
+reviewed splits (macro-F1 0.696 on the frozen test set; prompt_injection F1 0.933,
+toxicity_harm F1 0.865; benign FPR at the 0.90 block threshold 3.1%), with
+per-category temperature calibration. Honestly reported limitation: `system_prompt_leakage`
+and `malicious_code` have low precision and very small support, producing
+defensive-cyber false positives via `malicious_code` — remediable with more targeted
+data or a higher per-category threshold. The model is wired into `echelon/layer2.py`
+and exposed by `service/security_api.py` in the exact JSON the Go gateway's remote
+adapters require. Next: wire the Go gateway to this service (backend Phases 4–5).

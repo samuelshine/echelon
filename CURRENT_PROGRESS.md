@@ -291,3 +291,46 @@ py3.13 venv (torch 2.13 + MPS, sentence-transformers, transformers 5).
 
 ### Next
 R3 — train + calibrate the multi-label Layer 2 classifier on the reviewed splits (MPS).
+
+## Layer 2 multi-label model trained + served (2026-07-25)
+
+**Milestone: a real calibrated multi-label detector exists and is served over HTTP.**
+
+- **Trained** `scripts/train_layer2_multilabel.py` (fail-closed on the gate): DistilBERT
+  multi-label head over the 5 threat categories, 25,918 train rows, 3 epochs on MPS
+  (~32 min), weighted BCE for imbalance, per-category temperature calibration on
+  validation. Self-contained PyTorch loop (no HF Trainer) for transformers-v5 stability.
+- **Honest frozen-test metrics** (`models/layer2-threat-distilbert/metrics.json`),
+  **macro-F1 0.696**:
+  | category | P | R | F1 | support |
+  |---|---|---|---|---|
+  | prompt_injection | 0.895 | 0.975 | 0.933 | 280 |
+  | toxicity_harm | 0.849 | 0.881 | 0.865 | 1347 |
+  | adversarial_obfuscation | 0.622 | 0.986 | 0.762 | 70 |
+  | system_prompt_leakage | 0.267 | 0.975 | 0.419 | 40 |
+  | malicious_code | 0.333 | 1.00 | 0.50 | 2 |
+
+  Benign FPR @0.9 (block threshold) = **3.1%**; @0.5 = 13.9%.
+- **Known limitation (honest):** rare categories (`system_prompt_leakage`,
+  `malicious_code`) have low precision and tiny support; a defensive-cyber benign
+  prompt was false-positive blocked via `malicious_code` (defensive_cyber slice FPR
+  0.222, n=9). Root cause: only ~98 malicious_code / 98 defensive rows. Needs more
+  targeted data or a per-category (higher) malicious_code threshold to fix.
+- **Wired** a `MultiLabelTransformersAdapter` into `echelon/layer2.py` and a
+  `--multilabel` flag into `run_pipeline`; the full cascade routes real prompts
+  correctly (injection/obfuscation → block, ordinary → pass).
+
+## Security HTTP service — S1 (2026-07-25)
+
+- **`service/security_api.py`** (Flask) exposes the exact contracts the Go gateway's
+  remote adapters expect: `POST /classify → {malicious_probability, labels}` and
+  `POST /judge → {malicious, confidence, code}` (only those fields — Go decodes with
+  DisallowUnknownFields), plus `/health`. No raw-prompt logging; size-bounded; 503 on
+  failure so the gateway fails closed. Judge defaults to a deterministic stand-in fed
+  by real L1+L2 context (swap to a real HTTPS LLM judge via env).
+- **Contract tests** `tests/test_security_api.py` (4/4) assert exact field sets +
+  types; verified live against the real model (malicious → 0.9998 block, benign → 0.23).
+
+### Next
+B1 — finish the Go gateway (Phases 4–5) and point `ML_BASE_URL`/`JUDGE_BASE_URL` at
+this service; then B2 telemetry API, F1 frontend wiring, X integration.

@@ -2,17 +2,17 @@
 # Boot the full Echelon stack locally (no Docker) for a live demo.
 # Points the gateway at a fake upstream so no OpenAI key is required.
 #
-# Configure paths to the three checkouts (defaults assume sibling worktrees):
-#   PIPELINE_DIR  - rnd branch checkout (has service/, models/, the venv python)
-#   GATEWAY_DIR   - backend branch checkout (Go)
-#   CONSOLE_DIR   - frontend branch checkout (Next.js)
-#   PY            - python interpreter with pipeline deps (torch/transformers/flask)
+# In the monorepo the defaults resolve to ./pipeline ./gateway ./console.
+#   PY                   - python interpreter with pipeline deps (torch/transformers/flask)
+#   ECHELON_OLLAMA_MODEL - local Ollama judge model (e.g. qwen2.5:14b); unset -> mock judge
 set -euo pipefail
 
-PIPELINE_DIR="${PIPELINE_DIR:?set PIPELINE_DIR to the rnd checkout}"
-GATEWAY_DIR="${GATEWAY_DIR:?set GATEWAY_DIR to the backend checkout}"
-CONSOLE_DIR="${CONSOLE_DIR:?set CONSOLE_DIR to the frontend checkout}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PIPELINE_DIR="${PIPELINE_DIR:-$HERE/pipeline}"
+GATEWAY_DIR="${GATEWAY_DIR:-$HERE/gateway}"
+CONSOLE_DIR="${CONSOLE_DIR:-$HERE/console}"
 PY="${PY:-python3}"
+OLLAMA_MODEL="${ECHELON_OLLAMA_MODEL:-}"
 
 pids=()
 cleanup() { kill "${pids[@]}" 2>/dev/null || true; }
@@ -33,15 +33,18 @@ HTTPServer(('127.0.0.1',9100),H).serve_forever()
 PYEOF
 pids+=($!)
 
-echo "[2/4] security service on :8099 (loads the model)"
-( cd "$PIPELINE_DIR" && ECHELON_MODEL_DIR=models/layer2-threat-distilbert/best PORT=8099 "$PY" -m service.security_api ) &
+echo "[2/4] security service on :8099 (loads the model; judge=${OLLAMA_MODEL:-mock})"
+( cd "$PIPELINE_DIR" && ECHELON_MODEL_DIR=models/layer2-threat-distilbert/best \
+    ECHELON_OLLAMA_MODEL="$OLLAMA_MODEL" PORT=8099 "$PY" -m service.security_api ) &
 pids+=($!)
 
 echo "[3/4] building + starting gateway on :8080"
 ( cd "$GATEWAY_DIR" && go build -o /tmp/echelon-gateway ./cmd/server )
 ML_BASE_URL=http://127.0.0.1:8099/classify JUDGE_BASE_URL=http://127.0.0.1:8099/judge \
 UPSTREAM_BASE_URL=http://127.0.0.1:9100 ECHELON_API_KEYS=sk-demo:acme:key_live:pro \
-HTTP_ADDR=:8080 SECURITY_FAIL_CLOSED=true /tmp/echelon-gateway &
+HTTP_ADDR=:8080 SECURITY_FAIL_CLOSED=true \
+ML_TIMEOUT=2s JUDGE_TIMEOUT=15s UPSTREAM_TIMEOUT=15s REQUEST_TIMEOUT=40s HTTP_WRITE_TIMEOUT=50s \
+/tmp/echelon-gateway &
 pids+=($!)
 
 echo "[4/4] starting console on :3000"

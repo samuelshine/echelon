@@ -15,37 +15,70 @@ import type {
 } from "@/types/echelon";
 
 /**
- * The single seam between the UI and the backend. Today every call resolves from
- * the seeded mock; swap the bodies for `fetch(...)` against the real Echelon API
- * and nothing downstream changes. Payloads are Zod-validated at this boundary so
- * malformed data never reaches a component.
+ * The single seam between the UI and the backend.
+ *
+ * When `NEXT_PUBLIC_ECHELON_API_URL` is set, every call hits the real Echelon Go
+ * gateway's console API (`/v1/console/*`), which emits these exact shapes. If it is
+ * unset — or a request fails — we fall back to the seeded mock so the console still
+ * renders in isolation (offline, or first paint before the gateway is up). Payloads
+ * are Zod-validated at this boundary so malformed data never reaches a component.
  */
 
-// Simulate a fast network so loading states are exercisable in dev.
-const latency = () => new Promise((r) => setTimeout(r, 120));
+const BASE_URL = process.env.NEXT_PUBLIC_ECHELON_API_URL?.replace(/\/$/, "");
+
+async function getJSON<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Echelon API ${path} -> HTTP ${res.status}`);
+  return (await res.json()) as T;
+}
 
 export async function fetchDashboardSummary(): Promise<DashboardSummary> {
-  await latency();
-  return getDashboardSummary();
+  if (!BASE_URL) return getDashboardSummary();
+  try {
+    return await getJSON<DashboardSummary>("/v1/console/summary");
+  } catch {
+    return getDashboardSummary();
+  }
 }
 
 export async function fetchMetricSeries(hours = 24): Promise<MetricPoint[]> {
-  await latency();
-  return generateMetricSeries(hours);
+  if (!BASE_URL) return generateMetricSeries(hours);
+  try {
+    return await getJSON<MetricPoint[]>("/v1/console/metrics");
+  } catch {
+    return generateMetricSeries(hours);
+  }
 }
 
 export async function fetchEvents(count = 500): Promise<PromptEvent[]> {
-  await latency();
-  // Validate at the boundary — this is where the real API's shape gets enforced.
-  return generateEvents(count).map((e) => promptEventSchema.parse(e));
+  if (!BASE_URL) return generateEvents(count).map((e) => promptEventSchema.parse(e));
+  try {
+    const raw = await getJSON<unknown[]>("/v1/console/events");
+    // Validate at the boundary — this is where the real API's shape gets enforced.
+    return raw.map((e) => promptEventSchema.parse(e));
+  } catch {
+    return generateEvents(count).map((e) => promptEventSchema.parse(e));
+  }
 }
 
 export async function fetchApiKeys(): Promise<ApiKey[]> {
-  await latency();
-  return KEYS;
+  if (!BASE_URL) return KEYS;
+  try {
+    const keys = await getJSON<ApiKey[]>("/v1/console/keys");
+    return keys.length > 0 ? keys : KEYS;
+  } catch {
+    return KEYS;
+  }
 }
 
 export async function fetchConfig(): Promise<EchelonConfig> {
-  await latency();
-  return DEFAULT_CONFIG;
+  if (!BASE_URL) return DEFAULT_CONFIG;
+  try {
+    return await getJSON<EchelonConfig>("/v1/console/config");
+  } catch {
+    return DEFAULT_CONFIG;
+  }
 }

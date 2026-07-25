@@ -31,28 +31,32 @@ from flask import Flask, jsonify, request
 from echelon.contracts import Route, ThresholdPolicy
 from echelon.layer1 import HeuristicAnalyzer
 from echelon.layer2 import Layer2Classifier, Layer2Config, MultiLabelTransformersAdapter
-from echelon.layer3 import HttpJsonJudgeAdapter, Layer3Judge, MockJudge
+from echelon.layer3 import HttpJsonJudgeAdapter, Layer3Judge, MockJudge, OllamaJudgeAdapter
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL_DIR = PROJECT_ROOT / "models" / "layer2-threat-distilbert" / "best"
 MAX_TEXT_BYTES = 200_000
 
-# Per-category reliability applied to the BLOCK signal only (raw scores are still
-# reported in `labels` for transparency). The trained model has low precision and
-# tiny support on these two categories, which produced defensive-cyber false blocks;
-# down-weighting their contribution to the aggregate escalates such prompts to the
-# judge instead of hard-blocking. See models/layer2-threat-distilbert/metrics.json.
-CATEGORY_RELIABILITY = {
-    "prompt_injection": 1.0,
-    "toxicity_harm": 1.0,
-    "adversarial_obfuscation": 1.0,
-    "system_prompt_leakage": 0.7,
-    "malicious_code": 0.7,
-}
+# The trained model is low-precision on these two sparse categories AND scores them
+# non-monotonically (it flags defensive-cyber higher than actual malware). No single
+# threshold separates them — only the LLM judge can. So for the BLOCK signal (raw
+# scores are still reported in `labels`), any non-trivial sparse-category signal is
+# mapped into the escalate band [FLOOR, CAP]: never hard-block (< block threshold),
+# never silently pass (>= judge threshold), always routed to the judge to adjudicate.
+SPARSE_CATEGORIES = {"malicious_code", "system_prompt_leakage"}
+SPARSE_FLOOR = 0.60  # >= ML_JUDGE_THRESHOLD (0.55): force escalation to the judge
+SPARSE_CAP = 0.88    # <  ML_BLOCK_THRESHOLD (0.90): never hard-block on a sparse category
+SPARSE_TRIGGER = 0.30  # below this, treat as noise and leave untouched
 
 
 def _mitigated_scores(scores):
-    return {k: v * CATEGORY_RELIABILITY.get(k, 1.0) for k, v in scores.items()}
+    out = {}
+    for category, value in scores.items():
+        if category in SPARSE_CATEGORIES and value >= SPARSE_TRIGGER:
+            out[category] = min(SPARSE_CAP, max(SPARSE_FLOOR, value))
+        else:
+            out[category] = value
+    return out
 
 
 def _aggregate(scores):
@@ -67,8 +71,15 @@ def _services():
     model_dir = Path(os.environ.get("ECHELON_MODEL_DIR", str(DEFAULT_MODEL_DIR)))
     analyzer = HeuristicAnalyzer()
     classifier = Layer2Classifier(MultiLabelTransformersAdapter(model_dir))
+    ollama_model = os.environ.get("ECHELON_OLLAMA_MODEL")
     endpoint = os.environ.get("ECHELON_JUDGE_ENDPOINT")
-    if endpoint:
+    if ollama_model:
+        adapter = OllamaJudgeAdapter(
+            ollama_model,
+            endpoint=os.environ.get("ECHELON_OLLAMA_URL", "http://localhost:11434"),
+            timeout_seconds=float(os.environ.get("ECHELON_OLLAMA_TIMEOUT", "30")),
+        )
+    elif endpoint:
         adapter = HttpJsonJudgeAdapter(
             endpoint, token=os.environ.get("ECHELON_JUDGE_TOKEN", ""),
             judge_id="echelon-remote-judge", revision="1",

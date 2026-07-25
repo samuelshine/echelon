@@ -1,0 +1,16 @@
+# Monorepo root. Each service also has its own scoped .gitignore
+# (pipeline/.gitignore, console/.gitignore) for its subdirectory.
+node_modules/
+.next/
+__pycache__/
+*.py[cod]
+*.safetensors
+.env
+.env.local
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# Stray pre-monorepo layout (data/models/echelon/tests/scripts/service/reviewer
+# used to live at repo root before the pipeline/ consolidation).
+/data/
+/models/

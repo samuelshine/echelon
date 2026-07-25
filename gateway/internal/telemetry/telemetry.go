@@ -39,6 +39,7 @@ type PromptEvent struct {
 	Tokens            Tokens        `json:"tokens"`
 	LatencyOverheadUs int64         `json:"latencyOverheadUs"`
 	APIKeyID          string        `json:"apiKeyId"`
+	Provider          string        `json:"provider,omitempty"`
 	Excerpt           string        `json:"excerpt"`
 }
 

@@ -17,7 +17,7 @@ import type { PromptEvent } from "@/types/echelon";
 type SortKey = "ts" | "riskScore" | "latencyOverheadUs";
 
 const GRID =
-  "grid grid-cols-[104px_76px_120px_92px_64px_136px_88px_minmax(140px,1fr)] items-center gap-3 px-4";
+  "grid grid-cols-[104px_76px_76px_120px_92px_64px_136px_88px_minmax(140px,1fr)] items-center gap-3 px-4";
 
 function SortHeader({
   label,
@@ -99,6 +99,7 @@ export function ThreatTable({
       >
         <SortHeader label="Time" active={sort.key === "ts"} dir={sort.dir} onClick={() => toggleSort("ts")} />
         <span className="eyebrow">Dir</span>
+        <span className="eyebrow">Provider</span>
         <span className="eyebrow">Category</span>
         <span className="eyebrow">Verdict</span>
         <SortHeader
@@ -154,6 +155,9 @@ export function ThreatTable({
                   </span>
                   <span className="text-xs capitalize text-[var(--color-ink-soft)]">
                     {e.direction}
+                  </span>
+                  <span className="text-xs capitalize text-[var(--color-ink-soft)]">
+                    {e.provider || "—"}
                   </span>
                   <span className="truncate text-xs text-[var(--color-ink-soft)]">
                     {CATEGORY_LABELS[e.category]}

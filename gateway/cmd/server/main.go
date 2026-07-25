@@ -19,6 +19,7 @@ import (
 	"github.com/jscyril/echelon/internal/ports"
 	"github.com/jscyril/echelon/internal/ratelimit"
 	"github.com/jscyril/echelon/internal/telemetry"
+	"github.com/jscyril/echelon/internal/upstream"
 	"time"
 )
 
@@ -65,9 +66,7 @@ func main() {
 		Telemetry:     telemetryStore,
 		ConsoleKeys:   buildConsoleKeys(cfg),
 		CreditsBudget: 1_000_000,
-		HTTPClient: &http.Client{
-			Timeout: cfg.UpstreamTimeout,
-		},
+		UpstreamRouter: buildProviderRouter(cfg, logger),
 	})
 
 	server := &http.Server{
@@ -99,6 +98,62 @@ func main() {
 		logger.Error("graceful shutdown failed", "error", err)
 		os.Exit(1)
 	}
+}
+
+// buildProviderRouter creates the multi-provider router from configuration.
+func buildProviderRouter(cfg config.Config, logger *slog.Logger) *upstream.Router {
+	client := &http.Client{Timeout: cfg.UpstreamTimeout}
+	var providers []upstream.Provider
+
+	if p, err := upstream.NewOpenAI(upstream.ProviderConfig{
+		Name:    "openai",
+		BaseURL: cfg.Providers.OpenAI.BaseURL,
+		APIKey:  cfg.Providers.OpenAI.APIKey,
+	}, client); err == nil {
+		providers = append(providers, p)
+	}
+
+	if cfg.Providers.Gemini.BaseURL != "" {
+		if p, err := upstream.NewGemini(upstream.ProviderConfig{
+			Name:    "gemini",
+			BaseURL: cfg.Providers.Gemini.BaseURL,
+			APIKey:  cfg.Providers.Gemini.APIKey,
+		}, client); err == nil {
+			providers = append(providers, p)
+		}
+	}
+
+	if cfg.Providers.Anthropic.BaseURL != "" {
+		if p, err := upstream.NewAnthropic(upstream.ProviderConfig{
+			Name:    "anthropic",
+			BaseURL: cfg.Providers.Anthropic.BaseURL,
+			APIKey:  cfg.Providers.Anthropic.APIKey,
+		}, client); err == nil {
+			providers = append(providers, p)
+		}
+	}
+
+	if cfg.Providers.Ollama.BaseURL != "" {
+		if p, err := upstream.NewOllama(upstream.ProviderConfig{
+			Name:    "ollama",
+			BaseURL: cfg.Providers.Ollama.BaseURL,
+			APIKey:  cfg.Providers.Ollama.APIKey,
+		}, client); err == nil {
+			providers = append(providers, p)
+		}
+	}
+
+	router, err := upstream.NewRouter(providers, upstream.RouterConfig{
+		ModelRoutes:     cfg.Providers.ModelRoutes,
+		DefaultProvider: cfg.Providers.DefaultProvider,
+	})
+	if err != nil {
+		logger.Error("failed to construct upstream router", "error", err)
+		os.Exit(1)
+	}
+	
+	logger.Info("multi-provider routing enabled", "providers", len(providers))
+	return router
 }
 
 // buildIngress assembles the heuristics -> remote ML classifier -> remote judge

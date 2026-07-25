@@ -112,7 +112,7 @@ curl -sS http://localhost:8080/v1/guard/preflight \
   -d '{"messages":[{"role":"user","content":"hello"}]}'
 ```
 
-Set `UPSTREAM_API_KEY` before proxying provider requests. Echelon replaces an
+Set `PROVIDER_OPENAI_API_KEY` (or the respective provider's key) before proxying provider requests. Echelon replaces an
 inbound authorization header with this provider credential; it never exposes the
 configured value through readiness or admin responses.
 
@@ -138,8 +138,8 @@ are:
 | Group | Variables |
 | --- | --- |
 | Server | `HTTP_ADDR`, `REQUEST_TIMEOUT`, `HTTP_*_TIMEOUT`, `SHUTDOWN_TIMEOUT` |
-| Provider | `UPSTREAM_BASE_URL`, `UPSTREAM_API_KEY`, `UPSTREAM_TIMEOUT` |
-| Payload | `MAX_REQUEST_BYTES`, `SYSTEM_CANARY` |
+| Provider | `PROVIDER_*_BASE_URL`, `PROVIDER_*_API_KEY`, `DEFAULT_PROVIDER`, `MODEL_ROUTES` |
+| Security | `UPSTREAM_TIMEOUT`, `HTTP_*_TIMEOUT`, `SHUTDOWN_TIMEOUT`, `SYSTEM_CANARY` |
 | Cascade | `HEURISTIC_TIMEOUT`, `ML_TIMEOUT`, `JUDGE_TIMEOUT`, `EGRESS_TIMEOUT` |
 | Classifiers | `ML_BASE_URL`, `JUDGE_BASE_URL`, `ML_*_THRESHOLD` |
 | Failure policy | `SECURITY_FAIL_CLOSED` |

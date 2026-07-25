@@ -47,6 +47,7 @@ export const promptEventSchema = z.object({
   tokens: z.object({ in: z.number(), out: z.number() }),
   latencyOverheadUs: z.number().nonnegative(),
   apiKeyId: z.string(),
+  provider: z.string().optional(),
   excerpt: z.string(),
 });
 
@@ -76,6 +77,7 @@ export const echelonConfigSchema = z.object({
     toxicityScan: z.boolean(),
     policyEnforcement: z.boolean(),
   }),
+  providers: z.array(z.string()).optional(),
 });
 
 export type PromptEventDTO = z.infer<typeof promptEventSchema>;

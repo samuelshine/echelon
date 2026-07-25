@@ -1,8 +1,6 @@
 package gateway
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,6 +15,7 @@ import (
 	"github.com/jscyril/echelon/internal/guard"
 	"github.com/jscyril/echelon/internal/ports"
 	"github.com/jscyril/echelon/internal/telemetry"
+	"github.com/jscyril/echelon/internal/upstream"
 )
 
 // ConsoleKeyInfo is privacy-safe API-key metadata surfaced to the console.
@@ -39,7 +38,7 @@ type Options struct {
 	Logger        *slog.Logger
 	Guards        guard.PromptGuard
 	OutputScanner guard.OutputScanner
-	HTTPClient    HTTPDoer
+	UpstreamRouter *upstream.Router
 	// Hexagonal security composition (Phases 4-5). When Ingress is set it replaces
 	// the prototype Guards on the proxied OpenAI path; Authenticator/RateLimiter are
 	// enforced when present.
@@ -59,7 +58,7 @@ type Gateway struct {
 	logger        *slog.Logger
 	guards        guard.PromptGuard
 	outputScanner guard.OutputScanner
-	httpClient    HTTPDoer
+	upstreamRouter *upstream.Router
 	ingress       ports.IngressLayer
 	egress        ports.EgressScanner
 	authenticator ports.Authenticator
@@ -75,17 +74,14 @@ func New(opts Options) *Gateway {
 		logger = slog.Default()
 	}
 
-	httpClient := opts.HTTPClient
-	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 60 * time.Second}
-	}
+	upstreamRouter := opts.UpstreamRouter
 
 	return &Gateway{
 		cfg:           opts.Config,
 		logger:        logger,
 		guards:        opts.Guards,
 		outputScanner: opts.OutputScanner,
-		httpClient:    httpClient,
+		upstreamRouter: upstreamRouter,
 		ingress:       opts.Ingress,
 		egress:        opts.Egress,
 		authenticator: opts.Authenticator,
@@ -207,18 +203,18 @@ func (g *Gateway) outputScan(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) models(w http.ResponseWriter, r *http.Request) {
-	g.proxyOpenAI(w, r, "/v1/models")
+	g.proxyLLM(w, r, "/v1/models")
 }
 
 func (g *Gateway) chatCompletions(w http.ResponseWriter, r *http.Request) {
-	g.proxyOpenAI(w, r, "/v1/chat/completions")
+	g.proxyLLM(w, r, "/v1/chat/completions")
 }
 
 func (g *Gateway) responses(w http.ResponseWriter, r *http.Request) {
-	g.proxyOpenAI(w, r, "/v1/responses")
+	g.proxyLLM(w, r, "/v1/responses")
 }
 
-func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPath string) {
+func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath string) {
 	start := time.Now()
 	body := []byte(nil)
 	if r.Body != nil {
@@ -284,7 +280,7 @@ func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPa
 				return
 			}
 			if verdict.Action == core.ActionBlock {
-				g.recordEvent(identity, verdict, start, nil)
+				g.recordEvent(identity, verdict, start, nil, "")
 				writeError(w, http.StatusForbidden, findingCode(verdict, "ingress_blocked"), "prompt blocked by ingress policy")
 				return
 			}
@@ -297,13 +293,21 @@ func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPa
 		}
 	}
 
-	upstreamReq, err := g.newUpstreamRequest(r.Context(), r, upstreamPath, body)
-	if err != nil {
-		writeError(w, http.StatusBadGateway, "upstream_request_failed", err.Error())
-		return
+	var resp *http.Response
+	var err error
+	var providerName string
+	model := extractModel(body)
+
+	if upstreamPath == "/v1/models" {
+		provider := g.upstreamRouter.DefaultProvider()
+		providerName = provider.Name()
+		resp, err = provider.ForwardModels(r.Context())
+	} else {
+		provider := g.upstreamRouter.Resolve(model)
+		providerName = provider.Name()
+		resp, err = provider.ForwardChat(r.Context(), model, body)
 	}
 
-	resp, err := g.httpClient.Do(upstreamReq)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, "upstream_unavailable", err.Error())
 		return
@@ -341,7 +345,7 @@ func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPa
 		}
 	}
 
-	g.recordEvent(identity, core.Allow(), start, respBody)
+	g.recordEvent(identity, core.Allow(), start, respBody, providerName)
 
 	copyResponseHeaders(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
@@ -372,26 +376,6 @@ func (g *Gateway) outputScannerNames() []string {
 		return []string{named.Name()}
 	}
 	return []string{"unnamed"}
-}
-
-func (g *Gateway) newUpstreamRequest(ctx context.Context, inbound *http.Request, path string, body []byte) (*http.Request, error) {
-	target := *g.cfg.UpstreamBaseURL
-	target.Path = joinURLPath(g.cfg.UpstreamBaseURL.Path, path)
-	target.RawQuery = inbound.URL.RawQuery
-
-	req, err := http.NewRequestWithContext(ctx, inbound.Method, target.String(), bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-
-	copyRequestHeaders(req.Header, inbound.Header)
-	req.Host = target.Host
-	if g.cfg.UpstreamAPIKey != "" {
-		req.Header.Set("Authorization", "Bearer "+g.cfg.UpstreamAPIKey)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Del("Content-Length")
-	return req, nil
 }
 
 func (g *Gateway) withRequestLog(next http.Handler) http.Handler {
@@ -532,7 +516,7 @@ func writeContent(b *strings.Builder, value any) {
 
 // --- Console telemetry (B2) ---------------------------------------------------
 
-func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte) {
+func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte, providerName string) {
 	if g.telemetry == nil {
 		return
 	}
@@ -579,6 +563,7 @@ func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, star
 		FinalVerdict: finalVerdict, RiskScore: round4(risk), Category: category,
 		BlockedAtLayer: blocked, Layers: layers, Tokens: telemetry.Tokens{In: in, Out: out},
 		LatencyOverheadUs: latencyUs, APIKeyID: apiKey, Excerpt: "[redacted]",
+		Provider: providerName,
 	})
 }
 
@@ -637,11 +622,18 @@ func (g *Gateway) consoleConfig(w http.ResponseWriter, _ *http.Request) {
 		{"layer": "ml_classifier", "enabled": g.cfg.Pipeline.MLBaseURL != nil, "threshold": g.cfg.Pipeline.MLJudgeThreshold, "model": "layer2-threat-distilbert"},
 		{"layer": "llm_judge", "enabled": g.cfg.Pipeline.JudgeBaseURL != nil, "threshold": g.cfg.Pipeline.MLBlockThreshold, "model": "claude-judge"},
 	}
+	providers := make([]string, 0)
+	if g.upstreamRouter != nil {
+		for name := range g.upstreamRouter.Providers() {
+			providers = append(providers, name)
+		}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ingress": ingress,
 		"egress": map[string]any{
 			"piiMasking": g.outputScanner != nil || g.egress != nil, "toxicityScan": true, "policyEnforcement": true,
 		},
+		"providers": providers,
 	})
 }
 

@@ -68,8 +68,8 @@ ECHELON_MODEL_DIR=models/layer2-threat-distilbert/best PORT=8099 \
 #    take a few seconds, so widen the budgets when the judge is enabled:
 ML_BASE_URL=http://127.0.0.1:8099/classify \
 JUDGE_BASE_URL=http://127.0.0.1:8099/judge \
-UPSTREAM_BASE_URL=https://api.openai.com \
-UPSTREAM_API_KEY=sk-...  \
+PROVIDER_OPENAI_BASE_URL=https://api.openai.com \
+PROVIDER_OPENAI_API_KEY=sk-...  \
 ECHELON_API_KEYS=sk-demo:acme:key_live:pro \
 ML_TIMEOUT=2s JUDGE_TIMEOUT=15s UPSTREAM_TIMEOUT=15s REQUEST_TIMEOUT=40s HTTP_WRITE_TIMEOUT=50s \
 HTTP_ADDR=:8080 ./echelon

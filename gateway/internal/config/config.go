@@ -39,6 +39,22 @@ type RateLimitConfig struct {
 	KeyPrefix string
 }
 
+type ProviderConfig struct {
+	BaseURL string
+	APIKey  string
+}
+
+type ProvidersConfig struct {
+	OpenAI    ProviderConfig
+	Gemini    ProviderConfig
+	Anthropic ProviderConfig
+	Ollama    ProviderConfig
+
+	ModelRoutes     string
+	DefaultProvider string
+}
+
+
 type Config struct {
 	Address         string
 	UpstreamBaseURL *url.URL
@@ -54,6 +70,7 @@ type Config struct {
 	ShutdownTimeout time.Duration
 	Pipeline        PipelineConfig
 	RateLimit       RateLimitConfig
+	Providers       ProvidersConfig
 }
 
 func Load() (Config, error) {
@@ -106,6 +123,7 @@ func Load() (Config, error) {
 		RequestTimeout:  requestTimeout,
 		Pipeline:        pipeline,
 		RateLimit:       rateLimit,
+		Providers:       loadProvidersConfig(),
 	}
 	if cfg.ReadTimeout, err = envDuration("HTTP_READ_TIMEOUT", 5*time.Second); err != nil {
 		return Config{}, err
@@ -176,6 +194,33 @@ func loadRateLimitConfig() (RateLimitConfig, error) {
 		return RateLimitConfig{}, err
 	}
 	return cfg, nil
+}
+
+func loadProvidersConfig() ProvidersConfig {
+	// For backward compatibility, default OpenAI to the legacy UPSTREAM_BASE_URL.
+	openAIBase := envString("PROVIDER_OPENAI_BASE_URL", envString("UPSTREAM_BASE_URL", defaultUpstreamBaseURL))
+	openAIKey := envString("PROVIDER_OPENAI_API_KEY", os.Getenv("UPSTREAM_API_KEY"))
+
+	return ProvidersConfig{
+		OpenAI: ProviderConfig{
+			BaseURL: openAIBase,
+			APIKey:  openAIKey,
+		},
+		Gemini: ProviderConfig{
+			BaseURL: os.Getenv("PROVIDER_GEMINI_BASE_URL"),
+			APIKey:  os.Getenv("PROVIDER_GEMINI_API_KEY"),
+		},
+		Anthropic: ProviderConfig{
+			BaseURL: os.Getenv("PROVIDER_ANTHROPIC_BASE_URL"),
+			APIKey:  os.Getenv("PROVIDER_ANTHROPIC_API_KEY"),
+		},
+		Ollama: ProviderConfig{
+			BaseURL: os.Getenv("PROVIDER_OLLAMA_BASE_URL"),
+			APIKey:  os.Getenv("PROVIDER_OLLAMA_API_KEY"),
+		},
+		ModelRoutes:     os.Getenv("MODEL_ROUTES"),
+		DefaultProvider: envString("DEFAULT_PROVIDER", "openai"),
+	}
 }
 
 func (c Config) Validate() error {

@@ -58,6 +58,8 @@ export interface PromptEvent {
   apiKeyId: string;
   /** Truncated preview of the prompt/response for the log row. */
   excerpt: string;
+  /** The upstream provider that served this request (e.g. openai, gemini) */
+  provider?: string;
 }
 
 export interface MetricPoint {
@@ -112,4 +114,5 @@ export interface EgressConfig {
 export interface EchelonConfig {
   ingress: LayerConfig[];
   egress: EgressConfig;
+  providers?: string[];
 }

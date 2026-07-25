@@ -100,6 +100,9 @@ export function DrillDown({
             <MetaField label="Direction">
               <span className="capitalize">{event.direction}</span>
             </MetaField>
+            <MetaField label="Provider">
+              <span className="capitalize">{event.provider || "—"}</span>
+            </MetaField>
             <MetaField label="Category">
               {CATEGORY_LABELS[event.category]}
             </MetaField>

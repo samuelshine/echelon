@@ -16,6 +16,7 @@ import (
 	"github.com/jscyril/echelon/internal/ingress"
 	"github.com/jscyril/echelon/internal/ports"
 	"github.com/jscyril/echelon/internal/ratelimit"
+	"github.com/jscyril/echelon/internal/upstream"
 )
 
 // fakeSecurity emulates the Python service: /classify and /judge in the exact
@@ -75,8 +76,19 @@ func buildTestGateway(t *testing.T, upstream *url.URL, security *url.URL, burst 
 	var limiter ports.RateLimiter = ratelimit.NewMemoryTokenBucket()
 	return gateway.New(gateway.Options{
 		Config: cfg, Ingress: cascade, Authenticator: authn, RateLimiter: limiter,
-		HTTPClient: &http.Client{Timeout: 2 * time.Second},
+		UpstreamRouter: testRouter(cfg.UpstreamBaseURL.String(), cfg.UpstreamAPIKey, http.DefaultTransport),
 	})
+}
+
+func testRouter(urlStr string, apiKey string, rt http.RoundTripper) *upstream.Router {
+	client := &http.Client{Transport: rt}
+	p, _ := upstream.NewOpenAI(upstream.ProviderConfig{
+		Name:    "openai",
+		BaseURL: urlStr,
+		APIKey:  apiKey,
+	}, client)
+	r, _ := upstream.NewRouter([]upstream.Provider{p}, upstream.RouterConfig{DefaultProvider: "openai"})
+	return r
 }
 
 func TestPhase5EndToEnd(t *testing.T) {

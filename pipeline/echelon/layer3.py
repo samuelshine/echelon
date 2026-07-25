@@ -167,7 +167,13 @@ class OllamaJudgeAdapter:
         timeout_seconds: float = 30.0,
     ):
         endpoint = endpoint.rstrip("/")
-        if not (endpoint.startswith("https://") or endpoint.startswith("http://localhost") or endpoint.startswith("http://127.0.0.1")):
+        _loopback = (
+            endpoint.startswith("https://")
+            or endpoint.startswith("http://localhost")
+            or endpoint.startswith("http://127.0.0.1")
+            or endpoint.startswith("http://host.docker.internal")
+        )
+        if not _loopback:
             raise ValueError("Ollama endpoint must be HTTPS or a loopback http address")
         if not model:
             raise ValueError("Ollama model name is required")

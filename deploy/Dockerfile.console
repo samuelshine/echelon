@@ -1,6 +1,9 @@
 # Echelon Next.js console (frontend branch code as build context).
 FROM node:20-alpine AS build
 WORKDIR /app
+# NEXT_PUBLIC_* is inlined at build time — bake the gateway URL the browser will use.
+ARG NEXT_PUBLIC_ECHELON_API_URL=http://localhost:8080
+ENV NEXT_PUBLIC_ECHELON_API_URL=$NEXT_PUBLIC_ECHELON_API_URL
 COPY package*.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .

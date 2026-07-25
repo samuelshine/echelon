@@ -1,0 +1,46 @@
+# Containerized Echelon stack. Assumes a co-located monorepo layout:
+#   pipeline/  (rnd branch)   gateway/ (backend branch)   console/ (frontend branch)
+# See DEMO.md "Consolidation". Bring up: docker compose up --build
+services:
+  security:
+    build:
+      context: ./pipeline
+      dockerfile: ../deploy/Dockerfile.security
+    environment:
+      ECHELON_MODEL_DIR: /app/models/layer2-threat-distilbert/best
+      PORT: "8099"
+    # The trained model weights are git-ignored; bake them into the image or mount:
+    volumes:
+      - ./pipeline/models:/app/models:ro
+    expose: ["8099"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8099/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: ../deploy/Dockerfile.gateway
+    environment:
+      ML_BASE_URL: http://security:8099/classify
+      JUDGE_BASE_URL: http://security:8099/judge
+      UPSTREAM_BASE_URL: ${UPSTREAM_BASE_URL:-https://api.openai.com}
+      UPSTREAM_API_KEY: ${UPSTREAM_API_KEY:-}
+      ECHELON_API_KEYS: ${ECHELON_API_KEYS:-sk-demo:acme:key_live:pro}
+      HTTP_ADDR: ":8080"
+      SECURITY_FAIL_CLOSED: "true"
+    ports: ["8080:8080"]
+    depends_on:
+      security:
+        condition: service_healthy
+
+  console:
+    build:
+      context: ./console
+      dockerfile: ../deploy/Dockerfile.console
+    environment:
+      NEXT_PUBLIC_ECHELON_API_URL: http://localhost:8080
+    ports: ["3000:3000"]
+    depends_on: [gateway]

@@ -1,0 +1,12 @@
+# Echelon Go gateway (backend branch code as build context).
+FROM golang:1.25-alpine AS build
+WORKDIR /src
+COPY go.mod ./
+RUN go mod download 2>/dev/null || true
+COPY . .
+RUN CGO_ENABLED=0 go build -o /echelon ./cmd/server
+
+FROM gcr.io/distroless/static-debian12
+COPY --from=build /echelon /echelon
+EXPOSE 8080
+ENTRYPOINT ["/echelon"]

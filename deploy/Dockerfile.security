@@ -1,0 +1,8 @@
+# Echelon detection pipeline + security API (rnd branch code as build context).
+FROM python:3.13-slim
+WORKDIR /app
+RUN pip install --no-cache-dir torch transformers flask
+COPY . .
+EXPOSE 8099
+# Model weights are provided via a mounted volume or baked layer (see compose).
+CMD ["python", "-m", "service.security_api"]

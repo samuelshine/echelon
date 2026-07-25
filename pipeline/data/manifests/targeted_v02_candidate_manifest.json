@@ -1,0 +1,9 @@
+{
+  "artifact": "data/raw_v2/echelon_targeted_v0_2/candidates.jsonl",
+  "bytes": 803846,
+  "eligible_for_training": false,
+  "manifest_version": "0.2.0",
+  "review_status": "pending",
+  "rows": 1200,
+  "sha256": "6571443d54f75f6aa4857df85812084a78a56b626b358e5fcd9b5b9707a68197"
+}

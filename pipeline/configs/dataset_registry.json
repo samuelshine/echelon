@@ -1,0 +1,222 @@
+{
+  "registry_version": "0.2.0",
+  "policy": {
+    "gold_language": "en",
+    "allowed_roles": ["train_candidate", "evaluation_only", "benign_control"],
+    "required_review_states": ["pending", "approved", "rejected"],
+    "production_ingestion_requires": [
+      "immutable_revision",
+      "license_approved",
+      "provenance_approved",
+      "privacy_approved",
+      "schema_mapping_approved"
+    ]
+  },
+  "datasets": [
+    {
+      "id": "deepset_prompt_injections",
+      "uri": "hf://datasets/deepset/prompt-injections",
+      "role": "train_candidate",
+      "threat_coverage": ["prompt_injection"],
+      "languages": ["en"],
+      "revision": "4f61ecb038e9c3fb77e21034b22511b523772cdd",
+      "license_spdx": null,
+      "review_state": "rejected",
+      "holdout": false,
+      "notes": "Rejected from automated acquisition: repository says Apache-2.0 while embedded dataset_info says CC-BY-4.0; origin is also duplicated by an unlicensed mirror."
+    },
+    {
+      "id": "neuralchemy_prompt_injection",
+      "uri": "hf://datasets/neuralchemy/Prompt-injection-dataset",
+      "role": "train_candidate",
+      "threat_coverage": ["prompt_injection", "adversarial_obfuscation"],
+      "languages": ["en"],
+      "revision": "7d70432dfcf47a821612cbf9d34e9d9e3ad20e75",
+      "license_spdx": "Apache-2.0",
+      "review_state": "approved",
+      "holdout": false,
+      "notes": "Approved for raw acquisition, not automatic trust. Audit original-source lineage, synthetic generation, near duplicates, and leakage claims before curation.",
+      "artifacts": [
+        "README.md",
+        "full/train-00000-of-00001.parquet",
+        "full/validation-00000-of-00001.parquet",
+        "full/test-00000-of-00001.parquet"
+      ]
+    },
+    {
+      "id": "rossja_prompt_injection_index",
+      "uri": "github://rossja/prompt-injection-datasets",
+      "role": "train_candidate",
+      "threat_coverage": ["prompt_injection"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": false,
+      "notes": "Treat as an index; approve each upstream dataset independently."
+    },
+    {
+      "id": "jackhhao_jailbreak_classification",
+      "uri": "hf://datasets/jackhhao/jailbreak-classification",
+      "role": "train_candidate",
+      "threat_coverage": ["prompt_injection"],
+      "languages": ["en"],
+      "revision": "2f2ceeb39658696fd3f462403562b6eea5306287",
+      "license_spdx": "Apache-2.0",
+      "review_state": "approved",
+      "holdout": false,
+      "notes": "Approved. Preserve publisher splits but cluster against other injection sources before final grouped splitting.",
+      "artifacts": [
+        "README.md",
+        "balanced/jailbreak_dataset_train_balanced.csv",
+        "balanced/jailbreak_dataset_test_balanced.csv"
+      ]
+    },
+    {
+      "id": "tensor_trust",
+      "uri": "web://tensortrust.ai/paper",
+      "role": "train_candidate",
+      "threat_coverage": ["prompt_injection", "system_prompt_leakage"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": false,
+      "notes": "Human adversarial game data; group by challenge and defense template."
+    },
+    {
+      "id": "hackaprompt",
+      "uri": "web://paper.hackaprompt.com",
+      "role": "train_candidate",
+      "threat_coverage": ["prompt_injection", "system_prompt_leakage", "adversarial_obfuscation"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": false,
+      "notes": "Human competition data; challenge/template grouping is mandatory."
+    },
+    {
+      "id": "wildguardmix",
+      "uri": "hf://datasets/allenai/wildguardmix",
+      "role": "train_candidate",
+      "threat_coverage": ["prompt_injection", "malicious_code", "toxicity_harm"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": false,
+      "notes": "Map harmful-prompt and jailbreak labels without using response leakage."
+    },
+    {
+      "id": "aegis_safety_2",
+      "uri": "hf://datasets/nvidia/Aegis-AI-Content-Safety-Dataset-2.0",
+      "role": "train_candidate",
+      "threat_coverage": ["malicious_code", "toxicity_harm"],
+      "languages": ["en"],
+      "revision": "d86bb8bedff51d25ac834ab7838f1cc61acb7a2c",
+      "license_spdx": "CC-BY-4.0",
+      "review_state": "approved",
+      "holdout": false,
+      "notes": "Approved. Human prompt safety labels; retain category granularity and exclude response-derived shortcuts.",
+      "artifacts": ["README.md", "train.json", "validation.json", "test.json"]
+    },
+    {
+      "id": "toxic_chat",
+      "uri": "hf://datasets/lmsys/toxic-chat",
+      "role": "train_candidate",
+      "threat_coverage": ["toxicity_harm"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "rejected",
+      "holdout": false,
+      "notes": "CC-BY-NC-4.0 is incompatible with the production-oriented training pool; retain as an optional research-only source."
+    },
+    {
+      "id": "beavertails",
+      "uri": "hf://datasets/PKU-Alignment/BeaverTails",
+      "role": "train_candidate",
+      "threat_coverage": ["malicious_code", "toxicity_harm"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "rejected",
+      "holdout": false,
+      "notes": "CC-BY-NC-4.0 is incompatible with the production-oriented training pool; retain as an optional research-only source."
+    },
+    {
+      "id": "do_not_answer",
+      "uri": "hf://datasets/LibrAI/do-not-answer",
+      "role": "train_candidate",
+      "threat_coverage": ["malicious_code", "toxicity_harm"],
+      "languages": ["en"],
+      "revision": "74e74f2e4507ef256fe536f78a776f4a1ff67955",
+      "license_spdx": "Apache-2.0",
+      "review_state": "approved",
+      "holdout": false,
+      "notes": "Approved. Retain risk-area taxonomy and ingest questions only; never use model response columns as prompt features.",
+      "artifacts": ["README.md", "data_en.csv"]
+    },
+    {
+      "id": "echelon_benign_cyber",
+      "uri": "local://data/curated/benign_cyber",
+      "role": "benign_control",
+      "threat_coverage": ["benign"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": false,
+      "notes": "Native-speaker-reviewed defensive, educational, CTF, audit, and incident-response hard negatives."
+    },
+    {
+      "id": "jailbreakbench",
+      "uri": "github://JailbreakBench/jailbreakbench",
+      "role": "evaluation_only",
+      "threat_coverage": ["prompt_injection", "adversarial_obfuscation"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": true,
+      "notes": "Frozen benchmark; exclude behaviors, artifacts, and close paraphrases from training."
+    },
+    {
+      "id": "harmbench",
+      "uri": "github://centerforaisafety/HarmBench",
+      "role": "evaluation_only",
+      "threat_coverage": ["prompt_injection", "malicious_code", "toxicity_harm"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": true,
+      "notes": "Frozen behaviors and adversarial variants; contamination scan required."
+    },
+    {
+      "id": "strongreject",
+      "uri": "github://dsbowen/strong_reject",
+      "role": "evaluation_only",
+      "threat_coverage": ["malicious_code", "toxicity_harm"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": true,
+      "notes": "Evaluation-only harmful-request coverage."
+    },
+    {
+      "id": "cyberseceval",
+      "uri": "github://meta-llama/PurpleLlama/CybersecurityBenchmarks",
+      "role": "evaluation_only",
+      "threat_coverage": ["malicious_code", "benign"],
+      "languages": ["en"],
+      "revision": null,
+      "license_spdx": null,
+      "review_state": "pending",
+      "holdout": true,
+      "notes": "Use malicious and legitimate dual-use slices to measure safety recall and cyber false positives."
+    }
+  ]
+}

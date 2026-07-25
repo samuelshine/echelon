@@ -1,0 +1,12 @@
+/models/prompt-injection-distilbert/checkpoints
+/models/prompt-injection-deberta/checkpoints
+*.safetensors
+__pycache__/
+*.py[cod]
+/data/raw_v2/
+/data/normalized_v2/
+/data/review_v2/
+/data/splits_v2/
+/models/research-embeddings/
+/models/layer2-threat-distilbert/best/
+/.review-venv/

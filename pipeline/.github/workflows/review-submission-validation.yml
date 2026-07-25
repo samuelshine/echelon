@@ -1,0 +1,35 @@
+name: Validate distributed review submissions
+
+on:
+  pull_request:
+    paths:
+      - "review_submissions/v0.2/*.json"
+      - "data/manifests/targeted_v02_distributed_review_manifest.json"
+      - "reviewer/distributed.py"
+      - "scripts/validate_distributed_reviews.py"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate every prompt-free submission
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(review_submissions/v0.2/*.json)
+          if (( ${#files[@]} == 0 )); then
+            echo "No submission JSON files to validate."
+            exit 0
+          fi
+          args=()
+          for file in "${files[@]}"; do args+=(--submission "$file"); done
+          python -m scripts.validate_distributed_reviews \
+            --public-manifest data/manifests/targeted_v02_distributed_review_manifest.json \
+            "${args[@]}"

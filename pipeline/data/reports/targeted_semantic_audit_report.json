@@ -1,0 +1,92 @@
+{
+  "admission_gate": {
+    "passed": false,
+    "reasons": [
+      "largest_semantic_component_exceeds_10_percent",
+      "mixed_benign_malicious_semantic_components"
+    ]
+  },
+  "candidates": 6000,
+  "cross_label_existing_neighbors_at_threshold": 0,
+  "internal_nearest_similarity": {
+    "max": 1.0,
+    "mean": 0.97632408,
+    "min": 0.88628197
+  },
+  "largest_group": 4635,
+  "largest_group_fraction": 0.7725,
+  "lexical_by_family": {
+    "defensive_cyber_benign": {
+      "bigrams": 29830,
+      "distinct_2": 0.008146,
+      "tokens": 31330,
+      "type_token_ratio": 0.003798,
+      "unique_bigrams": 243,
+      "unique_first_8_token_prefixes": 125,
+      "unique_tokens": 119
+    },
+    "encoded_benign_control": {
+      "bigrams": 46739,
+      "distinct_2": 0.031366,
+      "tokens": 47739,
+      "type_token_ratio": 0.017051,
+      "unique_bigrams": 1466,
+      "unique_first_8_token_prefixes": 5,
+      "unique_tokens": 814
+    },
+    "malicious_code_intent": {
+      "bigrams": 17646,
+      "distinct_2": 0.012354,
+      "tokens": 18646,
+      "type_token_ratio": 0.005095,
+      "unique_bigrams": 218,
+      "unique_first_8_token_prefixes": 148,
+      "unique_tokens": 95
+    },
+    "obfuscated_attack": {
+      "bigrams": 42866,
+      "distinct_2": 0.039052,
+      "tokens": 43866,
+      "type_token_ratio": 0.018807,
+      "unique_bigrams": 1674,
+      "unique_first_8_token_prefixes": 5,
+      "unique_tokens": 825
+    },
+    "system_prompt_benign_control": {
+      "bigrams": 9046,
+      "distinct_2": 0.012713,
+      "tokens": 9546,
+      "type_token_ratio": 0.006285,
+      "unique_bigrams": 115,
+      "unique_first_8_token_prefixes": 56,
+      "unique_tokens": 60
+    },
+    "system_prompt_leakage": {
+      "bigrams": 16543,
+      "distinct_2": 0.016382,
+      "tokens": 17543,
+      "type_token_ratio": 0.0057,
+      "unique_bigrams": 271,
+      "unique_first_8_token_prefixes": 264,
+      "unique_tokens": 100
+    }
+  },
+  "mixed_safety_groups": 1,
+  "mixed_safety_rows": 4635,
+  "model": "BAAI/bge-small-en-v1.5",
+  "model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "multi_record_groups": 267,
+  "nearest_existing_overlap_buckets": {
+    "boundary_0.90_0.94": 13,
+    "novel_below_0.90": 5987
+  },
+  "nearest_existing_similarity": {
+    "max": 0.93390793,
+    "mean": 0.76364803,
+    "min": 0.62085611
+  },
+  "report_version": "0.1.0",
+  "semantic_parent_groups": 481,
+  "status": "failed_semantic_diversity_gate",
+  "threshold": 0.94
+}

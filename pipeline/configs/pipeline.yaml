@@ -1,0 +1,13 @@
+version: "1.0.0"
+mode: "shadow"
+short_circuit_layer1_blocks: false
+fail_route: "escalate"
+thresholds:
+  pass_below: 0.35
+  block_at_or_above: 0.90
+layer2:
+  minimum_evidence_score: 0.10
+judge:
+  enabled: false
+  endpoint: null
+  timeout_seconds: 8.0

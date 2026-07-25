@@ -1,0 +1,11 @@
+{
+  "artifact": "data/raw_v2/echelon_targeted_v0_1/candidates.jsonl",
+  "bytes": 3632976,
+  "eligible_for_training": false,
+  "generator_id": "echelon_controlled_composition",
+  "generator_version": "0.1.0",
+  "manifest_version": "0.1.0",
+  "review_status": "pending",
+  "rows": 6000,
+  "sha256": "c6d59d74f63016f7b4ee6a721f5583d8854c76081c437586e9d4e232bee29fe9"
+}

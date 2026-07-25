@@ -1,0 +1,15 @@
+{
+  "conflicts": 152,
+  "errors": [],
+  "expert_complete": true,
+  "items": 600,
+  "primary_reviewers": 2,
+  "queue_sha256": "11f0ca2e3de5564276533d0a88ec53e66aeaa611478e628839379f1175566e91",
+  "status": {
+    "accepted_by_agreement": 446,
+    "accepted_by_expert": 152,
+    "rejected_quality_gate": 2
+  },
+  "training_eligible_items": 598,
+  "valid": true
+}

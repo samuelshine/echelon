@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Echelon synthetic training candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate_id", "text", "proposed_labels", "family", "parent_id",
+    "transformation", "context", "generator_id", "generator_version",
+    "language", "review_status", "operational_content"
+  ],
+  "properties": {
+    "candidate_id": {"type": "string", "minLength": 1},
+    "text": {"type": "string", "minLength": 1},
+    "proposed_labels": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {"enum": ["prompt_injection", "system_prompt_leakage", "malicious_code", "toxicity_harm", "adversarial_obfuscation", "benign"]}
+    },
+    "family": {"type": "string", "minLength": 1},
+    "parent_id": {"type": ["string", "null"]},
+    "transformation": {"type": ["string", "null"]},
+    "context": {"enum": ["benign", "defensive", "dual_use", "malicious"]},
+    "generator_id": {"type": "string", "minLength": 1},
+    "generator_version": {"type": "string", "minLength": 1},
+    "language": {"const": "en"},
+    "review_status": {"const": "pending"},
+    "operational_content": {"const": false}
+    ,
+    "template_lineage": {"type": "string", "minLength": 1},
+    "generation_strategy": {"type": "string", "minLength": 1}
+  }
+}

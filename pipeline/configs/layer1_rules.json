@@ -1,0 +1,49 @@
+{
+  "version": "1.0.0",
+  "thresholds": {"pass_below": 0.35, "block_at_or_above": 0.9},
+  "limits": {
+    "max_scan_chars": 100000,
+    "entropy_sample_chars": 4096,
+    "max_encoded_token_chars": 4096,
+    "max_decoded_bytes": 8192,
+    "max_decoded_candidates": 6
+  },
+  "scoring": {
+    "secondary_category_factor": 0.12,
+    "obfuscation_corroboration_bonus": 0.08,
+    "repeat_factor": 0.08,
+    "max_repeat_bonus": 0.16
+  },
+  "phrases": [
+    {"phrase": "ignore previous instructions", "code": "pi_ignore_previous", "group": "pi_instruction_override", "category": "prompt_injection", "weight": 0.82},
+    {"phrase": "ignore all previous instructions", "code": "pi_ignore_all_previous", "group": "pi_instruction_override", "category": "prompt_injection", "weight": 0.88},
+    {"phrase": "disregard prior instructions", "code": "pi_disregard_prior", "group": "pi_instruction_override", "category": "prompt_injection", "weight": 0.80},
+    {"phrase": "override your instructions", "code": "pi_override_instructions", "group": "pi_instruction_override", "category": "prompt_injection", "weight": 0.76},
+    {"phrase": "do anything now", "code": "pi_dan_expansion", "category": "prompt_injection", "weight": 0.45},
+    {"phrase": "reveal your system prompt", "code": "leak_reveal_system", "group": "leak_system_extract", "category": "system_prompt_leakage", "weight": 0.88},
+    {"phrase": "show me your system prompt", "code": "leak_show_system", "group": "leak_system_extract", "category": "system_prompt_leakage", "weight": 0.84},
+    {"phrase": "repeat the instructions above", "code": "leak_repeat_above", "category": "system_prompt_leakage", "weight": 0.72},
+    {"phrase": "hidden instructions", "code": "leak_hidden_instructions", "category": "system_prompt_leakage", "weight": 0.42},
+    {"phrase": "write ransomware", "code": "code_ransomware", "group": "code_generate_malware", "category": "malicious_code", "weight": 0.94},
+    {"phrase": "steal credentials", "code": "code_credential_theft", "category": "malicious_code", "weight": 0.92},
+    {"phrase": "credential stealer", "code": "code_credential_stealer", "category": "malicious_code", "weight": 0.90},
+    {"phrase": "evade antivirus", "code": "code_evade_av", "group": "code_evade_controls", "category": "malicious_code", "weight": 0.84},
+    {"phrase": "exfiltrate data", "code": "code_exfiltrate", "category": "malicious_code", "weight": 0.70},
+    {"phrase": "reverse shell", "code": "code_reverse_shell", "category": "malicious_code", "weight": 0.24},
+    {"phrase": "decode and execute", "code": "obf_decode_execute", "category": "adversarial_obfuscation", "weight": 0.84},
+    {"phrase": "bypass safety filters", "code": "pi_bypass_safety", "category": "prompt_injection", "weight": 0.72},
+    {"phrase": "without restrictions", "code": "pi_without_restrictions", "category": "prompt_injection", "weight": 0.38},
+    {"phrase": "kill all", "code": "harm_kill_all", "category": "toxicity_harm", "weight": 0.72},
+    {"phrase": "how to hurt", "code": "harm_how_to_hurt", "category": "toxicity_harm", "weight": 0.66}
+  ],
+  "regex_rules": [
+    {"pattern": "\\b(?:ignore|disregard|forget)\\b.{0,40}\\b(?:previous|prior|above|system|developer)\\b.{0,30}\\b(?:instructions?|rules?|messages?)\\b", "code": "pi_flexible_override", "group": "pi_instruction_override", "category": "prompt_injection", "weight": 0.84},
+    {"pattern": "\\b(?:reveal|print|show|repeat|expose|dump)\\b.{0,35}\\b(?:system|developer|hidden|internal)\\b.{0,25}\\b(?:prompt|message|instructions?|context)\\b", "code": "leak_flexible_extract", "group": "leak_system_extract", "category": "system_prompt_leakage", "weight": 0.86},
+    {"pattern": "\\b(?:create|write|build|generate)\\b.{0,45}\\b(?:ransomware|keylogger|credential[ -]?stealer|botnet|malware)\\b", "code": "code_generate_malware", "group": "code_generate_malware", "category": "malicious_code", "weight": 0.92},
+    {"pattern": "\\b(?:bypass|disable|evade)\\b.{0,35}\\b(?:edr|antivirus|endpoint detection|security controls?)\\b", "code": "code_evade_controls", "group": "code_evade_controls", "category": "malicious_code", "weight": 0.78},
+    {"pattern": "\\b(?:create|generate|give me|write|build)\\b.{0,30}\\breverse[ -]?shell\\b", "code": "code_generate_reverse_shell", "category": "malicious_code", "weight": 0.74},
+    {"pattern": "\\b(?:pretend|roleplay|act as)\\b.{0,60}\\b(?:no restrictions|unfiltered|ignore rules|unrestricted)\\b", "code": "pi_roleplay_bypass", "category": "prompt_injection", "weight": 0.62},
+    {"pattern": "(?:<\\|system\\|>|\\[system\\]|#{2,}\\s*system\\b)", "code": "pi_system_delimiter", "category": "prompt_injection", "weight": 0.38},
+    {"pattern": "\\b(?:kill|attack|hurt)\\b.{0,30}\\b(?:all|every|those|them)\\b", "code": "harm_targeted_violence", "category": "toxicity_harm", "weight": 0.70}
+  ]
+}

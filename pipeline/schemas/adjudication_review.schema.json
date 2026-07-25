@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Echelon conflict adjudication review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["item_id", "reviewer_id", "decision", "labels", "rationale_code", "naturalness", "intent_correct", "labels_correct", "non_operational", "is_expert_adjudication"],
+  "properties": {
+    "item_id": {"type": "string", "minLength": 1},
+    "reviewer_id": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["benign", "malicious", "exclude"]},
+    "labels": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["prompt_injection", "system_prompt_leakage", "malicious_code", "toxicity_harm", "adversarial_obfuscation", "benign"]}
+    },
+    "rationale_code": {"type": "string", "minLength": 1},
+    "notes": {"type": ["string", "null"]},
+    "naturalness": {"type": "integer", "minimum": 1, "maximum": 5},
+    "intent_correct": {"type": "boolean"},
+    "labels_correct": {"type": "boolean"},
+    "non_operational": {"type": "boolean"},
+    "is_expert_adjudication": {"type": "boolean"}
+  }
+}

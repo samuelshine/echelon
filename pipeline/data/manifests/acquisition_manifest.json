@@ -1,0 +1,108 @@
+{
+  "acquired_at": "2026-07-24T18:20:23.050618+00:00",
+  "manifest_version": "0.1.0",
+  "registry_version": "0.2.0",
+  "sources": [
+    {
+      "artifacts": [
+        {
+          "bytes": 5855,
+          "path": "README.md",
+          "sha256": "d4a8ddc487274e577c448704a55d876e35794288062f3cef992b8df724e38619"
+        },
+        {
+          "bytes": 1409838,
+          "path": "full/train-00000-of-00001.parquet",
+          "sha256": "47e72340dc1eea05e5a341acad936d3fedee724d205c784d1b6a196093270990"
+        },
+        {
+          "bytes": 92943,
+          "path": "full/validation-00000-of-00001.parquet",
+          "sha256": "bbd417bfd0df1553dd769e814a0b62ca58ad5b1d08d153c90f66937a4af74deb"
+        },
+        {
+          "bytes": 94145,
+          "path": "full/test-00000-of-00001.parquet",
+          "sha256": "fb5432035fdd8453d61f6593bfe78ee2970403c5ea59959b642a6708e2bef670"
+        }
+      ],
+      "id": "neuralchemy_prompt_injection",
+      "license_spdx": "Apache-2.0",
+      "repo_id": "neuralchemy/Prompt-injection-dataset",
+      "revision": "7d70432dfcf47a821612cbf9d34e9d9e3ad20e75",
+      "role": "train_candidate"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 988,
+          "path": "README.md",
+          "sha256": "4698cabf6cef60b56885cdd49c6a4386909c16715e89a06ba1e80ebef8fc93be"
+        },
+        {
+          "bytes": 1309507,
+          "path": "balanced/jailbreak_dataset_train_balanced.csv",
+          "sha256": "e0c1460d229dc5d9162d5393a4e5e42382e862d04f400354bd4123b7d5257fff"
+        },
+        {
+          "bytes": 369990,
+          "path": "balanced/jailbreak_dataset_test_balanced.csv",
+          "sha256": "809ef0d7c82fa05c31e818e9c3ff68f769632ac6d11cc3b43254cada577869a9"
+        }
+      ],
+      "id": "jackhhao_jailbreak_classification",
+      "license_spdx": "Apache-2.0",
+      "repo_id": "jackhhao/jailbreak-classification",
+      "revision": "2f2ceeb39658696fd3f462403562b6eea5306287",
+      "role": "train_candidate"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 14107,
+          "path": "README.md",
+          "sha256": "da2598e587850bacc77c0658f56d0ea430f55d1cf70b197eb06070871802d3ba"
+        },
+        {
+          "bytes": 22705956,
+          "path": "train.json",
+          "sha256": "154fba82c71d9fa73abd2ca5588a198e693ddc816c83444df180a22f613e02f6"
+        },
+        {
+          "bytes": 1137821,
+          "path": "validation.json",
+          "sha256": "a97200e226ad4f6ba6a639982f817f675909bc74513859df3e8fc9a92951dfcd"
+        },
+        {
+          "bytes": 1731373,
+          "path": "test.json",
+          "sha256": "b0a6d602260524866053cb34105194f074f2c2906e3691b68d43b9e6e9318f35"
+        }
+      ],
+      "id": "aegis_safety_2",
+      "license_spdx": "CC-BY-4.0",
+      "repo_id": "nvidia/Aegis-AI-Content-Safety-Dataset-2.0",
+      "revision": "d86bb8bedff51d25ac834ab7838f1cc61acb7a2c",
+      "role": "train_candidate"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 4181,
+          "path": "README.md",
+          "sha256": "b0e3ec62f87b1e52c1cd47c9cb5d82120939caa0a5e962e32db7045e2365f544"
+        },
+        {
+          "bytes": 3912791,
+          "path": "data_en.csv",
+          "sha256": "410449674780aa7304512043706f7981f666a79528d11546da34ebdd9595681c"
+        }
+      ],
+      "id": "do_not_answer",
+      "license_spdx": "Apache-2.0",
+      "repo_id": "LibrAI/do-not-answer",
+      "revision": "74e74f2e4507ef256fe536f78a776f4a1ff67955",
+      "role": "train_candidate"
+    }
+  ]
+}

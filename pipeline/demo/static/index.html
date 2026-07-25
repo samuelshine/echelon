@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echelon — Prompt Injection Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Echelon</h1>
+            <p class="subtitle">Prompt Injection Detection Engine</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <textarea id="prompt-input" placeholder="Enter a prompt to analyze..."></textarea>
+                <button id="analyze-btn">Analyze Prompt</button>
+            </div>
+            
+            <div id="result-section" class="result-section hidden">
+                <div class="result-header">
+                    <span class="label">Result</span>
+                    <span id="prediction-badge" class="badge"></span>
+                </div>
+                <div class="confidence-wrapper">
+                    <span class="label">Confidence</span>
+                    <div class="progress-bar">
+                        <div id="confidence-fill" class="progress-fill"></div>
+                    </div>
+                    <span id="confidence-text" class="confidence-text"></span>
+                </div>
+                
+                <div class="explainability-wrapper">
+                    <span class="label">Why? (SHAP Explainability)</span>
+                    <div id="shap-text" class="shap-text"></div>
+                    <div class="shap-legend">
+                        <span class="legend-item"><span class="color-box benign"></span> Supports Benign</span>
+                        <span class="legend-item"><span class="color-box injection"></span> Supports Injection</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <span>Analyzing...</span>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+# ============================================================
+# Training Configuration — DistilBERT Prompt Injection Detector
+# ============================================================
+
+model:
+  name: "distilbert-base-uncased"
+  num_labels: 2
+  label_names:
+    0: "benign"
+    1: "injection"
+
+tokenizer:
+  max_length: 512
+  padding: "max_length"
+  truncation: true
+
+training:
+  epochs: 5
+  batch_size: 8
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  gradient_accumulation_steps: 8   # effective batch size = 64
+  fp16: false                       # disabled; MPS uses fp32
+  seed: 42
+  logging_steps: 50
+
+evaluation:
+  strategy: "epoch"
+  metric_for_best_model: "f1"
+  greater_is_better: true
+
+early_stopping:
+  enabled: true
+  patience: 2
+
+data:
+  training_manifest: "data/manifests/layer2_training_manifest.json"
+  train_path: "data/processed/train.csv"
+  val_path: "data/processed/val.csv"
+  test_path: "data/processed/test.csv"
+  text_column: "text"
+  label_column: "label"
+
+output:
+  model_dir: "models/prompt-injection-distilbert/best"
+  checkpoint_dir: "models/prompt-injection-distilbert/checkpoints"
+  results_file: "models/prompt-injection-distilbert/results.json"
+  confusion_matrix_path: "models/prompt-injection-distilbert/confusion_matrix.png"
+  roc_curve_path: "models/prompt-injection-distilbert/roc_curve.png"

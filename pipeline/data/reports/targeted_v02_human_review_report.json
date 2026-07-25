@@ -1,0 +1,24 @@
+{
+  "accepted_by_decision": {
+    "benign": 298,
+    "malicious": 300
+  },
+  "accepted_by_family": {
+    "defensive_cyber_benign_v02": 98,
+    "encoded_benign_control_v02": 100,
+    "malicious_code_intent_v02": 100,
+    "obfuscated_attack_v02": 100,
+    "system_prompt_benign_v02": 100,
+    "system_prompt_leakage_v02": 100
+  },
+  "accepted_total": 598,
+  "expert_provenance": "AI-assisted (Claude), provisional, human-overridable",
+  "report_version": "0.2.0",
+  "reviewed_items": 600,
+  "status_counts": {
+    "accepted_by_agreement": 446,
+    "accepted_by_expert": 152,
+    "rejected_quality_gate": 2
+  },
+  "training_eligible": true
+}

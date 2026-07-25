@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+/*
+  Echelon — "The Assay Ledger" design system.
+  Classical, modern, minimalist. Cool paper, engraved ink, desaturated severity.
+  Light-first; a disciplined dark variant is provided for live-monitoring at night.
+*/
+
+@theme {
+  /* Neutrals — cool paper, not cream */
+  --color-canvas: #f6f6f3;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #efefEb;
+  --color-ink: #18191c;
+  --color-ink-soft: #33353b;
+  --color-muted: #6b7280;
+  --color-faint: #9aa0aa;
+  --color-line: #e4e3dd;
+  --color-line-strong: #d3d2ca;
+
+  /* Brand — deep petrol, institutional */
+  --color-brand: #1c3b4a;
+  --color-brand-soft: #35606f;
+  --color-brand-wash: #eaf0f1;
+
+  /* Severity — desaturated & classical, never neon */
+  --color-block: #8c2f26;
+  --color-block-wash: #f5e7e4;
+  --color-flag: #9a6b1e;
+  --color-flag-wash: #f6eede;
+  --color-pass: #3f6b4e;
+  --color-pass-wash: #e7efe8;
+
+  /* Typography */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
+
+  /* Radius — restrained, engraved feel */
+  --radius-sm: 3px;
+  --radius: 5px;
+  --radius-lg: 8px;
+
+  /* Categorical viz palette — validated (CVD-safe) for attack vectors.
+     Slot order is the CVD-safety mechanism; do not reorder. */
+  --color-viz-prompt_injection: #2a78d6;
+  --color-viz-jailbreak: #1baf7a;
+  --color-viz-pii_leak: #eda100;
+  --color-viz-toxicity: #008300;
+  --color-viz-policy_violation: #4a3aa7;
+  --color-viz-data_exfiltration: #e34948;
+}
+
+:root[data-theme="dark"] {
+  --color-canvas: #131417;
+  --color-surface: #191a1e;
+  --color-surface-sunken: #101114;
+  --color-ink: #ecece8;
+  --color-ink-soft: #c6c7c3;
+  --color-muted: #8b909a;
+  --color-faint: #5c616b;
+  --color-line: #292b30;
+  --color-line-strong: #383a41;
+  --color-brand: #6fa3b5;
+  --color-brand-soft: #4d7f90;
+  --color-brand-wash: #17282e;
+  --color-block: #d0776c;
+  --color-block-wash: #2a1a18;
+  --color-flag: #cda257;
+  --color-flag-wash: #29220f;
+  --color-pass: #7fae8c;
+  --color-pass-wash: #16241a;
+  --color-viz-prompt_injection: #3987e5;
+  --color-viz-jailbreak: #199e70;
+  --color-viz-pii_leak: #c98500;
+  --color-viz-toxicity: #008300;
+  --color-viz-policy_violation: #9085e9;
+  --color-viz-data_exfiltration: #e66767;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-canvas: #131417;
+    --color-surface: #191a1e;
+    --color-surface-sunken: #101114;
+    --color-ink: #ecece8;
+    --color-ink-soft: #c6c7c3;
+    --color-muted: #8b909a;
+    --color-faint: #5c616b;
+    --color-line: #292b30;
+    --color-line-strong: #383a41;
+    --color-brand: #6fa3b5;
+    --color-brand-soft: #4d7f90;
+    --color-brand-wash: #17282e;
+    --color-block: #d0776c;
+    --color-block-wash: #2a1a18;
+    --color-flag: #cda257;
+    --color-flag-wash: #29220f;
+    --color-pass: #7fae8c;
+    --color-pass-wash: #16241a;
+    --color-viz-prompt_injection: #3987e5;
+    --color-viz-jailbreak: #199e70;
+    --color-viz-pii_leak: #c98500;
+    --color-viz-toxicity: #008300;
+    --color-viz-policy_violation: #9085e9;
+    --color-viz-data_exfiltration: #e66767;
+  }
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv05", "ss01";
+}
+
+/* Tabular numerals everywhere data lives */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Hairline eyebrow label — a recurring structural device */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+::selection {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

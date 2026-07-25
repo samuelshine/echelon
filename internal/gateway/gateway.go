@@ -13,7 +13,9 @@ import (
 	"time"
 
 	"github.com/jscyril/echelon/internal/config"
+	"github.com/jscyril/echelon/internal/core"
 	"github.com/jscyril/echelon/internal/guard"
+	"github.com/jscyril/echelon/internal/ports"
 )
 
 type HTTPDoer interface {
@@ -26,6 +28,13 @@ type Options struct {
 	Guards        guard.PromptGuard
 	OutputScanner guard.OutputScanner
 	HTTPClient    HTTPDoer
+	// Hexagonal security composition (Phases 4-5). When Ingress is set it replaces
+	// the prototype Guards on the proxied OpenAI path; Authenticator/RateLimiter are
+	// enforced when present.
+	Ingress       ports.IngressLayer
+	Egress        ports.EgressScanner
+	Authenticator ports.Authenticator
+	RateLimiter   ports.RateLimiter
 }
 
 type Gateway struct {
@@ -34,6 +43,10 @@ type Gateway struct {
 	guards        guard.PromptGuard
 	outputScanner guard.OutputScanner
 	httpClient    HTTPDoer
+	ingress       ports.IngressLayer
+	egress        ports.EgressScanner
+	authenticator ports.Authenticator
+	rateLimiter   ports.RateLimiter
 }
 
 func New(opts Options) *Gateway {
@@ -53,6 +66,10 @@ func New(opts Options) *Gateway {
 		guards:        opts.Guards,
 		outputScanner: opts.OutputScanner,
 		httpClient:    httpClient,
+		ingress:       opts.Ingress,
+		egress:        opts.Egress,
+		authenticator: opts.Authenticator,
+		rateLimiter:   opts.RateLimiter,
 	}
 }
 
@@ -183,20 +200,69 @@ func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPa
 		}
 	}
 
-	if len(body) > 0 && g.guards != nil {
+	// Authentication (enforced when an authenticator is configured).
+	var identity core.Identity
+	if g.authenticator != nil {
+		id, err := g.authenticator.Authenticate(r.Context(), r.Header.Get("Authorization"))
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, "unauthorized", "a valid API key is required")
+			return
+		}
+		identity = id
+	}
+
+	// Rate/quota admission (enforced when a limiter is configured).
+	if g.rateLimiter != nil {
+		key := identity.APIKeyID
+		if key == "" {
+			key = clientIP(r)
+		}
+		decision, err := g.rateLimiter.Allow(r.Context(), core.RateLimit{
+			Key:   g.cfg.RateLimit.KeyPrefix + key,
+			Cost:  1,
+			Limit: g.cfg.RateLimit.Limit,
+			Burst: g.cfg.RateLimit.Burst,
+			Every: g.cfg.RateLimit.Window,
+		})
+		if err == nil && !decision.Allowed {
+			w.Header().Set("Retry-After", retryAfterSeconds(decision.ResetAt))
+			writeError(w, http.StatusTooManyRequests, "rate_limited", "request quota exceeded")
+			return
+		}
+	}
+
+	// Ingress security: the hexagonal cascade when wired, else the prototype guards.
+	if len(body) > 0 {
 		promptText, err := extractPromptText(body)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
 			return
 		}
-		decision := g.guards.Check(r.Context(), guard.PromptRequest{
-			Route: upstreamPath,
-			Body:  body,
-			Text:  promptText,
-		})
-		if !decision.Allowed {
-			writeError(w, http.StatusForbidden, decision.Code, decision.Message)
-			return
+		if g.ingress != nil {
+			// The ML classifier should score the user prompt, not role labels/model id.
+			cleanPrompt := extractChatPrompt(body)
+			if cleanPrompt == "" {
+				cleanPrompt = promptText
+			}
+			verdict, err := g.ingress.Evaluate(r.Context(), core.Prompt{
+				RequestID: r.Header.Get("X-Request-ID"), TenantID: identity.TenantID,
+				APIKeyID: identity.APIKeyID, Route: upstreamPath,
+				Model: extractModel(body), Text: cleanPrompt, Body: body,
+			})
+			if err != nil && g.cfg.Pipeline.FailClosed {
+				writeError(w, http.StatusForbidden, "security_unavailable", "ingress security is unavailable")
+				return
+			}
+			if verdict.Action == core.ActionBlock {
+				writeError(w, http.StatusForbidden, findingCode(verdict, "ingress_blocked"), "prompt blocked by ingress policy")
+				return
+			}
+		} else if g.guards != nil {
+			decision := g.guards.Check(r.Context(), guard.PromptRequest{Route: upstreamPath, Body: body, Text: promptText})
+			if !decision.Allowed {
+				writeError(w, http.StatusForbidden, decision.Code, decision.Message)
+				return
+			}
 		}
 	}
 
@@ -219,7 +285,21 @@ func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPa
 		return
 	}
 
-	if g.outputScanner != nil {
+	// Egress: hexagonal scanner pipeline when wired (may redact), else prototype scanner.
+	if g.egress != nil {
+		scanned, verdict, err := g.egress.Scan(r.Context(), core.ModelResponse{Body: respBody})
+		if err != nil && g.cfg.Pipeline.FailClosed {
+			writeError(w, http.StatusForbidden, "egress_unavailable", "egress security is unavailable")
+			return
+		}
+		if verdict.Action == core.ActionBlock {
+			writeError(w, http.StatusForbidden, findingCode(verdict, "egress_blocked"), "response blocked by egress policy")
+			return
+		}
+		if verdict.Action == core.ActionRedact && scanned.Body != nil {
+			respBody = scanned.Body
+		}
+	} else if g.outputScanner != nil {
 		decision := g.outputScanner.Scan(r.Context(), guard.OutputResponse{
 			Route: upstreamPath,
 			Body:  respBody,
@@ -373,6 +453,87 @@ func joinURLPath(basePath string, nextPath string) string {
 		return next
 	}
 	return (&url.URL{Path: base + next}).EscapedPath()
+}
+
+// extractChatPrompt pulls only the user-authored prompt (message contents, input,
+// or prompt) from an OpenAI-style body, so the ML classifier scores the actual
+// prompt rather than a soup of role labels and the model id.
+func extractChatPrompt(body []byte) string {
+	var payload struct {
+		Messages []struct {
+			Content any `json:"content"`
+		} `json:"messages"`
+		Input  any `json:"input"`
+		Prompt any `json:"prompt"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return ""
+	}
+	var b strings.Builder
+	for _, m := range payload.Messages {
+		writeContent(&b, m.Content)
+	}
+	writeContent(&b, payload.Input)
+	writeContent(&b, payload.Prompt)
+	return strings.TrimSpace(b.String())
+}
+
+func writeContent(b *strings.Builder, value any) {
+	switch typed := value.(type) {
+	case string:
+		b.WriteString(typed)
+		b.WriteByte('\n')
+	case []any:
+		for _, item := range typed {
+			if part, ok := item.(map[string]any); ok {
+				if text, ok := part["text"].(string); ok {
+					b.WriteString(text)
+					b.WriteByte('\n')
+				}
+				continue
+			}
+			writeContent(b, item)
+		}
+	}
+}
+
+func extractModel(body []byte) string {
+	var payload struct {
+		Model string `json:"model"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return ""
+	}
+	return payload.Model
+}
+
+func findingCode(verdict core.Verdict, fallback string) string {
+	if len(verdict.Findings) > 0 && verdict.Findings[0].Code != "" {
+		return verdict.Findings[0].Code
+	}
+	return fallback
+}
+
+func clientIP(r *http.Request) string {
+	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
+		if comma := strings.IndexByte(forwarded, ','); comma >= 0 {
+			return strings.TrimSpace(forwarded[:comma])
+		}
+		return strings.TrimSpace(forwarded)
+	}
+	host := r.RemoteAddr
+	if colon := strings.LastIndexByte(host, ':'); colon >= 0 {
+		host = host[:colon]
+	}
+	return host
+}
+
+func retryAfterSeconds(resetAt time.Time) string {
+	seconds := int(time.Until(resetAt).Seconds())
+	if seconds < 1 {
+		seconds = 1
+	}
+	return fmt.Sprintf("%d", seconds)
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

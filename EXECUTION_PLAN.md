@@ -57,27 +57,37 @@ Status: **Complete**
 
 ## Phase 4 — Gateway protection and wallet controls
 
-Status: **Pending**
+Status: **In progress** (in-memory adapters complete; Redis deferred)
 
-- [ ] Implement local token bucket for development and Redis/Lua token bucket for
-  atomic distributed enforcement.
-- [ ] Add API-key authentication using constant-time digest comparison.
-- [ ] Add idempotent credit reservation, commit, and release around upstream usage.
-- [ ] Return standard rate-limit headers and stable machine-readable errors.
-- [ ] Test concurrency, Redis failure behavior, refunds, and duplicate operations.
+- [x] Implement local token bucket for development (`internal/ratelimit`). Redis/Lua
+  distributed enforcement deferred to a later pass.
+- [x] Add API-key authentication using constant-time digest comparison (`internal/auth`).
+- [x] Add idempotent credit reservation, commit, and release (`internal/credit`) —
+  reservation semantics refund unused/failed usage. Not yet wired into the request
+  path (cost estimation pending).
+- [x] Return `Retry-After` + stable machine-readable error codes on 401/403/429.
+- [x] Unit-test refunds, duplicate (idempotent) operations, and bucket refill;
+  concurrency/Redis-failure tests deferred with Redis.
 
 ## Phase 5 — API and provider wiring
 
-Status: **Pending**
+Status: **In progress** (security composition wired end-to-end; use-case layer & streaming deferred)
 
-- [ ] Introduce application use cases that orchestrate auth, quota, ingress,
-  upstream, egress, credits, and audit without depending on HTTP.
-- [ ] Wire OpenAI-compatible chat and responses endpoints with dependency injection.
-- [ ] Preserve streaming semantics with an explicitly documented buffered-security
-  mode; never imply a stream was scanned before it was buffered.
-- [ ] Add request IDs, panic recovery, secure headers, observability, readiness, and
-  graceful draining.
-- [ ] Add golden HTTP contract tests and end-to-end tests with fake dependencies.
+- [x] Compose auth → quota → ingress cascade → upstream → egress on the proxied
+  OpenAI path (`internal/gateway`), constructed from config in `cmd/server`. The
+  hexagonal `ingress.Cascade` (heuristics → remote ML `/classify` → remote judge
+  `/judge`) supersedes the prototype guards when `ML_BASE_URL` is set.
+- [x] OpenAI-compatible chat/responses/models endpoints proxy with DI of the
+  security ports; the ML classifier scores the extracted user prompt (not role
+  labels / model id).
+- [ ] Extract a transport-independent application use-case type (currently composed
+  in the gateway handler); wire credit reserve/commit around upstream usage.
+- [ ] Preserve streaming with an explicit buffered-security mode (still buffered-only).
+- [x] Request logging + graceful draining present; add panic recovery + full
+  observability in Phase 6.
+- [x] End-to-end tests with fake upstream + fake security service
+  (`phase5_integration_test.go`): auth 401, benign 200, classifier-flagged 403,
+  rate-limit 429. Verified live against the real Python model service end-to-end.
 
 ## Phase 6 — Production hardening and delivery
 

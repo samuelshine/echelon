@@ -7,11 +7,17 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
+	"github.com/jscyril/echelon/internal/auth"
 	"github.com/jscyril/echelon/internal/config"
+	"github.com/jscyril/echelon/internal/core"
 	"github.com/jscyril/echelon/internal/gateway"
 	"github.com/jscyril/echelon/internal/guard"
+	"github.com/jscyril/echelon/internal/ingress"
+	"github.com/jscyril/echelon/internal/ports"
+	"github.com/jscyril/echelon/internal/ratelimit"
 )
 
 func main() {
@@ -33,11 +39,25 @@ func main() {
 
 	outputScanner := guard.NewOutputScanner(cfg.SystemCanary)
 
+	// Hexagonal security composition. The ingress cascade (heuristics -> remote ML
+	// classifier -> remote LLM judge) is wired when ML_BASE_URL is configured; it
+	// then supersedes the prototype guards on the proxied OpenAI path.
+	securityClient := &http.Client{Timeout: cfg.Pipeline.JudgeTimeout + cfg.Pipeline.MLTimeout}
+	ingressCascade := buildIngress(cfg, securityClient, logger)
+	authenticator := buildAuthenticator(logger)
+	var rateLimiter ports.RateLimiter
+	if cfg.RateLimit.Backend == "memory" {
+		rateLimiter = ratelimit.NewMemoryTokenBucket()
+	}
+
 	app := gateway.New(gateway.Options{
 		Config:        cfg,
 		Logger:        logger,
 		Guards:        filterChain,
 		OutputScanner: outputScanner,
+		Ingress:       ingressCascade,
+		Authenticator: authenticator,
+		RateLimiter:   rateLimiter,
 		HTTPClient: &http.Client{
 			Timeout: cfg.UpstreamTimeout,
 		},
@@ -72,4 +92,76 @@ func main() {
 		logger.Error("graceful shutdown failed", "error", err)
 		os.Exit(1)
 	}
+}
+
+// buildIngress assembles the heuristics -> remote ML classifier -> remote judge
+// cascade. It returns nil (prototype guards remain in effect) when ML_BASE_URL is
+// unset, so local development without the Python security service still works.
+func buildIngress(cfg config.Config, client *http.Client, logger *slog.Logger) ports.IngressLayer {
+	if cfg.Pipeline.MLBaseURL == nil {
+		logger.Info("ingress cascade disabled (no ML_BASE_URL); using prototype guards")
+		return nil
+	}
+	classifier, err := ingress.NewHTTPClassifier("ml_classifier", cfg.Pipeline.MLBaseURL, client)
+	if err != nil {
+		logger.Error("classifier adapter build failed; falling back to prototype guards", "error", err)
+		return nil
+	}
+	var judge ports.PromptJudge
+	if cfg.Pipeline.JudgeBaseURL != nil {
+		if j, jerr := ingress.NewHTTPJudge("llm_judge", cfg.Pipeline.JudgeBaseURL, client); jerr == nil {
+			judge = j
+		} else {
+			logger.Error("judge adapter build failed; cascade will fail-to-escalate", "error", jerr)
+		}
+	}
+	cascade, err := ingress.NewCascade(ingress.CascadeConfig{
+		HeuristicTimeout:  cfg.Pipeline.HeuristicTimeout,
+		ClassifierTimeout: cfg.Pipeline.MLTimeout,
+		JudgeTimeout:      cfg.Pipeline.JudgeTimeout,
+		JudgeThreshold:    cfg.Pipeline.MLJudgeThreshold,
+		BlockThreshold:    cfg.Pipeline.MLBlockThreshold,
+		FailClosed:        cfg.Pipeline.FailClosed,
+	}, ingress.NewHeuristic(), classifier, judge)
+	if err != nil {
+		logger.Error("ingress cascade build failed; falling back to prototype guards", "error", err)
+		return nil
+	}
+	logger.Info("ingress cascade enabled", "ml_base_url", cfg.Pipeline.MLBaseURL.String(), "judge_wired", judge != nil)
+	return cascade
+}
+
+// buildAuthenticator reads ECHELON_API_KEYS ("key:tenant:keyid:plan,...") and
+// returns nil (auth disabled) when unset, keeping local development frictionless.
+func buildAuthenticator(logger *slog.Logger) ports.Authenticator {
+	raw := strings.TrimSpace(os.Getenv("ECHELON_API_KEYS"))
+	if raw == "" {
+		logger.Info("api-key auth disabled (no ECHELON_API_KEYS)")
+		return nil
+	}
+	keys := map[string]core.Identity{}
+	for _, entry := range strings.Split(raw, ",") {
+		parts := strings.Split(strings.TrimSpace(entry), ":")
+		if len(parts) < 2 || parts[0] == "" {
+			continue
+		}
+		id := core.Identity{TenantID: parts[1]}
+		if len(parts) > 2 {
+			id.APIKeyID = parts[2]
+		}
+		if len(parts) > 3 {
+			id.Plan = parts[3]
+		}
+		keys[parts[0]] = id
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	authenticator, err := auth.NewStaticAPIKeyAuthenticator(keys)
+	if err != nil {
+		logger.Error("api-key auth build failed; auth disabled", "error", err)
+		return nil
+	}
+	logger.Info("api-key auth enabled", "key_count", len(keys))
+	return authenticator
 }

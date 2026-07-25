@@ -18,6 +18,8 @@ import (
 	"github.com/jscyril/echelon/internal/ingress"
 	"github.com/jscyril/echelon/internal/ports"
 	"github.com/jscyril/echelon/internal/ratelimit"
+	"github.com/jscyril/echelon/internal/telemetry"
+	"time"
 )
 
 func main() {
@@ -50,6 +52,8 @@ func main() {
 		rateLimiter = ratelimit.NewMemoryTokenBucket()
 	}
 
+	telemetryStore := telemetry.NewStore(5000)
+
 	app := gateway.New(gateway.Options{
 		Config:        cfg,
 		Logger:        logger,
@@ -58,6 +62,9 @@ func main() {
 		Ingress:       ingressCascade,
 		Authenticator: authenticator,
 		RateLimiter:   rateLimiter,
+		Telemetry:     telemetryStore,
+		ConsoleKeys:   buildConsoleKeys(cfg),
+		CreditsBudget: 1_000_000,
 		HTTPClient: &http.Client{
 			Timeout: cfg.UpstreamTimeout,
 		},
@@ -129,6 +136,38 @@ func buildIngress(cfg config.Config, client *http.Client, logger *slog.Logger) p
 	}
 	logger.Info("ingress cascade enabled", "ml_base_url", cfg.Pipeline.MLBaseURL.String(), "judge_wired", judge != nil)
 	return cascade
+}
+
+// buildConsoleKeys renders privacy-safe API-key metadata for the console from the
+// same ECHELON_API_KEYS env ("key:tenant:keyid:plan,..."). Only the last 4 chars
+// of each key are retained.
+func buildConsoleKeys(cfg config.Config) []gateway.ConsoleKeyInfo {
+	raw := strings.TrimSpace(os.Getenv("ECHELON_API_KEYS"))
+	if raw == "" {
+		return nil
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+	var keys []gateway.ConsoleKeyInfo
+	for _, entry := range strings.Split(raw, ",") {
+		parts := strings.Split(strings.TrimSpace(entry), ":")
+		if len(parts) < 2 || parts[0] == "" {
+			continue
+		}
+		key := parts[0]
+		last4 := key
+		if len(key) > 4 {
+			last4 = key[len(key)-4:]
+		}
+		id := parts[1]
+		if len(parts) > 2 {
+			id = parts[2]
+		}
+		keys = append(keys, gateway.ConsoleKeyInfo{
+			ID: id, Label: parts[1], Last4: last4, CreatedAt: now, Status: "active",
+			RateLimitRpm: int(cfg.RateLimit.Limit), CreditBudget: 100_000,
+		})
+	}
+	return keys
 }
 
 // buildAuthenticator reads ECHELON_API_KEYS ("key:tenant:keyid:plan,...") and

@@ -16,7 +16,19 @@ import (
 	"github.com/jscyril/echelon/internal/core"
 	"github.com/jscyril/echelon/internal/guard"
 	"github.com/jscyril/echelon/internal/ports"
+	"github.com/jscyril/echelon/internal/telemetry"
 )
+
+// ConsoleKeyInfo is privacy-safe API-key metadata surfaced to the console.
+type ConsoleKeyInfo struct {
+	ID           string `json:"id"`
+	Label        string `json:"label"`
+	Last4        string `json:"last4"`
+	CreatedAt    string `json:"createdAt"`
+	Status       string `json:"status"`
+	RateLimitRpm int    `json:"rateLimitRpm"`
+	CreditBudget int64  `json:"creditBudget"`
+}
 
 type HTTPDoer interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -35,6 +47,11 @@ type Options struct {
 	Egress        ports.EgressScanner
 	Authenticator ports.Authenticator
 	RateLimiter   ports.RateLimiter
+	// Console telemetry (B2). When Telemetry is set, decisions are recorded and the
+	// /v1/console/* read API is served.
+	Telemetry     *telemetry.Store
+	ConsoleKeys   []ConsoleKeyInfo
+	CreditsBudget int64
 }
 
 type Gateway struct {
@@ -47,6 +64,9 @@ type Gateway struct {
 	egress        ports.EgressScanner
 	authenticator ports.Authenticator
 	rateLimiter   ports.RateLimiter
+	telemetry     *telemetry.Store
+	consoleKeys   []ConsoleKeyInfo
+	creditsBudget int64
 }
 
 func New(opts Options) *Gateway {
@@ -70,6 +90,9 @@ func New(opts Options) *Gateway {
 		egress:        opts.Egress,
 		authenticator: opts.Authenticator,
 		rateLimiter:   opts.RateLimiter,
+		telemetry:     opts.Telemetry,
+		consoleKeys:   opts.ConsoleKeys,
+		creditsBudget: opts.CreditsBudget,
 	}
 }
 
@@ -84,7 +107,13 @@ func (g *Gateway) Routes() http.Handler {
 	mux.HandleFunc("GET /v1/models", g.models)
 	mux.HandleFunc("POST /v1/chat/completions", g.chatCompletions)
 	mux.HandleFunc("POST /v1/responses", g.responses)
-	return g.withRequestLog(mux)
+	// Console read API (B2).
+	mux.HandleFunc("GET /v1/console/summary", g.consoleSummary)
+	mux.HandleFunc("GET /v1/console/metrics", g.consoleMetrics)
+	mux.HandleFunc("GET /v1/console/events", g.consoleEvents)
+	mux.HandleFunc("GET /v1/console/keys", g.consoleKeysHandler)
+	mux.HandleFunc("GET /v1/console/config", g.consoleConfig)
+	return corsForConsole(g.withRequestLog(mux))
 }
 
 func (g *Gateway) health(w http.ResponseWriter, _ *http.Request) {
@@ -190,6 +219,7 @@ func (g *Gateway) responses(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPath string) {
+	start := time.Now()
 	body := []byte(nil)
 	if r.Body != nil {
 		var err error
@@ -254,6 +284,7 @@ func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPa
 				return
 			}
 			if verdict.Action == core.ActionBlock {
+				g.recordEvent(identity, verdict, start, nil)
 				writeError(w, http.StatusForbidden, findingCode(verdict, "ingress_blocked"), "prompt blocked by ingress policy")
 				return
 			}
@@ -309,6 +340,8 @@ func (g *Gateway) proxyOpenAI(w http.ResponseWriter, r *http.Request, upstreamPa
 			return
 		}
 	}
+
+	g.recordEvent(identity, core.Allow(), start, respBody)
 
 	copyResponseHeaders(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
@@ -495,6 +528,198 @@ func writeContent(b *strings.Builder, value any) {
 			writeContent(b, item)
 		}
 	}
+}
+
+// --- Console telemetry (B2) ---------------------------------------------------
+
+func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte) {
+	if g.telemetry == nil {
+		return
+	}
+	latencyUs := time.Since(start).Microseconds()
+	finalVerdict := mapVerdict(verdict.Action)
+	risk := 0.0
+	blockedAt := ""
+	category := "clean"
+	layers := make([]telemetry.LayerResult, 0, len(verdict.Findings))
+	for _, f := range verdict.Findings {
+		if f.Confidence > risk {
+			risk = f.Confidence
+		}
+		layer := mapLayer(f.Layer)
+		if blockedAt == "" {
+			blockedAt = layer
+		}
+		if category == "clean" {
+			category = mapCategory(f.Code)
+		}
+		layers = append(layers, telemetry.LayerResult{
+			Layer: layer, Verdict: finalVerdict, Score: round4(f.Confidence),
+			Threshold: g.cfg.Pipeline.MLBlockThreshold, Model: f.Layer,
+			Detail: map[string]any{"code": f.Code, "message": f.Message},
+		})
+	}
+	if len(layers) == 0 {
+		layers = append(layers, telemetry.LayerResult{
+			Layer: "heuristics", Verdict: "pass", Threshold: g.cfg.Pipeline.MLBlockThreshold,
+			LatencyUs: latencyUs, Detail: map[string]any{},
+		})
+	}
+	in, out := estimateTokens(respBody)
+	blocked := ""
+	if finalVerdict != "pass" {
+		blocked = blockedAt
+	}
+	apiKey := identity.APIKeyID
+	if apiKey == "" {
+		apiKey = "anonymous"
+	}
+	g.telemetry.Record(telemetry.PromptEvent{
+		ID: fmt.Sprintf("evt_%x", time.Now().UnixNano()), Direction: "ingress",
+		FinalVerdict: finalVerdict, RiskScore: round4(risk), Category: category,
+		BlockedAtLayer: blocked, Layers: layers, Tokens: telemetry.Tokens{In: in, Out: out},
+		LatencyOverheadUs: latencyUs, APIKeyID: apiKey, Excerpt: "[redacted]",
+	})
+}
+
+func (g *Gateway) consoleSummary(w http.ResponseWriter, _ *http.Request) {
+	if g.telemetry == nil {
+		writeJSON(w, http.StatusOK, map[string]any{})
+		return
+	}
+	writeJSON(w, http.StatusOK, g.telemetry.Summary(g.creditsBudget))
+}
+
+func (g *Gateway) consoleMetrics(w http.ResponseWriter, _ *http.Request) {
+	if g.telemetry == nil {
+		writeJSON(w, http.StatusOK, []any{})
+		return
+	}
+	writeJSON(w, http.StatusOK, g.telemetry.Series(time.Hour, 24))
+}
+
+func (g *Gateway) consoleEvents(w http.ResponseWriter, _ *http.Request) {
+	if g.telemetry == nil {
+		writeJSON(w, http.StatusOK, []any{})
+		return
+	}
+	writeJSON(w, http.StatusOK, g.telemetry.Events(500))
+}
+
+func (g *Gateway) consoleKeysHandler(w http.ResponseWriter, _ *http.Request) {
+	usage := map[string]struct {
+		Calls       int
+		CreditsUsed int64
+		LastUsedAt  string
+	}{}
+	if g.telemetry != nil {
+		usage = g.telemetry.KeyUsage()
+	}
+	out := make([]map[string]any, 0, len(g.consoleKeys))
+	for _, k := range g.consoleKeys {
+		u := usage[k.ID]
+		key := map[string]any{
+			"id": k.ID, "label": k.Label, "last4": k.Last4, "createdAt": k.CreatedAt,
+			"status": k.Status, "rateLimitRpm": k.RateLimitRpm, "creditBudget": k.CreditBudget,
+			"creditsUsed": u.CreditsUsed,
+		}
+		if u.LastUsedAt != "" {
+			key["lastUsedAt"] = u.LastUsedAt
+		}
+		out = append(out, key)
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (g *Gateway) consoleConfig(w http.ResponseWriter, _ *http.Request) {
+	ingress := []map[string]any{
+		{"layer": "heuristics", "enabled": true, "threshold": 0.35},
+		{"layer": "ml_classifier", "enabled": g.cfg.Pipeline.MLBaseURL != nil, "threshold": g.cfg.Pipeline.MLJudgeThreshold, "model": "layer2-threat-distilbert"},
+		{"layer": "llm_judge", "enabled": g.cfg.Pipeline.JudgeBaseURL != nil, "threshold": g.cfg.Pipeline.MLBlockThreshold, "model": "claude-judge"},
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ingress": ingress,
+		"egress": map[string]any{
+			"piiMasking": g.outputScanner != nil || g.egress != nil, "toxicityScan": true, "policyEnforcement": true,
+		},
+	})
+}
+
+func corsForConsole(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/v1/console/") {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func mapVerdict(action core.Action) string {
+	switch action {
+	case core.ActionBlock:
+		return "block"
+	case core.ActionRedact:
+		return "flag"
+	default:
+		return "pass"
+	}
+}
+
+func mapLayer(layer string) string {
+	switch layer {
+	case "heuristic", "heuristics", "ingress_cascade":
+		return "heuristics"
+	case "llm_judge", "judge":
+		return "llm_judge"
+	default:
+		return "ml_classifier"
+	}
+}
+
+func mapCategory(code string) string {
+	c := strings.ToLower(code)
+	switch {
+	case strings.Contains(c, "leak"), strings.Contains(c, "extract"), strings.Contains(c, "exfil"):
+		return "data_exfiltration"
+	case strings.Contains(c, "role"), strings.Contains(c, "jailbreak"), strings.Contains(c, "dan"):
+		return "jailbreak"
+	case strings.Contains(c, "code"), strings.Contains(c, "malicious"), strings.Contains(c, "policy"):
+		return "policy_violation"
+	case strings.Contains(c, "tox"), strings.Contains(c, "harm"):
+		return "toxicity"
+	case strings.Contains(c, "pii"):
+		return "pii_leak"
+	case strings.Contains(c, "inject"), strings.Contains(c, "override"), strings.Contains(c, "delimiter"):
+		return "prompt_injection"
+	default:
+		return "prompt_injection"
+	}
+}
+
+func estimateTokens(respBody []byte) (int, int) {
+	if len(respBody) > 0 {
+		var payload struct {
+			Usage struct {
+				PromptTokens     int `json:"prompt_tokens"`
+				CompletionTokens int `json:"completion_tokens"`
+			} `json:"usage"`
+		}
+		if err := json.Unmarshal(respBody, &payload); err == nil && (payload.Usage.PromptTokens+payload.Usage.CompletionTokens) > 0 {
+			return payload.Usage.PromptTokens, payload.Usage.CompletionTokens
+		}
+		return 0, len(respBody) / 4
+	}
+	return 0, 0
+}
+
+func round4(v float64) float64 {
+	return float64(int64(v*10000+0.5)) / 10000
 }
 
 func extractModel(body []byte) string {

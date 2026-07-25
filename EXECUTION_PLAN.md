@@ -89,6 +89,18 @@ Status: **In progress** (security composition wired end-to-end; use-case layer &
   (`phase5_integration_test.go`): auth 401, benign 200, classifier-flagged 403,
   rate-limit 429. Verified live against the real Python model service end-to-end.
 
+## Console telemetry API (B2)
+
+Status: **Done** (in-memory)
+
+- [x] `internal/telemetry` bounded ring buffer of privacy-safe decision records (no
+  raw prompt/response text — verdicts, scores, timing, identifiers only).
+- [x] Gateway records each proxied request (block + pass) and serves the console
+  read API in the exact shapes the Next.js console consumes:
+  `GET /v1/console/{summary,metrics,events,keys,config}` with CORS for the browser.
+- [x] Category and per-layer mapping from core verdicts to the console domain model;
+  API-key usage aggregated per key. Verified live end-to-end against real traffic.
+
 ## Phase 6 — Production hardening and delivery
 
 Status: **Pending**

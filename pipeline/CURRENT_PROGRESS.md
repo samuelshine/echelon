@@ -365,3 +365,29 @@ this service; then B2 telemetry API, F1 frontend wiring, X integration.
   the `malicious_code` head near-zero and never triggers judge escalation.
   Needs an output-aware retrain or an unconditional judge escalation on
   code-shaped output. Full detail in root `DEMO.md` → "Honest limitations."
+
+## Egress `malicious_code` gap mitigated: code-shape heuristic (2026-08-01)
+
+**Phase 2 of the production-hardening plan.** Added `_looks_like_code()` +
+`_apply_code_shape_floor()` to `service/security_api.py`: response text that
+structurally looks like code (compiled-regex markers for imports/defs/
+`subprocess`/`socket`/`eval(`/`curl -`/`rm -rf`/PowerShell etc., plus a
+code-punctuation-density fallback) has its raw `malicious_code` score floored
+to `SPARSE_TRIGGER` (0.30) before the existing sparse-category mitigation
+runs — egress-only, ingress `/classify`/`/judge` unchanged. 5 new tests in
+`tests/test_security_api.py` (128/128 passing, isolated lightweight venv —
+flask/cryptography/numpy, no torch needed since the transformer adapter
+lazy-imports it and the tests use fixture adapters).
+
+**Verified live end-to-end through the full gateway** (real trained model +
+real Ollama judge `mistral-nemo:12b`, crafted fake upstream, actual
+`POST /v1/chat/completions`): the operational-keylogger scenario that
+previously returned 200 now returns **403** (`malicious_code`); the
+defensive YARA-rule scenario still returns **200** (judge correctly
+distinguishes intent — no new false-positive block). Full detail and exact
+verified numbers in root `DEMO.md` → "Honest limitations."
+
+Not a retrain — a pattern-based mitigation. Heavily obfuscated or
+unusually-shaped code that matches none of the markers and has low symbol
+density can still slip past the floor; an output-aware retrain remains the
+real fix and is out of scope for this pass.

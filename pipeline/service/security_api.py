@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import dataclasses
 import os
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -93,6 +94,70 @@ def _aggregate_response(scores):
     mitigated = _mitigated_scores(scores)
     relevant = {k: v for k, v in mitigated.items() if k in RESPONSE_RELEVANT_CATEGORIES}
     return max(relevant.values(), default=0.0)
+
+
+# --- Egress code-shape mitigation (RESPONSE PATH ONLY) -----------------------
+# The Layer 2 model was trained on prompt/attack text only, never on real
+# generated code (assistant responses were excluded from the corpus). So actual
+# operational code in an LLM RESPONSE scores the malicious_code head near-zero
+# (~0.0003 observed on a live keylogger sample). That miss keeps it below
+# SPARSE_TRIGGER, so _mitigated_scores' sparse floor never engages on egress and
+# operational code would pass without ever reaching the judge. To close that gap
+# without a retrain, we cheaply detect response text that is SHAPED like code and
+# floor its raw malicious_code score up to SPARSE_TRIGGER, so the existing
+# floor/cap/judge-escalation machinery engages naturally. This is deliberately
+# liberal: a false positive costs one extra judge call (the judge is what
+# distinguishes operational-malicious from benign/defensive output), never a hard
+# block (the floor still caps at SPARSE_CAP < the block threshold). This must NOT
+# be applied on the ingress path, which already escalates via natural-language
+# patterns and must keep its current behavior.
+_CODE_MARKER_PATTERNS = (
+    re.compile(r"\b(?:import|#include|require|using)\b"),
+    re.compile(r"\b(?:def|function|func|class|struct|void|public|private|static)\b"),
+    re.compile(r"\b(?:subprocess|socket|os\.system|pty|ctypes|urllib|requests|winreg)\b"),
+    re.compile(r"\b(?:eval|exec|system|popen|fork|execve|spawn|shellcode)\s*\("),
+    re.compile(r"(?:curl|wget|chmod|chown|nc|netcat)\s+-"),
+    re.compile(r"\brm\s+-rf\b"),
+    re.compile(r"(?:powershell|Invoke-\w+|New-Object|DownloadString|base64)"),
+    re.compile(r"[A-Za-z_]\w*\s*=\s*[A-Za-z_0-9\"'\[{(]"),  # assignment
+    re.compile(r"^\s*(?:for|while|if|elif|try|except|catch|return)\b", re.MULTILINE),
+)
+_CODE_SYMBOLS = frozenset("{};()[]=<>")
+_CODE_SYMBOL_DENSITY = 0.06  # ratio of code punctuation to text length
+_CODE_MIN_LENGTH = 40  # ignore short fragments; not enough signal to judge shape
+
+
+def _looks_like_code(text: str) -> bool:
+    """Cheap, deterministic 'is this response text shaped like code?' check.
+
+    No ML, no network, bounded cost — same spirit as the layer1 heuristics.
+    Trips on either two-or-more code-marker matches OR high code-punctuation
+    density over a minimum length, so a single stray keyword in prose does not
+    fire but real code (Python/JS/C/shell/PowerShell/rule DSLs) does.
+    Intentionally liberal — see the block comment above.
+    """
+    if len(text) < _CODE_MIN_LENGTH:
+        return False
+    marker_hits = sum(len(pattern.findall(text)) for pattern in _CODE_MARKER_PATTERNS)
+    if marker_hits >= 2:
+        return True
+    symbols = sum(1 for char in text if char in _CODE_SYMBOLS)
+    return symbols / len(text) >= _CODE_SYMBOL_DENSITY
+
+
+def _apply_code_shape_floor(text, scores):
+    """Floor malicious_code to SPARSE_TRIGGER on code-shaped RESPONSE text.
+
+    Returns a copy with the floor applied so the sparse-category mitigation and
+    judge escalation engage; a no-op (returns the input) when the text is not
+    code-shaped or the score is already at/above the trigger. Each handler passes
+    its own copy of the classifier's per-category scores.
+    """
+    if _looks_like_code(text) and scores.get("malicious_code", 0.0) < SPARSE_TRIGGER:
+        out = dict(scores)
+        out["malicious_code"] = SPARSE_TRIGGER
+        return out
+    return scores
 
 
 app = Flask(__name__)
@@ -230,8 +295,11 @@ def classify_response():
     except Exception:
         app.logger.error("classify_response failed", exc_info=False)
         return jsonify({"error": "classifier unavailable"}), 503
+    # Code-shaped output floors malicious_code so the sparse mitigation engages
+    # and the aggregate reaches the judge-escalation band (egress path only).
+    scored = _apply_code_shape_floor(text, result.category_scores)
     return jsonify({
-        "malicious_probability": round(float(_aggregate_response(result.category_scores)), 6),
+        "malicious_probability": round(float(_aggregate_response(scored)), 6),
         "labels": {k: round(float(v), 6) for k, v in result.category_scores.items()},
     })
 
@@ -248,8 +316,11 @@ def judge_response():
         judge_layer = _response_judge()
         layer1 = analyzer.analyze(text)
         layer2 = classifier.analyze(text)
-        weighted = _mitigated_scores(layer2.category_scores)
-        aggregate = _aggregate_response(layer2.category_scores)
+        # Floor malicious_code on code-shaped output (egress path only) so the
+        # sparse mitigation and aggregate escalate to the judge.
+        scored = _apply_code_shape_floor(text, layer2.category_scores)
+        weighted = _mitigated_scores(scored)
+        aggregate = _aggregate_response(scored)
         layer2 = dataclasses.replace(
             layer2, category_scores=weighted, risk_score=aggregate,
             route=ThresholdPolicy().route(aggregate),

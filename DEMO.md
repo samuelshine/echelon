@@ -112,8 +112,8 @@ Sending OpenAI-compatible requests to the gateway (`Bearer sk-demo`):
 |---|---|---|
 | Toxic/harassing text | **403** | classifier ambiguous → escalates to the response judge → blocks (`toxicity_harm`) |
 | Email + SSN in the reply | **200, redacted** | in-Go `PIIScanner` masks before the client ever sees it — deterministic, no model call |
-| Operational keylogger code | **200 (not blocked)** | see "Honest limitations" — the classifier's `malicious_code` head scores real malware near-zero on output text, so the aggregate never crosses the escalate threshold and the judge is never invoked |
-| Defensive YARA-rule explanation of the same technique | **200** | correctly allowed (verified the judge distinguishes this from the operational case when it *is* invoked) |
+| Operational keylogger code | **403** (`malicious_code`) | classifier still scores it near-zero, but the code-shape floor (2026-08-01 fix, see "Honest limitations") escalates it to the judge, which blocks it |
+| Defensive YARA-rule explanation of the same technique | **200** | also escalates via the same code-shape floor, but the judge correctly distinguishes it from the operational case and allows it |
 
 The console then shows these as a live ledger with per-layer drill-down (a
 distinct "Egress" cascade view — pii → canary check → response classifier →
@@ -134,22 +134,42 @@ co-located monorepo layout (`pipeline/`, `gateway/`, `console/`); see
   than trust the raw score, any non-trivial sparse signal is mapped into the escalate
   band so it is **always routed to the LLM judge**, which adjudicates. A model with
   more matched defensive/offensive training data would need this crutch less.
-- **Egress `malicious_code` detection has a real, verified gap.** The Layer 2 model
-  was trained exclusively on prompt/attack text — assistant responses were explicitly
-  excluded from its training corpus. On ingress, prompts *requesting* malicious code
-  still often score high enough (≥0.30 raw) for the sparse-category mitigation to
-  force escalation to the judge. On egress, actual generated code (Python/C snippets)
-  scores consistently near-zero on the `malicious_code` head (~0.0003 observed on a
-  live operational-keylogger sample) — the model has simply never seen code syntax as
-  an input feature. Since the egress cascade only escalates to the judge when the
-  classifier's aggregate crosses `ML_JUDGE_THRESHOLD`, and that never happens for pure
-  code output, **the judge is never invoked and operational malicious code presently
-  passes egress unblocked** (verified live: a working keylogger sample returned 200).
-  `toxicity_harm` and PII do not share this gap — they were verified to block/redact
-  correctly. Fixing this properly needs either an output-aware retrain (code-as-input
-  training examples) or an architecture change that escalates code-shaped output to
-  the judge unconditionally (adds judge latency to every response containing code,
-  a real throughput trade-off) rather than gating on an unreliable classifier signal.
+- **Egress `malicious_code` detection is mitigated by a code-shape heuristic, not
+  solved by a retrain.** The Layer 2 model was trained exclusively on prompt/attack
+  text — assistant responses were explicitly excluded from its training corpus. On
+  ingress, prompts *requesting* malicious code still often score high enough (≥0.30
+  raw) for the sparse-category mitigation to force escalation to the judge. On egress,
+  actual generated code (Python/C snippets) scores consistently near-zero on the
+  `malicious_code` head (~0.0003 observed on a live operational-keylogger sample) — the
+  model has simply never seen code syntax as an input feature — so left alone the
+  aggregate never crosses the escalate threshold and the judge is never invoked. To
+  close that gap without an output-aware retrain, the egress routes now run a cheap,
+  deterministic **code-shape detector** (`_looks_like_code` in `service/security_api.py`:
+  compiled-regex markers for imports/defs/`subprocess`/`socket`/`eval(`/`curl -`/
+  `rm -rf`/PowerShell etc., plus a code-punctuation-density fallback). When response
+  text looks like code, its raw `malicious_code` score is floored up to the sparse
+  trigger (0.30) so the **same conservative sparse-category mitigation described above**
+  engages: the score is mapped into the escalate band `[0.60, 0.88]`, so code-shaped
+  output is **always routed to the LLM judge**, which distinguishes operational-malicious
+  from benign/defensive, and the fix is **never silently passed nor auto hard-blocked**
+  (the cap stays below the block threshold, so a false "looks like code" costs only one
+  extra judge call, not a false block). **Verified live end-to-end (2026-08-01)**
+  through the full gateway (real trained model + real Ollama judge, `mistral-nemo:12b`,
+  a crafted fake upstream, and an actual `POST /v1/chat/completions` call — not just
+  the Python service in isolation): the operational-keylogger response now gets
+  **403** (`{"code":"malicious_code","message":"response blocked by egress policy"}`) —
+  previously this exact scenario returned 200. Underneath, `malicious_code` still scores
+  near-zero (`0.0012` raw, honestly reported in `labels`), but the code-shape floor pushes
+  `/classify_response`'s aggregate to `0.6` and `/judge_response` returns
+  `{"malicious": true, "confidence": 0.95, "code": "malicious_code"}`. The same defensive
+  YARA-rule detection signature also escalates the same way (the heuristic doesn't
+  distinguish intent, by design) but the full gateway request still returns **200** with
+  the content intact — the judge correctly tells operational and defensive code apart, so
+  there's no new false-positive block. This is a pattern-based mitigation, not perfect
+  coverage: heavily obfuscated or unusually-shaped malicious code that matches none of the
+  markers and carries low symbol density could still slip past the floor — an
+  output-aware retrain remains the real fix. `toxicity_harm` and PII never shared this
+  gap — they block/redact correctly on their own.
 - **Ollama judge instruction tuning is prompt-sensitive.** The first version of the
   egress judge instruction incorrectly flagged a defensive YARA-rule explanation as
   malicious; it needed an explicit "detection signatures/explanations are benign,

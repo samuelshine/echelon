@@ -158,8 +158,8 @@ Status: **Done** (in-memory)
 
 Status: **Pending** (Docker/Compose done; the rest not started)
 
-- [ ] Add Prometheus-compatible metrics, OpenTelemetry spans, and privacy-safe audit
-  sinks.
+- [x] Add Prometheus-compatible metrics, OpenTelemetry spans, and privacy-safe audit
+  sinks. See "Observability addendum" below.
 - [x] Add Docker image (`deploy/Dockerfile.gateway`) and Compose development
   stack (`docker-compose.yml`) for all three services.
 - [ ] Add Kubernetes probes/resources and example production configuration.
@@ -185,6 +185,81 @@ Status: **Pending** (Docker/Compose done; the rest not started)
   `gofmt` violations in `gateway_test.go`/`anthropic.go`/`gemini.go`, no
   logic changes), console typecheck/test/build clean, pipeline 123/123 tests
   green in an isolated lightweight venv.
+
+### Observability addendum — metrics, tracing, durable audit sink (2026-08-01)
+
+Delivers the first Phase 6 bullet ("Prometheus-compatible metrics, OpenTelemetry
+spans, and privacy-safe audit sinks"). All three additions are optional and
+default to today's exact behavior; the gateway still runs with zero external deps.
+
+- **Prometheus metrics** (`internal/observability/metrics.go`, new package).
+  `GET /metrics` is exposed unauthenticated in `Routes()`
+  (`internal/gateway/gateway.go`, `mux.Handle("GET /metrics", ...)`), same tier as
+  `/healthz`/`/readyz`. Five bounded-cardinality families:
+  `echelon_http_requests_total{route,status}` +
+  `echelon_http_request_duration_seconds{route}` (recorded in `withRequestLog`
+  via a `normalizeRoute` allowlist so unknown paths collapse to `other`);
+  `echelon_cascade_decisions_total{direction,layer,verdict}` (one per layer,
+  emitted inside `recordEvent`); `echelon_rate_limit_rejections_total` (the 429
+  branch); `echelon_credit_reservations_total{outcome}` (the four Reserve/
+  Insufficient/Commit/Release ledger call sites). Each `Metrics` owns a private
+  `prometheus.NewRegistry()`, so the ~12 test files that build many `*Gateway`s in
+  one binary never hit promauto's duplicate-registration panic. Metric methods are
+  nil-safe. Tests: `internal/observability/metrics_test.go`,
+  `internal/gateway/phase6_observability_test.go`.
+- **OpenTelemetry tracing** (`internal/observability/tracing.go`). Configured only
+  through the standard `OTEL_*` env vars; with no OTLP endpoint set, `InitTracer`
+  returns `noop.NewTracerProvider()` (zero overhead, zero behavior change). Wired
+  at the composition root (`cmd/server/main.go`). Spans are deliberately coarse
+  and confined to `proxyLLM`: one root span per route plus child spans around the
+  rate-limit check, `ingress.Evaluate`, `provider.Forward*`, and `egress.Scan` —
+  no `context` threading was pushed into the ingress/egress internal packages.
+  Attributes are low-cardinality only (route, direction, verdict, provider); no
+  raw prompt/response content, honoring the engineering invariant above.
+- **Durable audit sink** (`internal/telemetry/postgres.go`, `PostgresSink` via
+  `pgxpool`). `telemetry.Store.Record` is unchanged on the hot path: it still does
+  the synchronous in-memory ring append and now *additionally* performs a
+  non-blocking channel hand-off to a single background drain goroutine
+  (`Store.RunSink`, stopped by `main.go`'s `signal.NotifyContext`). A slow or
+  unavailable Postgres can never add request latency or fail a request — a full
+  buffer drops the event with a rate-limited warning. On startup the ring is
+  hydrated from the most recent rows (`Recent` → `Hydrate`) so a restart doesn't
+  show an empty console. Enabled only when `AUDIT_DATABASE_URL` is set (new
+  optional config in `internal/config/config.go`); unset → in-memory only.
+  `docker-compose.yml` gains an additive, internal-only `postgres:16-alpine`
+  service (opt-in, not wired into the gateway's default env). Tests:
+  `internal/telemetry/sink_test.go` (backpressure/no-block, hydrate ordering,
+  fake-sink forwarding) and `postgres_test.go` (live round-trip, **skips cleanly**
+  when no `AUDIT_TEST_DATABASE_URL`/reachable DB — Docker is unavailable here).
+- **Cleanup:** removed the dead `ports.AuditEvent` struct and `ports.AuditSink`
+  interface (`internal/ports/ports.go`) — scaffolding from an earlier design pass,
+  referenced nowhere; the real audit trail is `telemetry.PromptEvent`.
+- **`go.mod`:** added `github.com/prometheus/client_golang`,
+  `go.opentelemetry.io/otel` (+ `sdk`, `trace`, `otlptracehttp` exporter), and
+  `github.com/jackc/pgx/v5`. These transitively require Go ≥ 1.25, bumping the
+  `go` directive from 1.24 → 1.25.0 (README updated to match).
+- **Verification:** `go build ./...`, `go vet ./...`, `gofmt -l .` (empty), and
+  `go test -race ./...` all pass locally (2026-08-01).
+- **Verified live (2026-08-01) against a real `postgres` server** (not just the
+  automated test suite, which skips without one): installed Postgres locally,
+  built the gateway binary, ran it with `AUDIT_DATABASE_URL` set, drove 3 real
+  `POST /v1/chat/completions` requests, confirmed 3 privacy-safe rows landed in
+  `prompt_events` (`excerpt='[redacted]'`, real `tokens_in`/`tokens_out`/verdict),
+  scraped `/metrics` and saw the exact expected counters (`echelon_http_requests_total`,
+  `echelon_credit_reservations_total{outcome="reserved"|"committed"}`, per-layer
+  `echelon_cascade_decisions_total`), then **killed and restarted the gateway
+  process** and confirmed the log line `audit ring hydrated from postgres
+  events=3` and that `GET /v1/console/events` immediately served the 3
+  historical events on a cold process — the exact "console shows empty after
+  restart" gap this addendum exists to close, closed and proven, not just
+  unit-tested.
+- **Not done / deferred honestly:** no live-Postgres path in **CI** (Docker
+  unavailable in this environment — the automated `postgres_test.go` skips
+  without a reachable test DB, my live verification above was manual, not
+  CI-automated); OTel tracing verified only against the no-op path, not a live
+  OTLP collector; metrics/spans are gateway-request-scoped only (no runtime
+  `go_*`/process collectors registered, no spans inside the security cascades
+  by design — see "coarse span granularity" above).
 
 ## Immediate next steps
 

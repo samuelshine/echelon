@@ -49,20 +49,6 @@ type Authenticator interface {
 	Authenticate(ctx context.Context, credential string) (core.Identity, error)
 }
 
-type AuditEvent struct {
-	RequestID   string
-	TenantID    string
-	Direction   core.Direction
-	Action      core.Action
-	Findings    []core.Finding
-	PayloadHash string
-	OccurredAt  time.Time
-}
-
-type AuditSink interface {
-	Record(ctx context.Context, event AuditEvent) error
-}
-
 type Clock interface {
 	Now() time.Time
 }

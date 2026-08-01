@@ -9,15 +9,21 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/jscyril/echelon/internal/config"
 	"github.com/jscyril/echelon/internal/core"
 	"github.com/jscyril/echelon/internal/guard"
+	"github.com/jscyril/echelon/internal/observability"
 	"github.com/jscyril/echelon/internal/ports"
 	"github.com/jscyril/echelon/internal/telemetry"
 	"github.com/jscyril/echelon/internal/upstream"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 // ConsoleKeyInfo is privacy-safe API-key metadata surfaced to the console.
@@ -57,6 +63,13 @@ type Options struct {
 	Telemetry     *telemetry.Store
 	ConsoleKeys   []ConsoleKeyInfo
 	CreditsBudget int64
+	// Observability (Phase 6). Metrics is optional — when nil a private
+	// per-instance registry is constructed so /metrics always works and the test
+	// suite can build many Gateways without duplicate-registration panics.
+	// TracerProvider is optional — when nil a no-op provider is used (zero
+	// overhead, zero behavior change).
+	Metrics        *observability.Metrics
+	TracerProvider trace.TracerProvider
 }
 
 type Gateway struct {
@@ -74,6 +87,8 @@ type Gateway struct {
 	telemetry       *telemetry.Store
 	consoleKeys     []ConsoleKeyInfo
 	creditsBudget   int64
+	metrics         *observability.Metrics
+	tracer          trace.Tracer
 }
 
 func New(opts Options) *Gateway {
@@ -83,6 +98,21 @@ func New(opts Options) *Gateway {
 	}
 
 	upstreamRouter := opts.UpstreamRouter
+
+	metrics := opts.Metrics
+	if metrics == nil {
+		// A private per-instance registry keeps /metrics functional while never
+		// touching the global default registerer, so building many Gateways in
+		// one process (the test suite) never panics on duplicate registration.
+		metrics = observability.NewMetrics()
+	}
+
+	var tracer trace.Tracer
+	if opts.TracerProvider != nil {
+		tracer = opts.TracerProvider.Tracer("github.com/jscyril/echelon/internal/gateway")
+	} else {
+		tracer = noop.NewTracerProvider().Tracer("github.com/jscyril/echelon/internal/gateway")
+	}
 
 	return &Gateway{
 		cfg:             opts.Config,
@@ -99,6 +129,8 @@ func New(opts Options) *Gateway {
 		telemetry:       opts.Telemetry,
 		consoleKeys:     opts.ConsoleKeys,
 		creditsBudget:   opts.CreditsBudget,
+		metrics:         metrics,
+		tracer:          tracer,
 	}
 }
 
@@ -106,6 +138,8 @@ func (g *Gateway) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", g.health)
 	mux.HandleFunc("GET /readyz", g.ready)
+	// Prometheus exposition — unauthenticated, same tier as healthz/readyz.
+	mux.Handle("GET /metrics", g.metrics.Handler())
 	mux.HandleFunc("GET /admin/config", g.configSummary)
 	mux.HandleFunc("GET /admin/guards", g.guardSummary)
 	mux.HandleFunc("POST /v1/guard/preflight", g.preflight)
@@ -226,6 +260,14 @@ func (g *Gateway) responses(w http.ResponseWriter, r *http.Request) {
 
 func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath string) {
 	start := time.Now()
+
+	// One coarse root span per request, named after the route. Child spans below
+	// wrap each major stage. With a no-op tracer (the default) this is free.
+	ctx, span := g.tracer.Start(r.Context(), upstreamPath, trace.WithSpanKind(trace.SpanKindServer))
+	span.SetAttributes(attribute.String("echelon.route", upstreamPath))
+	defer span.End()
+	r = r.WithContext(ctx)
+
 	body := []byte(nil)
 	if r.Body != nil {
 		var err error
@@ -253,7 +295,8 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		if key == "" {
 			key = clientIP(r)
 		}
-		decision, err := g.rateLimiter.Allow(r.Context(), core.RateLimit{
+		rlCtx, rlSpan := g.tracer.Start(r.Context(), "ratelimit.admit")
+		decision, err := g.rateLimiter.Allow(rlCtx, core.RateLimit{
 			Key:   g.cfg.RateLimit.KeyPrefix + key,
 			Cost:  1,
 			Limit: g.cfg.RateLimit.Limit,
@@ -261,10 +304,15 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 			Every: g.cfg.RateLimit.Window,
 		})
 		if err == nil && !decision.Allowed {
+			rlSpan.SetAttributes(attribute.Bool("echelon.rate_limited", true))
+			rlSpan.End()
+			g.metrics.RateLimitRejection()
+			span.SetStatus(codes.Error, "rate_limited")
 			w.Header().Set("Retry-After", retryAfterSeconds(decision.ResetAt))
 			writeError(w, http.StatusTooManyRequests, "rate_limited", "request quota exceeded")
 			return
 		}
+		rlSpan.End()
 	}
 
 	// Ingress security: the hexagonal cascade when wired, else the prototype guards.
@@ -280,16 +328,25 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 			if cleanPrompt == "" {
 				cleanPrompt = promptText
 			}
-			verdict, err := g.ingress.Evaluate(r.Context(), core.Prompt{
+			igCtx, igSpan := g.tracer.Start(r.Context(), "ingress.evaluate")
+			igSpan.SetAttributes(attribute.String("echelon.direction", "ingress"))
+			verdict, err := g.ingress.Evaluate(igCtx, core.Prompt{
 				RequestID: r.Header.Get("X-Request-ID"), TenantID: identity.TenantID,
 				APIKeyID: identity.APIKeyID, Route: upstreamPath,
 				Model: extractModel(body), Text: cleanPrompt, Body: body,
 			})
+			if err != nil {
+				igSpan.RecordError(err)
+			}
+			igSpan.SetAttributes(attribute.String("echelon.verdict", mapVerdict(verdict.Action)))
+			igSpan.End()
 			if err != nil && g.cfg.Pipeline.FailClosed {
+				span.SetStatus(codes.Error, "ingress_unavailable")
 				writeError(w, http.StatusForbidden, "security_unavailable", "ingress security is unavailable")
 				return
 			}
 			if verdict.Action == core.ActionBlock {
+				span.SetStatus(codes.Error, "ingress_blocked")
 				g.recordEvent(identity, verdict, start, nil, "", "ingress")
 				writeError(w, http.StatusForbidden, findingCode(verdict, "ingress_blocked"), "prompt blocked by ingress policy")
 				return
@@ -317,9 +374,12 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		}
 		res, rerr := g.creditLedger.Reserve(r.Context(), identity.TenantID, idemKey, 1)
 		if rerr != nil {
+			g.metrics.CreditReservation("insufficient")
+			span.SetStatus(codes.Error, "insufficient_credits")
 			writeError(w, http.StatusPaymentRequired, "insufficient_credits", "credit budget exhausted")
 			return
 		}
+		g.metrics.CreditReservation("reserved")
 		creditRes = res
 		creditHeld = true
 	}
@@ -329,23 +389,32 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	var providerName string
 	model := extractModel(body)
 
+	upCtx, upSpan := g.tracer.Start(r.Context(), "upstream.forward")
 	if upstreamPath == "/v1/models" {
 		provider := g.upstreamRouter.DefaultProvider()
 		providerName = provider.Name()
-		resp, err = provider.ForwardModels(r.Context())
+		resp, err = provider.ForwardModels(upCtx)
 	} else {
 		provider := g.upstreamRouter.Resolve(model)
 		providerName = provider.Name()
-		resp, err = provider.ForwardChat(r.Context(), model, body)
+		resp, err = provider.ForwardChat(upCtx, model, body)
 	}
+	upSpan.SetAttributes(attribute.String("echelon.provider", providerName))
+	if err != nil {
+		upSpan.RecordError(err)
+		upSpan.SetStatus(codes.Error, "upstream error")
+	}
+	upSpan.End()
 
 	if err != nil {
 		// The upstream never produced a response, so nothing was actually charged
 		// on the provider side — return the reserved credit to the tenant.
 		if creditHeld {
 			_ = g.creditLedger.Release(r.Context(), creditRes)
+			g.metrics.CreditReservation("released")
 			creditHeld = false
 		}
+		span.SetStatus(codes.Error, "upstream_unavailable")
 		writeError(w, http.StatusBadGateway, "upstream_unavailable", err.Error())
 		return
 	}
@@ -355,6 +424,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	// the tenant is charged regardless of what egress later decides.
 	if creditHeld {
 		_ = g.creditLedger.Commit(r.Context(), creditRes, 1)
+		g.metrics.CreditReservation("committed")
 		creditHeld = false
 	}
 
@@ -369,15 +439,24 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	direction := "ingress"
 	if g.egress != nil {
 		direction = "egress"
-		scanned, verdict, err := g.egress.Scan(r.Context(), core.ModelResponse{
+		egCtx, egSpan := g.tracer.Start(r.Context(), "egress.scan")
+		egSpan.SetAttributes(attribute.String("echelon.direction", "egress"))
+		scanned, verdict, err := g.egress.Scan(egCtx, core.ModelResponse{
 			RequestID: r.Header.Get("X-Request-ID"), TenantID: identity.TenantID,
 			Route: upstreamPath, Model: model, Body: respBody,
 		})
+		if err != nil {
+			egSpan.RecordError(err)
+		}
+		egSpan.SetAttributes(attribute.String("echelon.verdict", mapVerdict(verdict.Action)))
+		egSpan.End()
 		if err != nil && g.cfg.Pipeline.FailClosed {
+			span.SetStatus(codes.Error, "egress_unavailable")
 			writeError(w, http.StatusForbidden, "egress_unavailable", "egress security is unavailable")
 			return
 		}
 		if verdict.Action == core.ActionBlock {
+			span.SetStatus(codes.Error, "egress_blocked")
 			g.recordEvent(identity, verdict, start, nil, providerName, direction)
 			writeError(w, http.StatusForbidden, findingCode(verdict, "egress_blocked"), "response blocked by egress policy")
 			return
@@ -396,6 +475,11 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 			return
 		}
 	}
+
+	span.SetAttributes(
+		attribute.String("echelon.direction", direction),
+		attribute.String("echelon.final_verdict", mapVerdict(finalVerdict.Action)),
+	)
 
 	g.recordEvent(identity, finalVerdict, start, respBody, providerName, direction)
 
@@ -435,13 +519,32 @@ func (g *Gateway) withRequestLog(next http.Handler) http.Handler {
 		start := time.Now()
 		recorder := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
 		next.ServeHTTP(recorder, r)
+		elapsed := time.Since(start)
+		route := normalizeRoute(r.URL.Path)
+		g.metrics.ObserveHTTP(route, strconv.Itoa(recorder.statusCode), elapsed)
 		g.logger.Info("request completed",
 			"method", r.Method,
 			"path", r.URL.Path,
 			"status", recorder.statusCode,
-			"duration_ms", time.Since(start).Milliseconds(),
+			"duration_ms", elapsed.Milliseconds(),
 		)
 	})
+}
+
+// normalizeRoute maps a request path to a bounded, low-cardinality label so the
+// Prometheus route label never explodes on unknown/probed paths.
+func normalizeRoute(path string) string {
+	switch path {
+	case "/healthz", "/readyz", "/metrics",
+		"/admin/config", "/admin/guards",
+		"/v1/guard/preflight", "/v1/guard/output-scan",
+		"/v1/models", "/v1/chat/completions", "/v1/responses",
+		"/v1/console/summary", "/v1/console/metrics", "/v1/console/events",
+		"/v1/console/keys", "/v1/console/config":
+		return path
+	default:
+		return "other"
+	}
 }
 
 func extractPromptText(body []byte) (string, error) {
@@ -605,6 +708,11 @@ func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, star
 			LatencyUs: latencyUs, Detail: map[string]any{},
 		})
 	}
+	// Emit one bounded-cardinality cascade metric per layer ruling.
+	for _, l := range layers {
+		g.metrics.CascadeDecision(direction, l.Layer, l.Verdict)
+	}
+
 	in, out := estimateTokens(respBody)
 	blocked := ""
 	if finalVerdict != "pass" {

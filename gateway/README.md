@@ -100,8 +100,9 @@ internal/gateway/    prototype HTTP adapter (application wiring in Phase 5)
 
 ## Run locally
 
-Go 1.24 or newer is required (bumped from 1.22 by the Redis client/test
-dependencies added in Phase 4).
+Go 1.25 or newer is required (bumped from 1.24 by the OpenTelemetry/pgx
+observability dependencies added in Phase 6; 1.24 was itself a bump from 1.22 by
+the Redis client/test dependencies added in Phase 4).
 
 ```sh
 cp .env.example .env
@@ -130,6 +131,7 @@ configured value through readiness or admin responses.
 | --- | --- | --- |
 | `GET` | `/healthz` | Process liveness. |
 | `GET` | `/readyz` | Redacted runtime readiness. |
+| `GET` | `/metrics` | Prometheus exposition (unauthenticated). |
 | `GET` | `/admin/config` | Redacted configuration summary. |
 | `GET` | `/admin/guards` | Enabled prompt and output plugins. |
 | `POST` | `/v1/guard/preflight` | Prompt checks without an upstream call. |
@@ -152,6 +154,7 @@ are:
 | Classifiers | `ML_BASE_URL`, `JUDGE_BASE_URL`, `ML_*_THRESHOLD` |
 | Failure policy | `SECURITY_FAIL_CLOSED` |
 | Quota | `RATE_LIMIT_BACKEND`, `REDIS_URL`, `RATE_LIMIT_*` |
+| Observability | `AUDIT_DATABASE_URL` (durable audit sink), standard `OTEL_*` (tracing) |
 
 Configuration is rejected at startup if URLs are malformed, thresholds are
 inverted, Redis is selected without a URL, values are non-positive, or the global

@@ -38,6 +38,24 @@ services:
       timeout: 5s
       retries: 10
 
+  # Local/dev parity for the durable audit sink (AUDIT_DATABASE_URL). Internal-only
+  # (no host port mapping) — reachable from the gateway as postgres:5432. The
+  # gateway service below still defaults to the in-memory telemetry ring; set
+  # AUDIT_DATABASE_URL=postgres://echelon:echelon@postgres:5432/echelon?sslmode=disable
+  # in its environment to opt in and persist the privacy-safe prompt_events table.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: echelon
+      POSTGRES_PASSWORD: echelon
+      POSTGRES_DB: echelon
+    expose: ["5432"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "echelon"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   gateway:
     build:
       context: ./gateway

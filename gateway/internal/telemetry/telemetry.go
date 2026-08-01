@@ -5,6 +5,8 @@
 package telemetry
 
 import (
+	"context"
+	"log/slog"
 	"sort"
 	"sync"
 	"time"
@@ -43,13 +45,30 @@ type PromptEvent struct {
 	Excerpt           string        `json:"excerpt"`
 }
 
-// Store is a thread-safe ring buffer of events.
+// Sink is an optional durable destination for events. It is deliberately local
+// to the telemetry package (keyed on PromptEvent, the real recorded shape) rather
+// than a generic audit port. Implementations must tolerate being called from a
+// single background goroutine and should honor ctx cancellation.
+type Sink interface {
+	Record(ctx context.Context, e PromptEvent) error
+}
+
+// Store is a thread-safe ring buffer of events, with an optional best-effort
+// durable Sink drained by a background goroutine.
 type Store struct {
 	mu       sync.RWMutex
 	events   []PromptEvent
 	capacity int
 	seq      int64
 	now      func() time.Time
+
+	// Durable-sink plumbing (nil unless RunSink was called). sinkCh is a bounded
+	// buffered channel; Record does a non-blocking send onto it so a slow or
+	// unavailable Sink can never add latency to or fail a request.
+	sinkCh   chan PromptEvent
+	logger   *slog.Logger
+	dropped  int64
+	lastWarn time.Time
 }
 
 func NewStore(capacity int) *Store {
@@ -59,10 +78,13 @@ func NewStore(capacity int) *Store {
 	return &Store{capacity: capacity, now: time.Now}
 }
 
-// Record appends an event, evicting the oldest when at capacity.
+// Record appends an event to the in-memory ring (fully synchronous, unchanged
+// behavior) and, when a durable Sink is configured, additionally performs a
+// non-blocking hand-off to the background drain goroutine. The hand-off never
+// blocks: if the buffer is full the event is dropped and a rate-limited warning
+// is logged — durability is best-effort and must never stall the hot path.
 func (s *Store) Record(e PromptEvent) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	if e.Ts == "" {
 		e.Ts = s.now().UTC().Format(time.RFC3339)
 	}
@@ -70,6 +92,99 @@ func (s *Store) Record(e PromptEvent) {
 	if len(s.events) > s.capacity {
 		s.events = s.events[len(s.events)-s.capacity:]
 	}
+	ch := s.sinkCh
+	s.mu.Unlock()
+
+	if ch == nil {
+		return
+	}
+	select {
+	case ch <- e:
+	default:
+		s.warnDrop()
+	}
+}
+
+// warnDrop counts dropped events and logs at most once every 5s to avoid log
+// floods under sustained backpressure.
+func (s *Store) warnDrop() {
+	s.mu.Lock()
+	s.dropped++
+	dropped := s.dropped
+	now := s.now()
+	shouldWarn := now.Sub(s.lastWarn) >= 5*time.Second
+	if shouldWarn {
+		s.lastWarn = now
+	}
+	logger := s.logger
+	s.mu.Unlock()
+	if shouldWarn && logger != nil {
+		logger.Warn("telemetry durable sink buffer full; dropping events", "dropped_total", dropped)
+	}
+}
+
+// RunSink wires a durable Sink and starts the single background drain goroutine.
+// It is idempotent-safe to call once at startup; the goroutine stops when ctx is
+// cancelled (hook it to main.go's signal.NotifyContext). A nil sink is a no-op,
+// leaving the Store purely in-memory.
+func (s *Store) RunSink(ctx context.Context, sink Sink, logger *slog.Logger) {
+	s.runSinkWithBuffer(ctx, sink, logger, 1024)
+}
+
+// runSinkWithBuffer is the tunable core of RunSink; buffer sizing is exposed to
+// tests so backpressure/drop behavior can be exercised deterministically.
+func (s *Store) runSinkWithBuffer(ctx context.Context, sink Sink, logger *slog.Logger, buffer int) {
+	if sink == nil {
+		return
+	}
+	if logger == nil {
+		logger = slog.Default()
+	}
+	if buffer <= 0 {
+		buffer = 1
+	}
+	ch := make(chan PromptEvent, buffer)
+	s.mu.Lock()
+	if s.sinkCh != nil { // already running; do not start a second drainer
+		s.mu.Unlock()
+		return
+	}
+	s.sinkCh = ch
+	s.logger = logger
+	s.mu.Unlock()
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case e := <-ch:
+				writeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				if err := sink.Record(writeCtx, e); err != nil {
+					logger.Warn("telemetry durable sink write failed", "error", err)
+				}
+				cancel()
+			}
+		}
+	}()
+}
+
+// Hydrate replaces the in-memory ring with the supplied events (chronological,
+// oldest-first), keeping at most capacity of them. Used at startup to restore the
+// most recent rows from a durable Sink so a restart does not show an empty
+// console.
+func (s *Store) Hydrate(events []PromptEvent) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(events) > s.capacity {
+		events = events[len(events)-s.capacity:]
+	}
+	s.events = append(s.events[:0:0], events...)
+}
+
+// Capacity returns the ring buffer's configured capacity.
+func (s *Store) Capacity() int {
+	return s.capacity
 }
 
 // Events returns up to limit most-recent events, newest first.

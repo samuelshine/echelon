@@ -18,11 +18,13 @@ import (
 	"github.com/jscyril/echelon/internal/gateway"
 	"github.com/jscyril/echelon/internal/guard"
 	"github.com/jscyril/echelon/internal/ingress"
+	"github.com/jscyril/echelon/internal/observability"
 	"github.com/jscyril/echelon/internal/ports"
 	"github.com/jscyril/echelon/internal/ratelimit"
 	"github.com/jscyril/echelon/internal/telemetry"
 	"github.com/jscyril/echelon/internal/upstream"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel"
 	"time"
 )
 
@@ -82,7 +84,40 @@ func main() {
 		logger.Info("in-memory rate limiter + credit ledger enabled", "tenants_seeded", len(creditSeed))
 	}
 
+	// OpenTelemetry tracing. Driven entirely by the standard OTEL_* env vars; with
+	// no OTLP endpoint configured this is a no-op provider (zero overhead).
+	tracerProvider, shutdownTracer, err := observability.InitTracer(context.Background())
+	if err != nil {
+		logger.Error("otel tracer init failed; continuing without tracing", "error", err)
+	}
+	otel.SetTracerProvider(tracerProvider)
+	defer func() {
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = shutdownTracer(shutdownCtx)
+	}()
+
 	telemetryStore := telemetry.NewStore(5000)
+
+	// Durable audit sink (optional). When AUDIT_DATABASE_URL is set, persist
+	// events to Postgres and hydrate the ring from the most recent rows so a
+	// restart doesn't show an empty console. Unset → in-memory only (no dep).
+	var auditSink *telemetry.PostgresSink
+	if cfg.AuditDatabaseURL != "" {
+		sink, serr := telemetry.NewPostgresSink(context.Background(), cfg.AuditDatabaseURL)
+		if serr != nil {
+			logger.Error("audit postgres sink disabled", "error", serr)
+		} else {
+			auditSink = sink
+			if recent, herr := sink.Recent(context.Background(), telemetryStore.Capacity()); herr != nil {
+				logger.Warn("audit hydrate failed", "error", herr)
+			} else {
+				telemetryStore.Hydrate(recent)
+				logger.Info("audit ring hydrated from postgres", "events", len(recent))
+			}
+			defer sink.Close()
+		}
+	}
 
 	app := gateway.New(gateway.Options{
 		Config:          cfg,
@@ -99,6 +134,7 @@ func main() {
 		ConsoleKeys:     buildConsoleKeys(cfg),
 		CreditsBudget:   1_000_000,
 		UpstreamRouter:  buildProviderRouter(cfg, logger),
+		TracerProvider:  tracerProvider,
 	})
 
 	server := &http.Server{
@@ -112,6 +148,12 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	// Drain the telemetry ring's durable-sink channel until shutdown. No-op when
+	// no sink was configured.
+	if auditSink != nil {
+		telemetryStore.RunSink(ctx, auditSink, logger)
+	}
 
 	go func() {
 		logger.Info("echelon gateway listening", "addr", cfg.Address)

@@ -72,6 +72,10 @@ type Config struct {
 	Pipeline        PipelineConfig
 	RateLimit       RateLimitConfig
 	Providers       ProvidersConfig
+	// AuditDatabaseURL, when set, enables the durable Postgres audit sink for the
+	// telemetry ring buffer. Unset (the default) keeps the gateway purely
+	// in-memory with no Postgres dependency.
+	AuditDatabaseURL string
 }
 
 func Load() (Config, error) {
@@ -114,17 +118,18 @@ func Load() (Config, error) {
 	}
 
 	cfg := Config{
-		Address:         envString("HTTP_ADDR", defaultAddress),
-		UpstreamBaseURL: upstream,
-		UpstreamAPIKey:  os.Getenv("UPSTREAM_API_KEY"),
-		MaxRequestBytes: maxRequestBytes,
-		UpstreamTimeout: upstreamTimeout,
-		SystemCanary:    envString("SYSTEM_CANARY", "[SYSTEM_CANARY_DEV]"),
-		LogLevel:        logLevel,
-		RequestTimeout:  requestTimeout,
-		Pipeline:        pipeline,
-		RateLimit:       rateLimit,
-		Providers:       loadProvidersConfig(),
+		Address:          envString("HTTP_ADDR", defaultAddress),
+		UpstreamBaseURL:  upstream,
+		UpstreamAPIKey:   os.Getenv("UPSTREAM_API_KEY"),
+		MaxRequestBytes:  maxRequestBytes,
+		UpstreamTimeout:  upstreamTimeout,
+		SystemCanary:     envString("SYSTEM_CANARY", "[SYSTEM_CANARY_DEV]"),
+		LogLevel:         logLevel,
+		RequestTimeout:   requestTimeout,
+		Pipeline:         pipeline,
+		RateLimit:        rateLimit,
+		Providers:        loadProvidersConfig(),
+		AuditDatabaseURL: strings.TrimSpace(os.Getenv("AUDIT_DATABASE_URL")),
 	}
 	if cfg.ReadTimeout, err = envDuration("HTTP_READ_TIMEOUT", 5*time.Second); err != nil {
 		return Config{}, err

@@ -25,6 +25,19 @@ services:
       timeout: 5s
       retries: 10
 
+  # Local/dev parity for RATE_LIMIT_BACKEND=redis. Internal-only (no host port
+  # mapping, no auth) — reachable from other services as redis:6379. The gateway
+  # service below still defaults to the in-memory backend; set RATE_LIMIT_BACKEND
+  # and REDIS_URL=redis://redis:6379/0 in its environment to opt in.
+  redis:
+    image: redis:7-alpine
+    expose: ["6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   gateway:
     build:
       context: ./gateway

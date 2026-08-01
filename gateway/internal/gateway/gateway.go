@@ -1,6 +1,8 @@
 package gateway
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -47,6 +49,9 @@ type Options struct {
 	EgressMLEnabled bool
 	Authenticator   ports.Authenticator
 	RateLimiter     ports.RateLimiter
+	// CreditLedger enforces per-tenant credit budgets (flat 1 credit per completed
+	// request). Enforced when set and auth is enabled; skipped otherwise.
+	CreditLedger ports.CreditLedger
 	// Console telemetry (B2). When Telemetry is set, decisions are recorded and the
 	// /v1/console/* read API is served.
 	Telemetry     *telemetry.Store
@@ -65,6 +70,7 @@ type Gateway struct {
 	egressMLEnabled bool
 	authenticator   ports.Authenticator
 	rateLimiter     ports.RateLimiter
+	creditLedger    ports.CreditLedger
 	telemetry       *telemetry.Store
 	consoleKeys     []ConsoleKeyInfo
 	creditsBudget   int64
@@ -89,6 +95,7 @@ func New(opts Options) *Gateway {
 		egressMLEnabled: opts.EgressMLEnabled,
 		authenticator:   opts.Authenticator,
 		rateLimiter:     opts.RateLimiter,
+		creditLedger:    opts.CreditLedger,
 		telemetry:       opts.Telemetry,
 		consoleKeys:     opts.ConsoleKeys,
 		creditsBudget:   opts.CreditsBudget,
@@ -296,6 +303,27 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		}
 	}
 
+	// Credit enforcement (flat 1 credit per completed request). Reserved here —
+	// after rate-limit and ingress have admitted the request — so a request blocked
+	// upstream of this point never touches credits. Released below if the upstream
+	// call never completes; committed once a response is received. Skipped entirely
+	// when no ledger is configured or auth is disabled (there is no tenant to bill).
+	var creditRes core.CreditReservation
+	var creditHeld bool
+	if g.creditLedger != nil && identity.TenantID != "" {
+		idemKey := r.Header.Get("X-Request-ID")
+		if idemKey == "" {
+			idemKey = newRequestID()
+		}
+		res, rerr := g.creditLedger.Reserve(r.Context(), identity.TenantID, idemKey, 1)
+		if rerr != nil {
+			writeError(w, http.StatusPaymentRequired, "insufficient_credits", "credit budget exhausted")
+			return
+		}
+		creditRes = res
+		creditHeld = true
+	}
+
 	var resp *http.Response
 	var err error
 	var providerName string
@@ -312,10 +340,23 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	}
 
 	if err != nil {
+		// The upstream never produced a response, so nothing was actually charged
+		// on the provider side — return the reserved credit to the tenant.
+		if creditHeld {
+			_ = g.creditLedger.Release(r.Context(), creditRes)
+			creditHeld = false
+		}
 		writeError(w, http.StatusBadGateway, "upstream_unavailable", err.Error())
 		return
 	}
 	defer resp.Body.Close()
+
+	// A response was received: the upstream provider actually ran the request, so
+	// the tenant is charged regardless of what egress later decides.
+	if creditHeld {
+		_ = g.creditLedger.Commit(r.Context(), creditRes, 1)
+		creditHeld = false
+	}
 
 	respBody, err := readLimited(resp.Body, g.cfg.MaxRequestBytes)
 	if err != nil {
@@ -755,6 +796,14 @@ func findingCode(verdict core.Verdict, fallback string) string {
 		return verdict.Findings[0].Code
 	}
 	return fallback
+}
+
+// newRequestID mints a random idempotency key when the client sends no
+// X-Request-ID, mirroring credit.newID (hex-encoded crypto/rand, no new dep).
+func newRequestID() string {
+	buf := make([]byte, 16)
+	_, _ = rand.Read(buf)
+	return hex.EncodeToString(buf)
 }
 
 func clientIP(r *http.Request) string {

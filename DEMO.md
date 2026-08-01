@@ -63,7 +63,7 @@ timing, and identifiers only (event excerpts are `[redacted]`).
 ## Run it locally (no Docker)
 
 Requires: Python 3.13 venv with the pipeline deps, the trained model at
-`models/layer2-threat-distilbert/best` (see `rnd` branch), Go 1.22+, Node 20+.
+`models/layer2-threat-distilbert/best` (see `rnd` branch), Go 1.24+, Node 20+.
 
 ```bash
 # 1. Security service (from the rnd checkout)

@@ -100,7 +100,8 @@ internal/gateway/    prototype HTTP adapter (application wiring in Phase 5)
 
 ## Run locally
 
-Go 1.22 or newer is required.
+Go 1.24 or newer is required (bumped from 1.22 by the Redis client/test
+dependencies added in Phase 4).
 
 ```sh
 cp .env.example .env

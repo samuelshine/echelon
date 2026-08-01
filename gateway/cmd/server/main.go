@@ -13,6 +13,7 @@ import (
 	"github.com/jscyril/echelon/internal/auth"
 	"github.com/jscyril/echelon/internal/config"
 	"github.com/jscyril/echelon/internal/core"
+	"github.com/jscyril/echelon/internal/credit"
 	"github.com/jscyril/echelon/internal/egress"
 	"github.com/jscyril/echelon/internal/gateway"
 	"github.com/jscyril/echelon/internal/guard"
@@ -21,6 +22,7 @@ import (
 	"github.com/jscyril/echelon/internal/ratelimit"
 	"github.com/jscyril/echelon/internal/telemetry"
 	"github.com/jscyril/echelon/internal/upstream"
+	"github.com/redis/go-redis/v9"
 	"time"
 )
 
@@ -50,9 +52,34 @@ func main() {
 	ingressCascade := buildIngress(cfg, securityClient, logger)
 	egressPipeline, egressMLEnabled := buildEgress(cfg, securityClient, logger)
 	authenticator := buildAuthenticator(logger)
+
+	// Rate limiter + credit ledger share a single backend flag (RATE_LIMIT_BACKEND):
+	// "redis" wires both against one shared *redis.Client; "memory" (the default)
+	// wires the in-process adapters. There is deliberately no separate CREDIT_BACKEND
+	// in this phase — one flag governs both distributed adapters.
+	creditSeed := buildCreditSeed(cfg)
 	var rateLimiter ports.RateLimiter
-	if cfg.RateLimit.Backend == "memory" {
+	var creditLedger ports.CreditLedger
+	switch cfg.RateLimit.Backend {
+	case "redis":
+		opts, err := redis.ParseURL(cfg.RateLimit.RedisURL)
+		if err != nil {
+			logger.Error("invalid REDIS_URL", "error", err)
+			os.Exit(1)
+		}
+		client := redis.NewClient(opts)
+		rateLimiter = ratelimit.NewRedisTokenBucket(client)
+		ledger, err := credit.NewRedisLedger(client, creditSeed, 0)
+		if err != nil {
+			logger.Error("failed to seed redis credit ledger", "error", err)
+			os.Exit(1)
+		}
+		creditLedger = ledger
+		logger.Info("redis rate limiter + credit ledger enabled", "tenants_seeded", len(creditSeed))
+	default: // "memory"
 		rateLimiter = ratelimit.NewMemoryTokenBucket()
+		creditLedger = credit.NewMemoryLedger(creditSeed)
+		logger.Info("in-memory rate limiter + credit ledger enabled", "tenants_seeded", len(creditSeed))
 	}
 
 	telemetryStore := telemetry.NewStore(5000)
@@ -67,6 +94,7 @@ func main() {
 		EgressMLEnabled: egressMLEnabled,
 		Authenticator:   authenticator,
 		RateLimiter:     rateLimiter,
+		CreditLedger:    creditLedger,
 		Telemetry:       telemetryStore,
 		ConsoleKeys:     buildConsoleKeys(cfg),
 		CreditsBudget:   1_000_000,
@@ -275,6 +303,32 @@ func buildConsoleKeys(cfg config.Config) []gateway.ConsoleKeyInfo {
 		})
 	}
 	return keys
+}
+
+// buildCreditSeed parses ECHELON_API_KEYS ("key:tenant:keyid:plan,...") the same
+// way buildConsoleKeys/buildAuthenticator do (parts[1] is the tenant, matching the
+// core.Identity.TenantID the authenticator emits) and returns each distinct tenant
+// seeded to 100_000 credits — the same budget buildConsoleKeys surfaces to the
+// console. Returns an empty map when auth is disabled (no tenant to bill).
+func buildCreditSeed(cfg config.Config) map[string]int64 {
+	_ = cfg // seeding derives from ECHELON_API_KEYS, kept for signature symmetry
+	seed := map[string]int64{}
+	raw := strings.TrimSpace(os.Getenv("ECHELON_API_KEYS"))
+	if raw == "" {
+		return seed
+	}
+	for _, entry := range strings.Split(raw, ",") {
+		parts := strings.Split(strings.TrimSpace(entry), ":")
+		if len(parts) < 2 || parts[0] == "" {
+			continue
+		}
+		tenant := parts[1]
+		if tenant == "" {
+			continue
+		}
+		seed[tenant] = 100_000
+	}
+	return seed
 }
 
 // buildAuthenticator reads ECHELON_API_KEYS ("key:tenant:keyid:plan,...") and

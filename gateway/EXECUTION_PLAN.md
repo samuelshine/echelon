@@ -74,17 +74,51 @@ Status: **Complete**
 
 ## Phase 4 — Gateway protection and wallet controls
 
-Status: **In progress** (in-memory adapters complete; Redis deferred)
+Status: **Done** (memory + Redis adapters implemented; token-based cost estimation deferred)
 
-- [x] Implement local token bucket for development (`internal/ratelimit`). Redis/Lua
-  distributed enforcement deferred to a later pass.
+- [x] Implement local token bucket for development (`internal/ratelimit`).
+- [x] Implement a distributed Redis/Lua token bucket (`internal/ratelimit/redis.go`,
+  `RedisTokenBucket`) with the same admission semantics as the in-memory bucket —
+  refill + check + decrement executed as a single Lua script (`EVAL`) so multiple
+  gateway replicas sharing one Redis instance cannot over-admit.
 - [x] Add API-key authentication using constant-time digest comparison (`internal/auth`).
 - [x] Add idempotent credit reservation, commit, and release (`internal/credit`) —
-  reservation semantics refund unused/failed usage. Not yet wired into the request
-  path (cost estimation pending).
-- [x] Return `Retry-After` + stable machine-readable error codes on 401/403/429.
-- [x] Unit-test refunds, duplicate (idempotent) operations, and bucket refill;
-  concurrency/Redis-failure tests deferred with Redis.
+  reservation semantics refund unused/failed usage.
+- [x] Implement a distributed Redis/Lua credit ledger (`internal/credit/redis.go`,
+  `RedisLedger`) mirroring `MemoryLedger`'s reservation semantics — Reserve/Commit/
+  Release each run as a single Lua script; abandoned reservations are lazily
+  reclaimed via a per-tenant holds ZSET swept on every `Reserve`.
+- [x] Wire credit reserve/commit/release into the request path
+  (`internal/gateway/gateway.go`, `proxyLLM`): a credit is reserved after
+  admission (auth + rate limit) and before the upstream call, released if the
+  upstream call errors out, and committed once a response is received. Enforced
+  for both the memory and Redis backends — `cmd/server/main.go` constructs
+  whichever `ports.CreditLedger` matches `RATE_LIMIT_BACKEND` (the same flag
+  now governs both the rate limiter and the credit ledger; there is no separate
+  `CREDIT_BACKEND`) and passes it into `gateway.Options.CreditLedger`.
+  Cost model is currently **flat 1 credit per completed request**; token-based
+  cost estimation (pricing by prompt/completion tokens) is a **deferred
+  follow-up**, not yet implemented.
+- [x] Return `Retry-After` + stable machine-readable error codes on 401/403/429
+  (rate limit) and 402 (insufficient credits).
+- [x] Unit-test refunds, duplicate (idempotent) operations, and bucket refill for
+  both backends, including Redis-specific coverage (`internal/ratelimit/redis_test.go`,
+  `internal/credit/redis_test.go`, via `miniredis`) and end-to-end credit
+  enforcement through the gateway handler (`internal/gateway/phase3_credit_test.go`).
+  All packages green under `go test -race ./...`.
+- **Verified live (2026-08-01) against a real `redis-server`** (not just
+  `miniredis`): built the gateway binary, ran it with
+  `RATE_LIMIT_BACKEND=redis REDIS_URL=redis://127.0.0.1:6390/0`, confirmed the
+  seed landed in Redis at exactly 100,000 (`GET echelon:credit:bal:acme`),
+  manually set it to 2, then drove real `POST /v1/chat/completions` requests
+  through the live gateway: 200 (balance → 1), 200 (balance → 0), then a real
+  **402** `insufficient_credits` on the third — the Redis key, not a mock,
+  backing the decision the whole way through.
+- **`go.mod` note:** the Redis client + `miniredis` test dependency bumped the
+  toolchain requirement from `go 1.22.0` to `go 1.24` — this is the module's
+  first external dependency (previously zero). `gateway-ci.yml` and
+  `gateway/README.md` were updated to match; `deploy/Dockerfile.gateway`
+  already builds on `golang:1.25-alpine`, no change needed there.
 
 ## Phase 5 — API and provider wiring
 
@@ -98,7 +132,9 @@ Status: **In progress** (security composition wired end-to-end; use-case layer &
   security ports; the ML classifier scores the extracted user prompt (not role
   labels / model id).
 - [ ] Extract a transport-independent application use-case type (currently composed
-  in the gateway handler); wire credit reserve/commit around upstream usage.
+  in the gateway handler). Credit reserve/commit/release is now wired around
+  upstream usage directly in the handler (see Phase 4); extracting it into a
+  use-case layer remains open.
 - [ ] Preserve streaming with an explicit buffered-security mode (still buffered-only).
 - [x] Request logging + graceful draining present; add panic recovery + full
   observability in Phase 6.
@@ -152,6 +188,8 @@ Status: **Pending** (Docker/Compose done; the rest not started)
 
 ## Immediate next steps
 
-1. Implement the atomic in-memory and Redis/Lua token buckets in Phase 4.
-2. Add constant-time API-key authentication and quota response metadata.
-3. Implement idempotent credit reservation, commit, and release semantics.
+1. Extract a transport-independent application use-case type out of the gateway
+   handler (Phase 5).
+2. Preserve streaming with an explicit buffered-security mode.
+3. Implement token-based cost estimation for the credit ledger (replacing the
+   current flat 1-credit-per-completed-request model).

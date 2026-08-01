@@ -96,12 +96,17 @@ func (s *Store) Summary(creditsBudget int64) map[string]any {
 	var latencySum int64
 	var credits int64
 	caught := map[string]int{"heuristics": 0, "ml_classifier": 0, "llm_judge": 0}
+	caughtEgress := map[string]int{"pii": 0, "response_policy": 0, "response_classifier": 0, "response_judge": 0}
 	for i := range s.events {
 		e := &s.events[i]
 		if e.FinalVerdict == "block" {
 			blocked++
 			if e.BlockedAtLayer != "" {
-				caught[e.BlockedAtLayer]++
+				if e.Direction == "egress" {
+					caughtEgress[e.BlockedAtLayer]++
+				} else {
+					caught[e.BlockedAtLayer]++
+				}
 			}
 		}
 		latencySum += e.LatencyOverheadUs
@@ -110,16 +115,17 @@ func (s *Store) Summary(creditsBudget int64) map[string]any {
 	blockedPct := 0.0
 	avgLatency := 0.0
 	if total > 0 {
-		blockedPct = float64(blocked) / float64(total) * 100
+		blockedPct = float64(blocked) / float64(total)
 		avgLatency = float64(latencySum) / float64(total)
 	}
 	return map[string]any{
 		"totalCalls":           total,
-		"blockedPct":           round(blockedPct, 2),
+		"blockedPct":           round(blockedPct, 4),
 		"avgLatencyOverheadUs": round(avgLatency, 1),
 		"creditsUsed":          credits,
 		"creditsBudget":        creditsBudget,
 		"caughtByLayer":        caught,
+		"caughtByEgressLayer":  caughtEgress,
 		"windowLabel":          "session",
 	}
 }

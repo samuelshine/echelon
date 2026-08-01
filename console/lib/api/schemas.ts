@@ -6,10 +6,21 @@ import { z } from "zod";
  * ships, these schemas guard the boundary so bad data never reaches the UI.
  */
 
+export const ingressLayerSchema = z.enum(["heuristics", "ml_classifier", "llm_judge"]);
+export const egressLayerSchema = z.enum([
+  "pii",
+  "response_policy",
+  "response_classifier",
+  "response_judge",
+]);
 export const cascadeLayerSchema = z.enum([
   "heuristics",
   "ml_classifier",
   "llm_judge",
+  "pii",
+  "response_policy",
+  "response_classifier",
+  "response_judge",
 ]);
 
 export const verdictSchema = z.enum(["pass", "flag", "block"]);
@@ -22,6 +33,7 @@ export const threatCategorySchema = z.enum([
   "toxicity",
   "policy_violation",
   "data_exfiltration",
+  "malicious_code",
   "clean",
 ]);
 
@@ -64,7 +76,7 @@ export const apiKeySchema = z.object({
 });
 
 export const layerConfigSchema = z.object({
-  layer: cascadeLayerSchema,
+  layer: ingressLayerSchema,
   enabled: z.boolean(),
   threshold: z.number().min(0).max(1),
   model: z.string().optional(),
@@ -76,6 +88,7 @@ export const echelonConfigSchema = z.object({
     piiMasking: z.boolean(),
     toxicityScan: z.boolean(),
     policyEnforcement: z.boolean(),
+    maliciousCodeScan: z.boolean(),
   }),
   providers: z.array(z.string()).optional(),
 });

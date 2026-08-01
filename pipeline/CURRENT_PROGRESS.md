@@ -1,12 +1,21 @@
 # Echelon Current Progress
 
-## Status
+## Status (updated 2026-08-01 — see bottom of log for the current entry)
 
-**Phase:** 3 — Layer 1 heuristic engine complete; human dataset review remains in parallel
+**Phase:** Layer 1/2/3 built and served; Layer 2 trained + calibrated
+(macro-F1 0.696) on the reviewed corpus; `service/security_api.py` serves
+`/classify`, `/judge`, `/classify_response`, `/judge_response` to the Go
+gateway; egress ML-cascade escalation added 2026-08-01 (see bottom entry).
+Consolidated into the `main` monorepo under `pipeline/` (was branch `rnd`).
 
-**Branch:** `rnd`
+**Checkpoint:** Production e2e verified live (see root `DEMO.md`). Open:
+Redis-backed distributed state, CI, observability, output-aware retrain for
+egress `malicious_code` detection — tracked in the root `README.md`/
+`gateway/EXECUTION_PLAN.md` production-hardening list.
 
-**Checkpoint:** Layer 1 verified; awaiting approval before Layer 2 infrastructure
+<!-- Historical status line, kept for context: originally "Phase 3 — Layer 1
+heuristic engine complete; human dataset review remains in parallel". The
+chronological log below is append-only and has not been rewritten. -->
 
 ## Completed in this step
 
@@ -334,3 +343,25 @@ R3 — train + calibrate the multi-label Layer 2 classifier on the reviewed spli
 ### Next
 B1 — finish the Go gateway (Phases 4–5) and point `ML_BASE_URL`/`JUDGE_BASE_URL` at
 this service; then B2 telemetry API, F1 frontend wiring, X integration.
+
+## Monorepo consolidation + real Ollama judge + egress ML cascade (2026-07-25 – 2026-08-01)
+
+- **Consolidated** the three service branches (`rnd`, `backend`, `frontend`) into
+  the `main` monorepo as `pipeline/`, `gateway/`, `console/` with history preserved.
+- **Real local LLM judge**: `OllamaJudgeAdapter` in `echelon/layer3.py`
+  (`ECHELON_OLLAMA_MODEL`, e.g. `qwen2.5:14b`); sparse categories use a
+  floor+cap ([0.60, 0.88]) so any non-trivial signal is always escalated to
+  the judge rather than trusted raw. Verified live and inside Docker.
+- **Egress ML cascade** (`POST /classify_response`, `POST /judge_response` in
+  `service/security_api.py`; `OLLAMA_OUTPUT_JUDGE_INSTRUCTION` in
+  `layer3.py`): mirrors the ingress classify→judge cascade on response text,
+  wired into the Go gateway's egress pipeline alongside the pre-existing PII
+  and canary/policy scanners. `tests/test_security_api.py` extended for the
+  new endpoints. Verified live in Docker: toxic response → 403 (judge),
+  PII → 200 redacted, defensive YARA-rule explanation → 200 (correct allow).
+- **Known real gap, verified not fixed:** operational malicious code in a
+  response is not reliably blocked — the model was trained on prompt/attack
+  text only (responses excluded from its corpus), so real code output scores
+  the `malicious_code` head near-zero and never triggers judge escalation.
+  Needs an output-aware retrain or an unconditional judge escalation on
+  code-shaped output. Full detail in root `DEMO.md` → "Honest limitations."

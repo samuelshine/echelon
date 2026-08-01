@@ -32,17 +32,21 @@ services:
     environment:
       ML_BASE_URL: http://security:8099/classify
       JUDGE_BASE_URL: http://security:8099/judge
+      EGRESS_ML_BASE_URL: http://security:8099/classify_response
+      EGRESS_JUDGE_BASE_URL: http://security:8099/judge_response
       UPSTREAM_BASE_URL: ${UPSTREAM_BASE_URL:-https://api.openai.com}
       UPSTREAM_API_KEY: ${UPSTREAM_API_KEY:-}
       ECHELON_API_KEYS: ${ECHELON_API_KEYS:-sk-demo:acme:key_live:pro}
       HTTP_ADDR: ":8080"
       SECURITY_FAIL_CLOSED: "true"
-      # Widened budgets so the (slow) LLM judge fits within the request deadline.
+      # Widened budgets so the (slow) LLM judge fits within the request deadline —
+      # EGRESS_TIMEOUT covers the response classifier+judge as a single scanner call.
       ML_TIMEOUT: "2s"
       JUDGE_TIMEOUT: "15s"
+      EGRESS_TIMEOUT: "16s"
       UPSTREAM_TIMEOUT: "15s"
-      REQUEST_TIMEOUT: "40s"
-      HTTP_WRITE_TIMEOUT: "50s"
+      REQUEST_TIMEOUT: "50s"
+      HTTP_WRITE_TIMEOUT: "60s"
     ports: ["8080:8080"]
     depends_on:
       security:

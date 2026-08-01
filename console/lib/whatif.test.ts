@@ -28,7 +28,7 @@ const config = (thr: Record<string, number>, disabled: string[] = []): EchelonCo
     enabled: !disabled.includes(layer),
     threshold: thr[layer] ?? 0.6,
   })),
-  egress: { piiMasking: true, toxicityScan: true, policyEnforcement: false },
+  egress: { piiMasking: true, toxicityScan: true, policyEnforcement: false, maliciousCodeScan: false },
 });
 
 const base = config({ heuristics: 0.7, ml_classifier: 0.6, llm_judge: 0.5 });

@@ -1,25 +1,32 @@
 import { formatCompact, formatPct, LAYER_LABELS, LAYER_ORDINAL } from "@/lib/format";
-import type { CascadeLayer } from "@/types/echelon";
 
 /**
- * Where threats were caught across the 3-fold cascade. A precursor to the
- * signature "Cascade Assay Strip" (Phase 3) — for now, an honest bar breakdown.
+ * Where threats were caught across a cascade. Reused for both the 3-fold
+ * ingress cascade and the egress scanner stages — each gets its own instance
+ * with a distinct title, since the two counts must never be visually implied
+ * to be one pipeline (ingress and egress layer names don't overlap).
  */
 export function CascadeFunnel({
   caughtByLayer,
+  eyebrow = "3-Fold Ingress Cascade",
+  title = "Where threats were caught",
+  footnote = "Cheap heuristics catch the majority at L1; the DistilBERT classifier and LLM judge handle progressively subtler attacks that slip past.",
 }: {
-  caughtByLayer: Record<CascadeLayer, number>;
+  caughtByLayer: Record<string, number>;
+  eyebrow?: string;
+  title?: string;
+  footnote?: string;
 }) {
-  const layers = Object.entries(caughtByLayer) as [CascadeLayer, number][];
+  const layers = Object.entries(caughtByLayer);
   const total = layers.reduce((a, [, n]) => a + n, 0);
 
   return (
     <section className="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6">
       <div className="flex items-baseline justify-between">
         <div>
-          <div className="eyebrow">3-Fold Ingress Cascade</div>
+          <div className="eyebrow">{eyebrow}</div>
           <h2 className="mt-1 font-[family-name:var(--font-display)] text-xl">
-            Where threats were caught
+            {title}
           </h2>
         </div>
         <div className="tnum text-sm text-[var(--color-muted)]">
@@ -56,8 +63,7 @@ export function CascadeFunnel({
       </div>
 
       <p className="mt-6 border-t border-[var(--color-line)] pt-4 text-xs leading-relaxed text-[var(--color-muted)]">
-        Cheap heuristics catch the majority at L1; the DistilBERT classifier and
-        LLM judge handle progressively subtler attacks that slip past.
+        {footnote}
       </p>
     </section>
   );

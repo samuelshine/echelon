@@ -19,6 +19,11 @@ const SCANNERS: {
     desc: "Block responses that cross the toxicity threshold.",
   },
   {
+    key: "maliciousCodeScan",
+    label: "Malicious code scan",
+    desc: "Classifier + LLM judge adjudicate operational malware/exploit code in responses.",
+  },
+  {
     key: "policyEnforcement",
     label: "Policy enforcement",
     desc: "Enforce your custom content-policy ruleset on every response.",

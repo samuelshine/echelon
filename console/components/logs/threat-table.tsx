@@ -178,6 +178,7 @@ export function ThreatTable({
                       finalVerdict={e.finalVerdict}
                       blockedAtLayer={e.blockedAtLayer}
                       riskScore={e.riskScore}
+                      direction={e.direction}
                     />
                   </span>
                   <span className="tnum text-right font-[family-name:var(--font-mono)] text-xs text-[var(--color-muted)]">

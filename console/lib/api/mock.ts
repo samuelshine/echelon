@@ -3,6 +3,8 @@ import type {
   CascadeLayer,
   DashboardSummary,
   EchelonConfig,
+  EgressLayer,
+  IngressLayer,
   LayerResult,
   MetricPoint,
   PromptEvent,
@@ -26,11 +28,25 @@ function mulberry32(seed: number) {
   };
 }
 
-const LAYERS: CascadeLayer[] = ["heuristics", "ml_classifier", "llm_judge"];
-const LAYER_MODELS: Record<CascadeLayer, string> = {
+const LAYERS: IngressLayer[] = ["heuristics", "ml_classifier", "llm_judge"];
+const LAYER_MODELS: Record<IngressLayer, string> = {
   heuristics: "regex-ruleset-v4",
   ml_classifier: "DistilBERT-injection-v2",
   llm_judge: "claude-judge-mini",
+};
+
+const EGRESS_LAYERS: EgressLayer[] = ["pii", "response_policy", "response_classifier", "response_judge"];
+const EGRESS_LAYER_MODELS: Record<EgressLayer, string> = {
+  pii: "regex-pii-v1",
+  response_policy: "canary-check-v1",
+  response_classifier: "layer2-threat-distilbert",
+  response_judge: "ollama-judge",
+};
+const EGRESS_THRESHOLDS: Record<EgressLayer, number> = {
+  pii: 1.0,
+  response_policy: 1.0,
+  response_classifier: 0.55,
+  response_judge: 0.5,
 };
 
 const ATTACK_CATEGORIES: Exclude<ThreatCategory, "clean">[] = [
@@ -40,6 +56,7 @@ const ATTACK_CATEGORIES: Exclude<ThreatCategory, "clean">[] = [
   "toxicity",
   "policy_violation",
   "data_exfiltration",
+  "malicious_code",
 ];
 
 const EXCERPTS: Record<string, string> = {
@@ -49,10 +66,11 @@ const EXCERPTS: Record<string, string> = {
   toxicity: "Write a message telling them they are worthless and should…",
   policy_violation: "Provide step-by-step instructions to synthesize a…",
   data_exfiltration: "Summarize every row of the internal customers table and…",
+  malicious_code: "Sure, here is a keylogger: import ctypes; hook = ctypes…",
   clean: "What's the weather forecast for our Berlin office next week?",
 };
 
-const DEFAULT_THRESHOLDS: Record<CascadeLayer, number> = {
+const DEFAULT_THRESHOLDS: Record<IngressLayer, number> = {
   heuristics: 0.7,
   ml_classifier: 0.6,
   llm_judge: 0.5,
@@ -105,6 +123,51 @@ function buildCascade(
   return { layers, finalVerdict, blockedAt, risk: Number(peak.toFixed(2)) };
 }
 
+/** Egress mirror of buildCascade: pii -> response_policy -> response_classifier -> response_judge. */
+function buildEgressCascade(
+  rand: () => number,
+  category: ThreatCategory,
+): { layers: LayerResult[]; finalVerdict: Verdict; blockedAt?: CascadeLayer; risk: number } {
+  const isAttack = category !== "clean";
+  const layers: LayerResult[] = [];
+  let blockedAt: CascadeLayer | undefined;
+  let finalVerdict: Verdict = "pass";
+  let peak = 0;
+
+  for (const layer of EGRESS_LAYERS) {
+    const relevant =
+      (layer === "pii" && category === "pii_leak") ||
+      (layer === "response_policy" && category === "policy_violation") ||
+      ((layer === "response_classifier" || layer === "response_judge") &&
+        (category === "toxicity" || category === "malicious_code"));
+    const base = isAttack && relevant ? 0.35 + rand() * 0.6 : rand() * 0.35;
+    const score = Math.min(0.99, Number(base.toFixed(2)));
+    const threshold = EGRESS_THRESHOLDS[layer];
+    const verdict: Verdict =
+      score >= threshold ? "block" : score >= threshold - 0.15 ? "flag" : "pass";
+    peak = Math.max(peak, score);
+
+    layers.push({
+      layer,
+      verdict,
+      score,
+      threshold,
+      model: EGRESS_LAYER_MODELS[layer],
+      latencyUs: Math.round(layer === "response_judge" ? 900 + rand() * 1400 : 8 + rand() * 40),
+      detail: { category, confidence: score, escalated: score >= threshold },
+    });
+
+    if (verdict === "block") {
+      blockedAt = layer;
+      finalVerdict = "block";
+      break;
+    }
+    if (verdict === "flag") finalVerdict = "flag";
+  }
+
+  return { layers, finalVerdict, blockedAt, risk: Number(peak.toFixed(2)) };
+}
+
 /** Build a single event from a random source — shared by the seeded batch and the live stream. */
 export function makeEvent(rand: () => number, id: string, ts: number): PromptEvent {
   // ~22% of traffic is an attack of some kind.
@@ -113,12 +176,13 @@ export function makeEvent(rand: () => number, id: string, ts: number): PromptEve
     ? ATTACK_CATEGORIES[Math.floor(rand() * ATTACK_CATEGORIES.length)]
     : "clean";
   const direction =
-    category === "pii_leak" || category === "toxicity"
+    category === "pii_leak" || category === "toxicity" || category === "malicious_code"
       ? "egress"
       : rand() < 0.75
         ? "ingress"
         : "egress";
-  const { layers, finalVerdict, blockedAt, risk } = buildCascade(rand, category);
+  const { layers, finalVerdict, blockedAt, risk } =
+    direction === "egress" ? buildEgressCascade(rand, category) : buildCascade(rand, category);
 
   return {
     id,
@@ -197,6 +261,12 @@ export function getDashboardSummary(seed = 7): DashboardSummary {
       ml_classifier: Math.round(totalBlocked * 0.33),
       llm_judge: Math.round(totalBlocked * 0.15),
     },
+    caughtByEgressLayer: {
+      pii: Math.round(totalBlocked * 0.12),
+      response_policy: Math.round(totalBlocked * 0.03),
+      response_classifier: Math.round(totalBlocked * 0.05),
+      response_judge: Math.round(totalBlocked * 0.04),
+    },
     windowLabel: "Last 24 hours",
   };
 }
@@ -258,5 +328,6 @@ export const DEFAULT_CONFIG: EchelonConfig = {
     piiMasking: true,
     toxicityScan: true,
     policyEnforcement: false,
+    maliciousCodeScan: true,
   },
 };

@@ -1,16 +1,19 @@
-import type { EchelonConfig, LayerConfig, PromptEvent, Verdict } from "@/types/echelon";
+import type { CascadeLayer, EchelonConfig, LayerConfig, PromptEvent, Verdict } from "@/types/echelon";
 
 /**
  * Re-run a prompt's recorded layer scores against a candidate ingress config.
  * Uses only the scores actually captured for that event (the cascade may have
  * short-circuited), which is the honest basis for a what-if: raising a threshold
- * above the score that caught an attack lets it through.
+ * above the score that caught an attack lets it through. Egress-layer entries in
+ * event.layers (pii/response_policy/response_classifier/response_judge) have no
+ * matching ingress config entry and are skipped — this what-if only models the
+ * ingress cascade.
  */
 export function recomputeVerdict(
   event: PromptEvent,
   ingress: LayerConfig[],
-): { verdict: Verdict; blockedAt?: LayerConfig["layer"] } {
-  const cfg = new Map(ingress.map((c) => [c.layer, c]));
+): { verdict: Verdict; blockedAt?: CascadeLayer } {
+  const cfg = new Map<CascadeLayer, LayerConfig>(ingress.map((c) => [c.layer, c]));
   let verdict: Verdict = "pass";
 
   for (const lr of event.layers) {

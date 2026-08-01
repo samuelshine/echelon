@@ -41,9 +41,11 @@ pids+=($!)
 echo "[3/4] building + starting gateway on :8080"
 ( cd "$GATEWAY_DIR" && go build -o /tmp/echelon-gateway ./cmd/server )
 ML_BASE_URL=http://127.0.0.1:8099/classify JUDGE_BASE_URL=http://127.0.0.1:8099/judge \
+EGRESS_ML_BASE_URL=http://127.0.0.1:8099/classify_response EGRESS_JUDGE_BASE_URL=http://127.0.0.1:8099/judge_response \
 UPSTREAM_BASE_URL=http://127.0.0.1:9100 ECHELON_API_KEYS=sk-demo:acme:key_live:pro \
 HTTP_ADDR=:8080 SECURITY_FAIL_CLOSED=true \
-ML_TIMEOUT=2s JUDGE_TIMEOUT=15s UPSTREAM_TIMEOUT=15s REQUEST_TIMEOUT=40s HTTP_WRITE_TIMEOUT=50s \
+ML_TIMEOUT=2s JUDGE_TIMEOUT=15s EGRESS_TIMEOUT=16s UPSTREAM_TIMEOUT=15s \
+REQUEST_TIMEOUT=50s HTTP_WRITE_TIMEOUT=60s \
 /tmp/echelon-gateway &
 pids+=($!)
 

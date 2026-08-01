@@ -1,8 +1,16 @@
 # Echelon R&D — Project Handoff and Continuation Brief
 
+> **Superseded.** This snapshot predates the `rnd`/`backend`/`frontend` →
+> `main` monorepo consolidation and the Layer 2 training/serving milestone
+> (both 2026-07-25). For current architecture and verified state, see the
+> root [`README.md`](README.md) and [`DEMO.md`](DEMO.md); for the pipeline's
+> current status see [`pipeline/CURRENT_PROGRESS.md`](pipeline/CURRENT_PROGRESS.md).
+> Kept here for data-governance/review-pipeline history (Phases A–H below are
+> accurate as a historical record of that work).
+
 **Snapshot date:** 2026-07-24  
 **Repository:** `samuelshine/echelon`  
-**Working branch:** `rnd`
+**Working branch:** `rnd` (now consolidated into `main` as `pipeline/`)
 
 This document transfers the complete technical context to a new chat or engineer. It records what Echelon is, why the design was chosen, what has been implemented, the verified current state, blockers, and exact continuation commands.
 

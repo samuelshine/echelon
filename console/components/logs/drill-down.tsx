@@ -130,12 +130,15 @@ export function DrillDown({
 
           {/* Layer 2 — the cascade trace, as the signature Assay Strip */}
           <div>
-            <div className="eyebrow mb-3">3-Fold Cascade Trace</div>
+            <div className="eyebrow mb-3">
+              {event.direction === "egress" ? "Egress Scan Trace" : "3-Fold Cascade Trace"}
+            </div>
             <AssayStrip
               layers={event.layers}
               finalVerdict={event.finalVerdict}
               blockedAtLayer={event.blockedAtLayer}
               riskScore={event.riskScore}
+              direction={event.direction}
             />
           </div>
 

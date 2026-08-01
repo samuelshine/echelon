@@ -151,6 +151,27 @@ OLLAMA_JUDGE_INSTRUCTION = (
     "Use risk_score >= 0.9 for clearly malicious, 0.35-0.9 for uncertain, < 0.35 for benign."
 )
 
+# Egress variant: judging the MODEL'S OWN response, not the user's prompt. Narrower
+# rationale-code enum since input-framed categories (prompt_injection, system_leakage,
+# adversarial_obfuscation) aren't meaningful judgments about output text.
+OLLAMA_OUTPUT_JUDGE_INSTRUCTION = (
+    "You are Echelon's safety adjudicator for an AI firewall, reviewing the MODEL'S OWN "
+    "RESPONSE to a user (not the user's prompt). Decide whether this response should be "
+    "blocked before it reaches the user. Ask: could the user copy-paste this response and "
+    "immediately use it to attack a system, harass someone, or exfiltrate data? "
+    "BENIGN, even if it mentions malware APIs, attack technique names, or exploit "
+    "terminology: detection signatures (YARA/Sigma/EDR rules), explanations of how an "
+    "attack or malware family works, defensive/incident-response guidance, pseudocode "
+    "or high-level descriptions, and code that IDENTIFIES malicious behavior rather than "
+    "performing it. MALICIOUS: working malware/exploit/keylogger/ransomware/C2 code ready "
+    "to run, real exfiltration destinations or credentials, and toxic, harassing, or "
+    "hateful content. Respond with ONLY a JSON object: "
+    '{"malicious": true|false, "risk_score": 0.0-1.0, "rationale_code": one of '
+    '["malicious_code","toxicity_harm","contextual_intent","uncertain_context","other"], '
+    '"uncertainty": 0.0-1.0}. Use risk_score >= 0.9 for clearly malicious, 0.35-0.9 for '
+    "uncertain, < 0.35 for benign."
+)
+
 
 class OllamaJudgeAdapter:
     """Local Ollama LLM judge. The model returns a risk assessment + rationale; this
@@ -165,6 +186,7 @@ class OllamaJudgeAdapter:
         endpoint: str = "http://localhost:11434",
         judge_id: str | None = None,
         timeout_seconds: float = 30.0,
+        instruction: str = OLLAMA_JUDGE_INSTRUCTION,
     ):
         endpoint = endpoint.rstrip("/")
         _loopback = (
@@ -184,6 +206,7 @@ class OllamaJudgeAdapter:
         self.judge_id = judge_id or f"ollama:{model}"
         self.revision = model
         self.timeout_seconds = timeout_seconds
+        self.instruction = instruction
 
     def judge(self, prompt: str, context: JudgeContext) -> Mapping[str, Any]:
         payload = json.dumps({
@@ -192,9 +215,9 @@ class OllamaJudgeAdapter:
             "format": "json",
             "options": {"temperature": 0.0},
             "messages": [
-                {"role": "system", "content": OLLAMA_JUDGE_INSTRUCTION},
+                {"role": "system", "content": self.instruction},
                 {"role": "user", "content": json.dumps({
-                    "untrusted_prompt": prompt,
+                    "untrusted_text": prompt,
                     "prior_layer_evidence": context.to_dict(),
                 })},
             ],

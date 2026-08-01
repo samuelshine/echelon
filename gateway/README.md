@@ -5,10 +5,17 @@ firewall written in Go. It evaluates prompts before they reach an LLM, scans
 model responses before they leave the trust boundary, and provides the quota and
 credit controls needed to keep model usage safe and predictable.
 
-> Build status: Phases 1 through 3 are complete. Typed ingress and egress
-> pipelines and their remote classifier adapters are implemented; the existing
-> prototype gateway remains wired to local guards until application composition in Phase 5. See
-> [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md) for the live build ledger.
+> Build status: Phases 1–3 complete; Phase 4 (rate-limit/auth/credit) and Phase 5
+> (API/provider wiring) are functionally done — auth → quota → ingress cascade →
+> upstream → egress is composed end-to-end and verified live, including an ML
+> classifier + LLM-judge escalation cascade on the **egress** path (response
+> scanning), console telemetry (`/v1/console/*`), and a Docker/Compose stack.
+> Remaining before Phase 5 closes: the transport-independent use-case extraction
+> and a non-buffered streaming security mode. Phase 6 (Prometheus/OTel metrics,
+> Redis-backed distributed rate-limit/credit, k8s manifests, fuzzing/race
+> testing, SLOs) has not started. See [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md)
+> for the live build ledger and the root [`DEMO.md`](../DEMO.md) for the
+> verified end-to-end contracts and honest limitations.
 
 ## Architecture
 

@@ -8,9 +8,10 @@ import {
   formatLatency,
   formatScore,
 } from "@/lib/format";
-import type { CascadeLayer, LayerResult, Verdict } from "@/types/echelon";
+import type { CascadeLayer, Direction, LayerResult, Verdict } from "@/types/echelon";
 
-const ALL_LAYERS: CascadeLayer[] = ["heuristics", "ml_classifier", "llm_judge"];
+const INGRESS_LAYERS: CascadeLayer[] = ["heuristics", "ml_classifier", "llm_judge"];
+const EGRESS_LAYERS: CascadeLayer[] = ["pii", "response_policy", "response_classifier", "response_judge"];
 
 const VERDICT_COLOR: Record<Verdict, string> = {
   pass: "var(--color-pass)",
@@ -29,17 +30,21 @@ export function AssayStrip({
   finalVerdict,
   blockedAtLayer,
   riskScore,
+  direction = "ingress",
   variant = "full",
 }: {
   layers: LayerResult[];
   finalVerdict: Verdict;
   blockedAtLayer?: CascadeLayer;
   riskScore: number;
+  direction?: Direction;
   variant?: "full" | "compact";
 }) {
   const [hover, setHover] = useState<CascadeLayer | null>(null);
   const byLayer = new Map(layers.map((l) => [l.layer, l]));
+  const ALL_LAYERS = direction === "egress" ? EGRESS_LAYERS : INGRESS_LAYERS;
   const blockedIndex = blockedAtLayer ? ALL_LAYERS.indexOf(blockedAtLayer) : Infinity;
+  const lastIndex = ALL_LAYERS.length - 1;
 
   if (variant === "compact") {
     return (
@@ -88,15 +93,18 @@ export function AssayStrip({
       <div className="mt-[2px] h-px bg-[var(--color-line)]" />
 
       <figcaption className="flex items-center justify-between px-4 pt-3">
-        <span className="eyebrow">Cascade Assay · Ingress</span>
+        <span className="eyebrow">Cascade Assay · {direction === "egress" ? "Egress" : "Ingress"}</span>
         <span className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--color-muted)]">
           aggregate risk{" "}
           <span style={{ color: VERDICT_COLOR[finalVerdict] }}>{formatScore(riskScore)}</span>
         </span>
       </figcaption>
 
-      {/* The rail + 3 stamped segments */}
-      <div className="grid grid-cols-3 gap-0 px-4 py-5">
+      {/* The rail + stamped segments */}
+      <div
+        className="grid gap-0 px-4 py-5"
+        style={{ gridTemplateColumns: `repeat(${ALL_LAYERS.length}, minmax(0, 1fr))` }}
+      >
         {ALL_LAYERS.map((layer, i) => {
           const r = byLayer.get(layer);
           const reached = i <= blockedIndex && !!r;
@@ -126,7 +134,7 @@ export function AssayStrip({
                 />
               ) : null}
               {/* Rail segment to the right */}
-              {i < 2 ? (
+              {i < lastIndex ? (
                 <span
                   className="absolute right-0 top-3 h-0 w-1/2 translate-x-1/2"
                   style={{
@@ -238,8 +246,12 @@ export function AssayStrip({
         {blockedAtLayer
           ? `Short-circuited at ${LAYER_LABELS[blockedAtLayer]} — deeper stages never evaluated.`
           : finalVerdict === "flag"
-            ? "Flagged for review — passed to the target LLM with a warning."
-            : "Cleared all three stages — delivered to the target LLM."}
+            ? direction === "egress"
+              ? "Flagged for review — delivered to the user with a warning."
+              : "Flagged for review — passed to the target LLM with a warning."
+            : direction === "egress"
+              ? `Cleared all ${ALL_LAYERS.length} stages — delivered to the user.`
+              : `Cleared all ${ALL_LAYERS.length} stages — delivered to the target LLM.`}
       </div>
     </figure>
   );

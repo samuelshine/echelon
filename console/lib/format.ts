@@ -50,12 +50,20 @@ export const LAYER_LABELS: Record<string, string> = {
   heuristics: "Heuristics",
   ml_classifier: "ML Classifier",
   llm_judge: "LLM Judge",
+  pii: "PII Scan",
+  response_policy: "Canary Check",
+  response_classifier: "Response Classifier",
+  response_judge: "Response Judge",
 };
 
 export const LAYER_ORDINAL: Record<string, string> = {
   heuristics: "L1",
   ml_classifier: "L2",
   llm_judge: "L3",
+  pii: "R1",
+  response_policy: "R2",
+  response_classifier: "R3",
+  response_judge: "R4",
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -65,5 +73,6 @@ export const CATEGORY_LABELS: Record<string, string> = {
   toxicity: "Toxicity",
   policy_violation: "Policy Violation",
   data_exfiltration: "Data Exfiltration",
+  malicious_code: "Malicious Code",
   clean: "Clean",
 };

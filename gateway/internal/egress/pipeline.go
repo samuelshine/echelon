@@ -21,6 +21,8 @@ type Pipeline struct {
 	scanners []ports.EgressScanner
 }
 
+func (p *Pipeline) Name() string { return "egress_pipeline" }
+
 func NewPipeline(config PipelineConfig, scanners ...ports.EgressScanner) (*Pipeline, error) {
 	for i, scanner := range scanners {
 		if scanner == nil {

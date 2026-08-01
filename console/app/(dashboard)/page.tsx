@@ -1,10 +1,12 @@
+"use client";
+
 import { PageHeader } from "@/components/page-header";
 import { CascadeFunnel } from "@/components/cascade-funnel";
 import { AttackVectorsChart } from "@/components/charts/attack-vectors-chart";
 import { LatencyChart } from "@/components/charts/latency-chart";
 import { CreditBurndown } from "@/components/charts/credit-burndown";
 import { AssayStrip } from "@/components/cascade/assay-strip";
-import { getDashboardSummary, generateEvents } from "@/lib/api/mock";
+import { useDashboardSummary, useEvents } from "@/lib/hooks/useEchelon";
 import {
   formatCompact,
   formatCredits,
@@ -13,8 +15,20 @@ import {
 } from "@/lib/format";
 
 export default function OverviewPage() {
-  const s = getDashboardSummary();
-  const latestBlock = generateEvents(500).find((e) => e.finalVerdict === "block");
+  const { data: s } = useDashboardSummary();
+  const { data: events } = useEvents(500);
+  const latestBlock = events?.find((e) => e.finalVerdict === "block");
+
+  if (!s) {
+    return (
+      <>
+        <PageHeader eyebrow="Module 00 · Global" title="Overview" />
+        <div className="p-8">
+          <div className="h-96 animate-pulse rounded-[var(--radius-lg)] bg-[var(--color-surface-sunken)]" />
+        </div>
+      </>
+    );
+  }
 
   const kpis = [
     { label: "API calls", value: formatCompact(s.totalCalls), note: s.windowLabel },
@@ -85,6 +99,7 @@ export default function OverviewPage() {
               finalVerdict={latestBlock.finalVerdict}
               blockedAtLayer={latestBlock.blockedAtLayer}
               riskScore={latestBlock.riskScore}
+              direction={latestBlock.direction}
             />
           </section>
         ) : null}
@@ -99,7 +114,15 @@ export default function OverviewPage() {
         </div>
 
         {/* Cascade breakdown */}
-        <CascadeFunnel caughtByLayer={s.caughtByLayer} />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <CascadeFunnel caughtByLayer={s.caughtByLayer} />
+          <CascadeFunnel
+            caughtByLayer={s.caughtByEgressLayer}
+            eyebrow="Egress Scan Outcomes"
+            title="Where responses were caught"
+            footnote="PII masking and the canary check are deterministic and always on; the response classifier and judge adjudicate toxicity and malicious code in what the model sends back."
+          />
+        </div>
       </div>
     </>
   );

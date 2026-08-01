@@ -34,18 +34,19 @@ type HTTPDoer interface {
 }
 
 type Options struct {
-	Config        config.Config
-	Logger        *slog.Logger
-	Guards        guard.PromptGuard
-	OutputScanner guard.OutputScanner
+	Config         config.Config
+	Logger         *slog.Logger
+	Guards         guard.PromptGuard
+	OutputScanner  guard.OutputScanner
 	UpstreamRouter *upstream.Router
 	// Hexagonal security composition (Phases 4-5). When Ingress is set it replaces
 	// the prototype Guards on the proxied OpenAI path; Authenticator/RateLimiter are
 	// enforced when present.
-	Ingress       ports.IngressLayer
-	Egress        ports.EgressScanner
-	Authenticator ports.Authenticator
-	RateLimiter   ports.RateLimiter
+	Ingress         ports.IngressLayer
+	Egress          ports.EgressScanner
+	EgressMLEnabled bool
+	Authenticator   ports.Authenticator
+	RateLimiter     ports.RateLimiter
 	// Console telemetry (B2). When Telemetry is set, decisions are recorded and the
 	// /v1/console/* read API is served.
 	Telemetry     *telemetry.Store
@@ -54,18 +55,19 @@ type Options struct {
 }
 
 type Gateway struct {
-	cfg           config.Config
-	logger        *slog.Logger
-	guards        guard.PromptGuard
-	outputScanner guard.OutputScanner
-	upstreamRouter *upstream.Router
-	ingress       ports.IngressLayer
-	egress        ports.EgressScanner
-	authenticator ports.Authenticator
-	rateLimiter   ports.RateLimiter
-	telemetry     *telemetry.Store
-	consoleKeys   []ConsoleKeyInfo
-	creditsBudget int64
+	cfg             config.Config
+	logger          *slog.Logger
+	guards          guard.PromptGuard
+	outputScanner   guard.OutputScanner
+	upstreamRouter  *upstream.Router
+	ingress         ports.IngressLayer
+	egress          ports.EgressScanner
+	egressMLEnabled bool
+	authenticator   ports.Authenticator
+	rateLimiter     ports.RateLimiter
+	telemetry       *telemetry.Store
+	consoleKeys     []ConsoleKeyInfo
+	creditsBudget   int64
 }
 
 func New(opts Options) *Gateway {
@@ -77,18 +79,19 @@ func New(opts Options) *Gateway {
 	upstreamRouter := opts.UpstreamRouter
 
 	return &Gateway{
-		cfg:           opts.Config,
-		logger:        logger,
-		guards:        opts.Guards,
-		outputScanner: opts.OutputScanner,
-		upstreamRouter: upstreamRouter,
-		ingress:       opts.Ingress,
-		egress:        opts.Egress,
-		authenticator: opts.Authenticator,
-		rateLimiter:   opts.RateLimiter,
-		telemetry:     opts.Telemetry,
-		consoleKeys:   opts.ConsoleKeys,
-		creditsBudget: opts.CreditsBudget,
+		cfg:             opts.Config,
+		logger:          logger,
+		guards:          opts.Guards,
+		outputScanner:   opts.OutputScanner,
+		upstreamRouter:  upstreamRouter,
+		ingress:         opts.Ingress,
+		egress:          opts.Egress,
+		egressMLEnabled: opts.EgressMLEnabled,
+		authenticator:   opts.Authenticator,
+		rateLimiter:     opts.RateLimiter,
+		telemetry:       opts.Telemetry,
+		consoleKeys:     opts.ConsoleKeys,
+		creditsBudget:   opts.CreditsBudget,
 	}
 }
 
@@ -280,7 +283,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 				return
 			}
 			if verdict.Action == core.ActionBlock {
-				g.recordEvent(identity, verdict, start, nil, "")
+				g.recordEvent(identity, verdict, start, nil, "", "ingress")
 				writeError(w, http.StatusForbidden, findingCode(verdict, "ingress_blocked"), "prompt blocked by ingress policy")
 				return
 			}
@@ -321,19 +324,27 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	}
 
 	// Egress: hexagonal scanner pipeline when wired (may redact), else prototype scanner.
+	finalVerdict := core.Allow()
+	direction := "ingress"
 	if g.egress != nil {
-		scanned, verdict, err := g.egress.Scan(r.Context(), core.ModelResponse{Body: respBody})
+		direction = "egress"
+		scanned, verdict, err := g.egress.Scan(r.Context(), core.ModelResponse{
+			RequestID: r.Header.Get("X-Request-ID"), TenantID: identity.TenantID,
+			Route: upstreamPath, Model: model, Body: respBody,
+		})
 		if err != nil && g.cfg.Pipeline.FailClosed {
 			writeError(w, http.StatusForbidden, "egress_unavailable", "egress security is unavailable")
 			return
 		}
 		if verdict.Action == core.ActionBlock {
+			g.recordEvent(identity, verdict, start, nil, providerName, direction)
 			writeError(w, http.StatusForbidden, findingCode(verdict, "egress_blocked"), "response blocked by egress policy")
 			return
 		}
 		if verdict.Action == core.ActionRedact && scanned.Body != nil {
 			respBody = scanned.Body
 		}
+		finalVerdict = verdict
 	} else if g.outputScanner != nil {
 		decision := g.outputScanner.Scan(r.Context(), guard.OutputResponse{
 			Route: upstreamPath,
@@ -345,7 +356,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		}
 	}
 
-	g.recordEvent(identity, core.Allow(), start, respBody, providerName)
+	g.recordEvent(identity, finalVerdict, start, respBody, providerName, direction)
 
 	copyResponseHeaders(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
@@ -516,7 +527,7 @@ func writeContent(b *strings.Builder, value any) {
 
 // --- Console telemetry (B2) ---------------------------------------------------
 
-func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte, providerName string) {
+func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte, providerName, direction string) {
 	if g.telemetry == nil {
 		return
 	}
@@ -535,7 +546,7 @@ func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, star
 			blockedAt = layer
 		}
 		if category == "clean" {
-			category = mapCategory(f.Code)
+			category = mapCategory(layer, f.Code)
 		}
 		layers = append(layers, telemetry.LayerResult{
 			Layer: layer, Verdict: finalVerdict, Score: round4(f.Confidence),
@@ -544,8 +555,12 @@ func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, star
 		})
 	}
 	if len(layers) == 0 {
+		defaultLayer := "heuristics"
+		if direction == "egress" {
+			defaultLayer = "pii"
+		}
 		layers = append(layers, telemetry.LayerResult{
-			Layer: "heuristics", Verdict: "pass", Threshold: g.cfg.Pipeline.MLBlockThreshold,
+			Layer: defaultLayer, Verdict: "pass", Threshold: g.cfg.Pipeline.MLBlockThreshold,
 			LatencyUs: latencyUs, Detail: map[string]any{},
 		})
 	}
@@ -559,7 +574,7 @@ func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, star
 		apiKey = "anonymous"
 	}
 	g.telemetry.Record(telemetry.PromptEvent{
-		ID: fmt.Sprintf("evt_%x", time.Now().UnixNano()), Direction: "ingress",
+		ID: fmt.Sprintf("evt_%x", time.Now().UnixNano()), Direction: direction,
 		FinalVerdict: finalVerdict, RiskScore: round4(risk), Category: category,
 		BlockedAtLayer: blocked, Layers: layers, Tokens: telemetry.Tokens{In: in, Out: out},
 		LatencyOverheadUs: latencyUs, APIKeyID: apiKey, Excerpt: "[redacted]",
@@ -631,7 +646,10 @@ func (g *Gateway) consoleConfig(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ingress": ingress,
 		"egress": map[string]any{
-			"piiMasking": g.outputScanner != nil || g.egress != nil, "toxicityScan": true, "policyEnforcement": true,
+			"piiMasking":        g.egress != nil,
+			"policyEnforcement": g.egress != nil,
+			"toxicityScan":      g.egressMLEnabled,
+			"maliciousCodeScan": g.egressMLEnabled,
 		},
 		"providers": providers,
 	})
@@ -669,13 +687,21 @@ func mapLayer(layer string) string {
 		return "heuristics"
 	case "llm_judge", "judge":
 		return "llm_judge"
+	case "pii", "response_policy", "response_classifier", "response_judge":
+		return layer
 	default:
 		return "ml_classifier"
 	}
 }
 
-func mapCategory(code string) string {
+func mapCategory(layer, code string) string {
+	if layer == "pii" {
+		return "pii_leak"
+	}
 	c := strings.ToLower(code)
+	if c == "malicious_code" {
+		return "malicious_code"
+	}
 	switch {
 	case strings.Contains(c, "leak"), strings.Contains(c, "extract"), strings.Contains(c, "exfil"):
 		return "data_exfiltration"

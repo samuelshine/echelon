@@ -141,11 +141,19 @@ interface PromptEvent {
 | **4 — Configuration & Thresholds** | Toggles + threshold editor + what-if preview | ✅ Done |
 | **5 — API & Access Management** | Key lifecycle + rate limits | ✅ Done |
 | **6 — Live data & polish** | Live-tail, command palette, a11y pass, perf pass, theming | ✅ Done |
-| **7 — Wire to real backend** | Swap mock for real Echelon API / OpenAPI client | ▶ Next |
+| **7 — Wire to real backend** | Swap mock for real Echelon API / OpenAPI client | ✅ Done |
 
 > **Milestone:** all four core modules from the brief (Global Dashboard · Threat Audit · Configuration & Thresholds · API & Access) are built, verified, and previewable. Phases 6–7 are enhancement + integration.
 
-> **Hardening pass (post-Phase 6):** Vitest suite (24 tests) covering the what-if guardrail, log filters, and formatters · all `npm audit` advisories resolved via `overrides` (0 vulnerabilities) · focus-traps added to the drawer + command palette. Remaining before Phase 7: none blocking.
+> **Hardening pass (post-Phase 6):** Vitest suite (24 tests) covering the what-if guardrail, log filters, and formatters · all `npm audit` advisories resolved via `overrides` (0 vulnerabilities) · focus-traps added to the drawer + command palette.
+
+> **Phase 7 (2026-07-25):** `lib/api/client.ts` is the real seam — when
+> `NEXT_PUBLIC_ECHELON_API_URL` is set it fetches the gateway's
+> `/v1/console/{summary,metrics,events,keys,config}` (Zod-validated at the
+> boundary), falling back to the seeded mock if unset or on fetch failure.
+> Verified live end-to-end against the real gateway. **Still open:** config
+> toggles and API-key create/revoke are local-state only — no `POST`/`DELETE`
+> wired yet, so mutations don't persist against the real backend.
 
 ---
 

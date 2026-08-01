@@ -55,6 +55,23 @@ Status: **Complete**
   each scanner input and accepting body changes only with a redact verdict.
 - [x] Test blocking, redaction, cancellation, scanner ordering, and fail policy.
 
+### Egress ML cascade addendum (2026-08-01)
+
+- [x] Added a remote ML classifier + LLM-judge escalation stage to the egress
+  pipeline (`internal/egress/ml_cascade.go`, `http_response_classifier.go`,
+  `http_response_judge.go`), mirroring the ingress cascade's `/classify`→judge
+  routing but on response text via `POST /classify_response` /
+  `POST /judge_response` on the Python service. Wired into `buildEgress()` in
+  `cmd/server/main.go` alongside the pre-existing PII/canary scanners.
+- [x] Tests: `http_response_adapters_test.go`, `ml_cascade_test.go`,
+  `gateway/phase6_egress_test.go`. `go build`/`go vet`/`go test ./...` all pass.
+- **Known real gap (not fixed):** the Layer 2 classifier was trained only on
+  prompt/attack text, not assistant responses — operational malicious code in a
+  response scores near-zero on the `malicious_code` head, never crosses
+  `ML_JUDGE_THRESHOLD`, and the judge is never invoked. Verified live: a working
+  keylogger sample returned 200 unblocked. `toxicity_harm` and PII do not share
+  this gap. See `DEMO.md` → "Honest limitations."
+
 ## Phase 4 — Gateway protection and wallet controls
 
 Status: **In progress** (in-memory adapters complete; Redis deferred)
@@ -103,17 +120,24 @@ Status: **Done** (in-memory)
 
 ## Phase 6 — Production hardening and delivery
 
-Status: **Pending**
+Status: **Pending** (Docker/Compose done; the rest not started)
 
 - [ ] Add Prometheus-compatible metrics, OpenTelemetry spans, and privacy-safe audit
   sinks.
-- [ ] Add Docker image, Compose development stack, Kubernetes probes/resources,
-  and example production configuration.
+- [x] Add Docker image (`deploy/Dockerfile.gateway`) and Compose development
+  stack (`docker-compose.yml`) for all three services.
+- [ ] Add Kubernetes probes/resources and example production configuration.
 - [ ] Run fuzzing, `go test -race`, benchmarks, profiling, static analysis, and
   dependency/security scans.
 - [ ] Establish latency SLOs, overload behavior, rollout/rollback, and incident
   runbooks.
 - [ ] Publish architecture decision records and the completed engineering article.
+- [ ] Replace in-memory rate-limit/credit/telemetry with Redis-backed
+  distributed state (`RATE_LIMIT_BACKEND=redis` exists in config but the
+  distributed limiter/credit ledger/persistent audit sink are not implemented).
+- [ ] Add CI (GitHub Actions) running `go build`/`go vet`/`go test ./...` on
+  every push — none exists today; only `pipeline/` has a workflow
+  (review-submission validation).
 
 ## Immediate next steps
 

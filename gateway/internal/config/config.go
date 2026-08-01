@@ -19,15 +19,17 @@ const (
 )
 
 type PipelineConfig struct {
-	HeuristicTimeout time.Duration
-	MLTimeout        time.Duration
-	JudgeTimeout     time.Duration
-	EgressTimeout    time.Duration
-	MLBaseURL        *url.URL
-	JudgeBaseURL     *url.URL
-	MLBlockThreshold float64
-	MLJudgeThreshold float64
-	FailClosed       bool
+	HeuristicTimeout   time.Duration
+	MLTimeout          time.Duration
+	JudgeTimeout       time.Duration
+	EgressTimeout      time.Duration
+	MLBaseURL          *url.URL
+	JudgeBaseURL       *url.URL
+	EgressMLBaseURL    *url.URL
+	EgressJudgeBaseURL *url.URL
+	MLBlockThreshold   float64
+	MLJudgeThreshold   float64
+	FailClosed         bool
 }
 
 type RateLimitConfig struct {
@@ -53,7 +55,6 @@ type ProvidersConfig struct {
 	ModelRoutes     string
 	DefaultProvider string
 }
-
 
 type Config struct {
 	Address         string
@@ -166,6 +167,12 @@ func loadPipelineConfig() (PipelineConfig, error) {
 		return PipelineConfig{}, err
 	}
 	if cfg.JudgeBaseURL, err = optionalURL("JUDGE_BASE_URL"); err != nil {
+		return PipelineConfig{}, err
+	}
+	if cfg.EgressMLBaseURL, err = optionalURL("EGRESS_ML_BASE_URL"); err != nil {
+		return PipelineConfig{}, err
+	}
+	if cfg.EgressJudgeBaseURL, err = optionalURL("EGRESS_JUDGE_BASE_URL"); err != nil {
 		return PipelineConfig{}, err
 	}
 	if cfg.MLBlockThreshold, err = envProbability("ML_BLOCK_THRESHOLD", 0.90); err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/jscyril/echelon/internal/auth"
 	"github.com/jscyril/echelon/internal/config"
 	"github.com/jscyril/echelon/internal/core"
+	"github.com/jscyril/echelon/internal/egress"
 	"github.com/jscyril/echelon/internal/gateway"
 	"github.com/jscyril/echelon/internal/guard"
 	"github.com/jscyril/echelon/internal/ingress"
@@ -47,6 +48,7 @@ func main() {
 	// then supersedes the prototype guards on the proxied OpenAI path.
 	securityClient := &http.Client{Timeout: cfg.Pipeline.JudgeTimeout + cfg.Pipeline.MLTimeout}
 	ingressCascade := buildIngress(cfg, securityClient, logger)
+	egressPipeline, egressMLEnabled := buildEgress(cfg, securityClient, logger)
 	authenticator := buildAuthenticator(logger)
 	var rateLimiter ports.RateLimiter
 	if cfg.RateLimit.Backend == "memory" {
@@ -56,17 +58,19 @@ func main() {
 	telemetryStore := telemetry.NewStore(5000)
 
 	app := gateway.New(gateway.Options{
-		Config:        cfg,
-		Logger:        logger,
-		Guards:        filterChain,
-		OutputScanner: outputScanner,
-		Ingress:       ingressCascade,
-		Authenticator: authenticator,
-		RateLimiter:   rateLimiter,
-		Telemetry:     telemetryStore,
-		ConsoleKeys:   buildConsoleKeys(cfg),
-		CreditsBudget: 1_000_000,
-		UpstreamRouter: buildProviderRouter(cfg, logger),
+		Config:          cfg,
+		Logger:          logger,
+		Guards:          filterChain,
+		OutputScanner:   outputScanner,
+		Ingress:         ingressCascade,
+		Egress:          egressPipeline,
+		EgressMLEnabled: egressMLEnabled,
+		Authenticator:   authenticator,
+		RateLimiter:     rateLimiter,
+		Telemetry:       telemetryStore,
+		ConsoleKeys:     buildConsoleKeys(cfg),
+		CreditsBudget:   1_000_000,
+		UpstreamRouter:  buildProviderRouter(cfg, logger),
 	})
 
 	server := &http.Server{
@@ -151,7 +155,7 @@ func buildProviderRouter(cfg config.Config, logger *slog.Logger) *upstream.Route
 		logger.Error("failed to construct upstream router", "error", err)
 		os.Exit(1)
 	}
-	
+
 	logger.Info("multi-provider routing enabled", "providers", len(providers))
 	return router
 }
@@ -191,6 +195,54 @@ func buildIngress(cfg config.Config, client *http.Client, logger *slog.Logger) p
 	}
 	logger.Info("ingress cascade enabled", "ml_base_url", cfg.Pipeline.MLBaseURL.String(), "judge_wired", judge != nil)
 	return cascade
+}
+
+// buildEgress assembles the always-on PII/policy scanners plus the optional
+// ML classifier -> judge cascade (mirrors buildIngress; wired when
+// EGRESS_ML_BASE_URL is set). Returns (pipeline, mlEnabled) — mlEnabled tells
+// the console whether toxicity/malicious-code scanning is genuinely wired,
+// so /v1/console/config never has to guess or hardcode.
+func buildEgress(cfg config.Config, client *http.Client, logger *slog.Logger) (ports.EgressScanner, bool) {
+	scanners := []ports.EgressScanner{
+		egress.NewPIIScanner(egress.PIIMask),
+		egress.NewPolicyScanner(cfg.SystemCanary),
+	}
+	mlEnabled := false
+	if cfg.Pipeline.EgressMLBaseURL != nil {
+		classifier, err := egress.NewHTTPResponseClassifier("response_classifier", cfg.Pipeline.EgressMLBaseURL, client)
+		if err != nil {
+			logger.Error("egress response classifier build failed; toxicity/malicious-code scanning disabled", "error", err)
+		} else {
+			var judge *egress.HTTPResponseJudge
+			if cfg.Pipeline.EgressJudgeBaseURL != nil {
+				j, jerr := egress.NewHTTPResponseJudge("response_judge", cfg.Pipeline.EgressJudgeBaseURL, client)
+				if jerr != nil {
+					logger.Error("egress response judge build failed; cascade will fail-to-escalate", "error", jerr)
+				} else {
+					judge = j
+				}
+			}
+			cascade, cerr := egress.NewMLCascade(egress.MLCascadeConfig{
+				ClassifierTimeout: cfg.Pipeline.MLTimeout, JudgeTimeout: cfg.Pipeline.JudgeTimeout,
+				JudgeThreshold: cfg.Pipeline.MLJudgeThreshold, BlockThreshold: cfg.Pipeline.MLBlockThreshold,
+			}, classifier, judge)
+			if cerr != nil {
+				logger.Error("egress ML cascade build failed; toxicity/malicious-code scanning disabled", "error", cerr)
+			} else {
+				scanners = append(scanners, cascade)
+				mlEnabled = true
+			}
+		}
+	}
+	pipeline, err := egress.NewPipeline(egress.PipelineConfig{
+		ScannerTimeout: cfg.Pipeline.EgressTimeout, FailClosed: cfg.Pipeline.FailClosed,
+	}, scanners...)
+	if err != nil {
+		logger.Error("egress pipeline build failed; responses will not be scanned", "error", err)
+		return nil, false
+	}
+	logger.Info("egress pipeline enabled", "ml_wired", mlEnabled)
+	return pipeline, mlEnabled
 }
 
 // buildConsoleKeys renders privacy-safe API-key metadata for the console from the

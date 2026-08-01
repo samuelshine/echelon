@@ -8,7 +8,13 @@
  */
 
 /** The three stages of the ingress cascade, in evaluation order. */
-export type CascadeLayer = "heuristics" | "ml_classifier" | "llm_judge";
+export type IngressLayer = "heuristics" | "ml_classifier" | "llm_judge";
+
+/** The egress (response-side) scanner stages, in evaluation order. */
+export type EgressLayer = "pii" | "response_policy" | "response_classifier" | "response_judge";
+
+/** Any stage in either cascade — the shape a single event's `layers` array uses. */
+export type CascadeLayer = IngressLayer | EgressLayer;
 
 /** A single stage's ruling. */
 export type Verdict = "pass" | "flag" | "block";
@@ -24,6 +30,7 @@ export type ThreatCategory =
   | "toxicity"
   | "policy_violation"
   | "data_exfiltration"
+  | "malicious_code"
   | "clean";
 
 export interface LayerResult {
@@ -79,8 +86,10 @@ export interface DashboardSummary {
   avgLatencyOverheadUs: number;
   creditsUsed: number;
   creditsBudget: number;
-  /** Counts caught at each cascade stage (funnel). */
-  caughtByLayer: Record<CascadeLayer, number>;
+  /** Counts caught at each ingress cascade stage (funnel). */
+  caughtByLayer: Record<IngressLayer, number>;
+  /** Counts caught at each egress scanner stage (funnel). */
+  caughtByEgressLayer: Record<EgressLayer, number>;
   windowLabel: string;
 }
 
@@ -98,7 +107,7 @@ export interface ApiKey {
 }
 
 export interface LayerConfig {
-  layer: CascadeLayer;
+  layer: IngressLayer;
   enabled: boolean;
   /** Routing threshold, 0..1 — scores at or above escalate/block. */
   threshold: number;
@@ -109,6 +118,7 @@ export interface EgressConfig {
   piiMasking: boolean;
   toxicityScan: boolean;
   policyEnforcement: boolean;
+  maliciousCodeScan: boolean;
 }
 
 export interface EchelonConfig {

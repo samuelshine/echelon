@@ -1,8 +1,30 @@
-# Echelon — Three-Fold Prompt Security Ingress (R&D)
+# Echelon — Detection Pipeline (Three-Fold Prompt Security)
 
-Echelon is a staged prompt-security ingress pipeline: deterministic Layer 1 heuristics, a local semantic Layer 2 classifier, and a strict Layer 3 judge for gray-area prompts. This R&D branch is also the data-governance and evaluation workspace for the pending English human-review gate.
+Echelon's detection pipeline is a staged prompt/response-security cascade:
+deterministic Layer 1 heuristics, a trained multi-label Layer 2 DistilBERT
+classifier, and a Layer 3 LLM-judge (local Ollama) for gray-area cases. This
+directory is also the data-governance and evaluation workspace that produced
+the reviewed training corpus.
 
-Training remains intentionally blocked until the distributed reviewers complete their 600-item queue, disagreements receive expert adjudication, and the accepted corpus passes normalization and semantic split validation.
+**Current state (see `CURRENT_PROGRESS.md` for the full log, `../DEMO.md` for
+the live end-to-end contracts):** the training gate has passed, Layer 2 is
+trained and calibrated on the reviewed corpus (macro-F1 0.696;
+`models/layer2-threat-distilbert/best`, weights git-ignored), and
+`service/security_api.py` serves it over HTTP (`/classify`, `/judge`,
+`/classify_response`, `/judge_response`) to the Go gateway. Known limitation:
+the rare categories (`system_prompt_leakage`, `malicious_code`) have low
+precision/tiny support and are mitigated by forced judge escalation rather
+than fixed at the classifier level — see `DEMO.md` → "Honest limitations."
+Expert adjudication of the 152 review conflicts was AI-assisted
+(`ai_claude`), recorded as provisional and human-overridable, not native
+human review.
+
+The sections below (datasets, legacy training commands, project structure)
+describe the original R&D/data-governance workspace and the superseded
+binary-classifier training path; they are retained for historical/data-lineage
+reference. The production path is: `service/security_api.py` serves the
+trained multilabel model already in `models/layer2-threat-distilbert/best` —
+no retraining is required to run the system.
 
 ## 📁 Project Structure
 

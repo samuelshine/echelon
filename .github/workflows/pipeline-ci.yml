@@ -1,0 +1,42 @@
+name: Pipeline CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "pipeline/**"
+      - ".github/workflows/pipeline-ci.yml"
+  pull_request:
+    paths:
+      - "pipeline/**"
+      - ".github/workflows/pipeline-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pipeline
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Compile-check source
+        run: python3 -m py_compile echelon/*.py service/*.py scripts/*.py
+
+      # torch/transformers are intentionally NOT installed here: Layer 2's
+      # transformer adapter lazy-imports them only inside its own __init__
+      # (see echelon/layer2.py), and the test suite exercises the service
+      # contract via StaticModelAdapter/MockJudge fixtures, not the real
+      # model. This keeps CI fast; it does not exercise real inference.
+      - name: Install lightweight test dependencies
+        run: pip install "flask>=3.0.0" flask-cors "cryptography>=42,<46" numpy
+
+      - name: Run test suite
+        run: python -m unittest discover -s tests -p 'test_*.py' -v

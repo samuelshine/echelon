@@ -44,12 +44,12 @@ func (g *Gemini) Name() string { return g.name }
 // --- OpenAI request types (inbound) -----------------------------------------
 
 type openAIRequest struct {
-	Model       string           `json:"model"`
-	Messages    []openAIMessage  `json:"messages"`
-	MaxTokens   *int             `json:"max_tokens,omitempty"`
-	Temperature *float64         `json:"temperature,omitempty"`
-	TopP        *float64         `json:"top_p,omitempty"`
-	Stop        json.RawMessage  `json:"stop,omitempty"`
+	Model       string          `json:"model"`
+	Messages    []openAIMessage `json:"messages"`
+	MaxTokens   *int            `json:"max_tokens,omitempty"`
+	Temperature *float64        `json:"temperature,omitempty"`
+	TopP        *float64        `json:"top_p,omitempty"`
+	Stop        json.RawMessage `json:"stop,omitempty"`
 }
 
 type openAIMessage struct {
@@ -79,9 +79,9 @@ func (m openAIMessage) TextContent() string {
 // --- Gemini request types (outbound) ----------------------------------------
 
 type geminiRequest struct {
-	Contents          []geminiContent          `json:"contents"`
-	SystemInstruction *geminiContent           `json:"systemInstruction,omitempty"`
-	GenerationConfig  *geminiGenerationConfig  `json:"generationConfig,omitempty"`
+	Contents          []geminiContent         `json:"contents"`
+	SystemInstruction *geminiContent          `json:"systemInstruction,omitempty"`
+	GenerationConfig  *geminiGenerationConfig `json:"generationConfig,omitempty"`
 }
 
 type geminiContent struct {
@@ -94,18 +94,18 @@ type geminiPart struct {
 }
 
 type geminiGenerationConfig struct {
-	MaxOutputTokens *int      `json:"maxOutputTokens,omitempty"`
-	Temperature     *float64  `json:"temperature,omitempty"`
-	TopP            *float64  `json:"topP,omitempty"`
-	StopSequences   []string  `json:"stopSequences,omitempty"`
+	MaxOutputTokens *int     `json:"maxOutputTokens,omitempty"`
+	Temperature     *float64 `json:"temperature,omitempty"`
+	TopP            *float64 `json:"topP,omitempty"`
+	StopSequences   []string `json:"stopSequences,omitempty"`
 }
 
 // --- Gemini response types --------------------------------------------------
 
 type geminiResponse struct {
-	Candidates    []geminiCandidate  `json:"candidates"`
-	UsageMetadata *geminiUsage       `json:"usageMetadata,omitempty"`
-	ModelVersion  string             `json:"modelVersion,omitempty"`
+	Candidates    []geminiCandidate `json:"candidates"`
+	UsageMetadata *geminiUsage      `json:"usageMetadata,omitempty"`
+	ModelVersion  string            `json:"modelVersion,omitempty"`
 }
 
 type geminiCandidate struct {
@@ -132,9 +132,9 @@ type openAIResponse struct {
 }
 
 type openAIChoice struct {
-	Index        int            `json:"index"`
-	Message      openAIMessage  `json:"message"`
-	FinishReason string         `json:"finish_reason"`
+	Index        int           `json:"index"`
+	Message      openAIMessage `json:"message"`
+	FinishReason string        `json:"finish_reason"`
 }
 
 type openAIUsage struct {

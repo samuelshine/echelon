@@ -3,10 +3,10 @@ name: Validate distributed review submissions
 on:
   pull_request:
     paths:
-      - "review_submissions/v0.2/*.json"
-      - "data/manifests/targeted_v02_distributed_review_manifest.json"
-      - "reviewer/distributed.py"
-      - "scripts/validate_distributed_reviews.py"
+      - "pipeline/review_submissions/v0.2/*.json"
+      - "pipeline/data/manifests/targeted_v02_distributed_review_manifest.json"
+      - "pipeline/reviewer/distributed.py"
+      - "pipeline/scripts/validate_distributed_reviews.py"
 
 permissions:
   contents: read
@@ -14,6 +14,9 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pipeline
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

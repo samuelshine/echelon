@@ -135,9 +135,20 @@ Status: **Pending** (Docker/Compose done; the rest not started)
 - [ ] Replace in-memory rate-limit/credit/telemetry with Redis-backed
   distributed state (`RATE_LIMIT_BACKEND=redis` exists in config but the
   distributed limiter/credit ledger/persistent audit sink are not implemented).
-- [ ] Add CI (GitHub Actions) running `go build`/`go vet`/`go test ./...` on
-  every push — none exists today; only `pipeline/` has a workflow
-  (review-submission validation).
+- [x] Add CI (GitHub Actions): `.github/workflows/gateway-ci.yml`
+  (`go build`/`go vet`/`gofmt -l`/`go test -race`), `console-ci.yml`
+  (`tsc --noEmit`/`vitest`/`next build`), `pipeline-ci.yml` (`py_compile` +
+  the 123-test suite against lightweight deps only — flask/cryptography/
+  numpy, no torch/transformers needed since the transformer adapter
+  lazy-imports them and the contract tests use fixture adapters). Also fixed
+  `pipeline/.github/workflows/review-submission-validation.yml`, which had
+  never actually run: GitHub Actions only reads `.github/workflows` at the
+  **repository root**, not per-subdirectory — moved to root with corrected
+  paths. All four workflows verified locally end-to-end (2026-08-01) before
+  being added: gateway build/vet/fmt/race-test clean (fixed 3 pre-existing
+  `gofmt` violations in `gateway_test.go`/`anthropic.go`/`gemini.go`, no
+  logic changes), console typecheck/test/build clean, pipeline 123/123 tests
+  green in an isolated lightweight venv.
 
 ## Immediate next steps
 

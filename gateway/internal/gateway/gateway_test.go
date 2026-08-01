@@ -51,9 +51,9 @@ func TestGatewayProxiesChatCompletion(t *testing.T) {
 			MaxRequestBytes: 1024,
 			UpstreamTimeout: time.Second,
 		},
-		Logger:        slog.New(slog.NewTextHandler(io.Discard, nil)),
-		Guards:        guard.NewChain(guard.NewInjectionFilter()),
-		OutputScanner: guard.NewOutputScanner("[CANARY]"),
+		Logger:         slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Guards:         guard.NewChain(guard.NewInjectionFilter()),
+		OutputScanner:  guard.NewOutputScanner("[CANARY]"),
 		UpstreamRouter: testRouter(upstreamURL.String(), "upstream-key", client),
 	})
 
@@ -187,8 +187,8 @@ func TestModelsProxiesWithoutBody(t *testing.T) {
 			UpstreamBaseURL: upstreamURL,
 			MaxRequestBytes: 1024,
 		},
-		Logger:     slog.New(slog.NewTextHandler(io.Discard, nil)),
-		Guards:     guard.NewChain(guard.NewInjectionFilter()),
+		Logger:         slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Guards:         guard.NewChain(guard.NewInjectionFilter()),
 		UpstreamRouter: testRouter(upstreamURL.String(), "upstream-key", client),
 	})
 

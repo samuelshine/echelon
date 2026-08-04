@@ -180,8 +180,19 @@ co-located monorepo layout (`pipeline/`, `gateway/`, `console/`); see
   seconds each, so raise the gateway budgets when enabled (see run instructions).
 - **Expert adjudication was AI-assisted** (`ai_claude`), recorded as provisional and
   human-overridable — not native-human review.
-- **Telemetry & rate/credit state are in-memory** (single process); Redis-backed
-  distributed enforcement and a persistent audit sink are the next hardening step.
+- **Telemetry & rate/credit state default to in-memory** (single process); Redis-backed
+  distributed rate-limit/credit enforcement and a persistent Postgres audit sink are
+  opt-in via `RATE_LIMIT_BACKEND=redis` / `AUDIT_DATABASE_URL` (Phases 3–4).
+- **Console key and config mutations are real and durable (Phase 5).** Creating,
+  re-limiting, and revoking API keys from the console hits the gateway's mutable key
+  store, and editing ingress thresholds / egress toggles applies live to the running
+  cascade and pipeline. With `AUDIT_DATABASE_URL` set, all of it (keys + threshold/
+  toggle overrides) is Postgres-backed and survives a restart; unset, it still works
+  live but is lost on restart. Two intentional gaps remain: **(1)** the `/v1/console/*`
+  API has **no operator authentication** — it is an internal ops dashboard, not a
+  customer-facing surface; **(2)** a key's `rateLimitRpm` is **display/budget metadata
+  only** — rate-limit enforcement still uses the global `RATE_LIMIT_*` for every key,
+  so per-key rate limits are not yet enforced independently. Both are known follow-ups.
 - **Streaming** responses are buffered before scanning (documented buffered-security).
 
 ## Consolidation

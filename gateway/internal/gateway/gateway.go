@@ -1,9 +1,11 @@
 package gateway
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -15,9 +17,13 @@ import (
 
 	"github.com/jscyril/echelon/internal/config"
 	"github.com/jscyril/echelon/internal/core"
+	"github.com/jscyril/echelon/internal/egress"
 	"github.com/jscyril/echelon/internal/guard"
+	"github.com/jscyril/echelon/internal/ingress"
+	"github.com/jscyril/echelon/internal/keystore"
 	"github.com/jscyril/echelon/internal/observability"
 	"github.com/jscyril/echelon/internal/ports"
+	"github.com/jscyril/echelon/internal/runtimeconfig"
 	"github.com/jscyril/echelon/internal/telemetry"
 	"github.com/jscyril/echelon/internal/upstream"
 	"go.opentelemetry.io/otel/attribute"
@@ -26,15 +32,22 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
-// ConsoleKeyInfo is privacy-safe API-key metadata surfaced to the console.
-type ConsoleKeyInfo struct {
-	ID           string `json:"id"`
-	Label        string `json:"label"`
-	Last4        string `json:"last4"`
-	CreatedAt    string `json:"createdAt"`
-	Status       string `json:"status"`
-	RateLimitRpm int    `json:"rateLimitRpm"`
-	CreditBudget int64  `json:"creditBudget"`
+// CreditSeeder initializes a brand-new tenant's credit balance when a key is
+// created from the console. The concrete ledgers differ (MemoryLedger.Credit vs
+// RedisLedger.Seed), so main.go adapts whichever is active to this one-method
+// interface used only by POST /v1/console/keys.
+type CreditSeeder interface {
+	Seed(ctx context.Context, tenantID string, amount int64) error
+}
+
+// RuntimeConfigStore persists live threshold/toggle overrides so they survive a
+// restart. Nilable: when no Postgres is configured, PATCH still applies live but
+// is not persisted. Load is used to merge a PATCH on top of whatever was
+// previously persisted, so a request that only touches egress toggles (say)
+// does not clobber a previously-saved ingress threshold override.
+type RuntimeConfigStore interface {
+	Load(ctx context.Context) (runtimeconfig.Overrides, bool, error)
+	Save(ctx context.Context, ov runtimeconfig.Overrides) error
 }
 
 type HTTPDoer interface {
@@ -60,9 +73,16 @@ type Options struct {
 	CreditLedger ports.CreditLedger
 	// Console telemetry (B2). When Telemetry is set, decisions are recorded and the
 	// /v1/console/* read API is served.
-	Telemetry     *telemetry.Store
-	ConsoleKeys   []ConsoleKeyInfo
-	CreditsBudget int64
+	Telemetry *telemetry.Store
+	// KeyStore is the mutable API-key store backing the console keys UI (list/
+	// create/update/revoke). Always wired (even when auth is disabled) so the UI
+	// works; also assigned to Authenticator when auth is enabled.
+	KeyStore keystore.Store
+	// CreditSeeder initializes a new key's tenant balance on create. Optional.
+	CreditSeeder CreditSeeder
+	// RuntimeConfigStore persists config overrides. Optional (nil => live-only).
+	RuntimeConfigStore RuntimeConfigStore
+	CreditsBudget      int64
 	// Observability (Phase 6). Metrics is optional — when nil a private
 	// per-instance registry is constructed so /metrics always works and the test
 	// suite can build many Gateways without duplicate-registration panics.
@@ -85,7 +105,9 @@ type Gateway struct {
 	rateLimiter     ports.RateLimiter
 	creditLedger    ports.CreditLedger
 	telemetry       *telemetry.Store
-	consoleKeys     []ConsoleKeyInfo
+	keyStore        keystore.Store
+	creditSeeder    CreditSeeder
+	runtimeConfig   RuntimeConfigStore
 	creditsBudget   int64
 	metrics         *observability.Metrics
 	tracer          trace.Tracer
@@ -127,7 +149,9 @@ func New(opts Options) *Gateway {
 		rateLimiter:     opts.RateLimiter,
 		creditLedger:    opts.CreditLedger,
 		telemetry:       opts.Telemetry,
-		consoleKeys:     opts.ConsoleKeys,
+		keyStore:        opts.KeyStore,
+		creditSeeder:    opts.CreditSeeder,
+		runtimeConfig:   opts.RuntimeConfigStore,
 		creditsBudget:   opts.CreditsBudget,
 		metrics:         metrics,
 		tracer:          tracer,
@@ -152,7 +176,11 @@ func (g *Gateway) Routes() http.Handler {
 	mux.HandleFunc("GET /v1/console/metrics", g.consoleMetrics)
 	mux.HandleFunc("GET /v1/console/events", g.consoleEvents)
 	mux.HandleFunc("GET /v1/console/keys", g.consoleKeysHandler)
+	mux.HandleFunc("POST /v1/console/keys", g.consoleCreateKey)
+	mux.HandleFunc("PATCH /v1/console/keys/{id}", g.consoleUpdateKey)
+	mux.HandleFunc("DELETE /v1/console/keys/{id}", g.consoleRevokeKey)
 	mux.HandleFunc("GET /v1/console/config", g.consoleConfig)
+	mux.HandleFunc("PATCH /v1/console/config", g.consoleUpdateConfig)
 	return corsForConsole(g.withRequestLog(mux))
 }
 
@@ -755,60 +783,309 @@ func (g *Gateway) consoleEvents(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, g.telemetry.Events(500))
 }
 
-func (g *Gateway) consoleKeysHandler(w http.ResponseWriter, _ *http.Request) {
-	usage := map[string]struct {
+// keyUsage returns the telemetry usage map, or an empty map when telemetry is
+// off, so callers never nil-check.
+func (g *Gateway) keyUsage() map[string]struct {
+	Calls       int
+	CreditsUsed int64
+	LastUsedAt  string
+} {
+	if g.telemetry != nil {
+		return g.telemetry.KeyUsage()
+	}
+	return map[string]struct {
 		Calls       int
 		CreditsUsed int64
 		LastUsedAt  string
 	}{}
-	if g.telemetry != nil {
-		usage = g.telemetry.KeyUsage()
+}
+
+// keyJSON renders one keystore.Key as the console's JSON shape, merging in
+// telemetry usage. This is the single source of the list/create/update/revoke
+// response shape.
+func keyJSON(k keystore.Key, usage map[string]struct {
+	Calls       int
+	CreditsUsed int64
+	LastUsedAt  string
+}) map[string]any {
+	u := usage[k.ID]
+	key := map[string]any{
+		"id": k.ID, "label": k.Label, "last4": k.Last4, "createdAt": k.CreatedAt,
+		"status": k.Status, "rateLimitRpm": k.RateLimitRpm, "creditBudget": k.CreditBudget,
+		"creditsUsed": u.CreditsUsed,
 	}
-	out := make([]map[string]any, 0, len(g.consoleKeys))
-	for _, k := range g.consoleKeys {
-		u := usage[k.ID]
-		key := map[string]any{
-			"id": k.ID, "label": k.Label, "last4": k.Last4, "createdAt": k.CreatedAt,
-			"status": k.Status, "rateLimitRpm": k.RateLimitRpm, "creditBudget": k.CreditBudget,
-			"creditsUsed": u.CreditsUsed,
-		}
-		if u.LastUsedAt != "" {
-			key["lastUsedAt"] = u.LastUsedAt
-		}
-		out = append(out, key)
+	if u.LastUsedAt != "" {
+		key["lastUsedAt"] = u.LastUsedAt
+	}
+	return key
+}
+
+func (g *Gateway) consoleKeysHandler(w http.ResponseWriter, r *http.Request) {
+	if g.keyStore == nil {
+		writeJSON(w, http.StatusOK, []any{})
+		return
+	}
+	keys, err := g.keyStore.List(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "keystore_error", err.Error())
+		return
+	}
+	usage := g.keyUsage()
+	out := make([]map[string]any, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, keyJSON(k, usage))
 	}
 	writeJSON(w, http.StatusOK, out)
 }
 
-func (g *Gateway) consoleConfig(w http.ResponseWriter, _ *http.Request) {
-	ingress := []map[string]any{
-		{"layer": "heuristics", "enabled": true, "threshold": 0.35},
-		{"layer": "ml_classifier", "enabled": g.cfg.Pipeline.MLBaseURL != nil, "threshold": g.cfg.Pipeline.MLJudgeThreshold, "model": "layer2-threat-distilbert"},
-		{"layer": "llm_judge", "enabled": g.cfg.Pipeline.JudgeBaseURL != nil, "threshold": g.cfg.Pipeline.MLBlockThreshold, "model": "claude-judge"},
+func (g *Gateway) consoleCreateKey(w http.ResponseWriter, r *http.Request) {
+	if g.keyStore == nil {
+		writeError(w, http.StatusServiceUnavailable, "keystore_unavailable", "no key store configured")
+		return
 	}
+	var body struct {
+		Label string `json:"label"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "body must be valid JSON")
+		return
+	}
+	label := strings.TrimSpace(body.Label)
+	if label == "" {
+		writeError(w, http.StatusBadRequest, "invalid_request", "label is required")
+		return
+	}
+	key, secret, err := g.keyStore.Create(r.Context(), label, keystore.DefaultRateLimitRpm, keystore.DefaultCreditBudget)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "keystore_error", err.Error())
+		return
+	}
+	// Seed the new key's tenant so it has a spendable credit balance. Each key is
+	// its own tenant (id == tenant), so seed under key.ID.
+	if g.creditSeeder != nil {
+		if serr := g.creditSeeder.Seed(r.Context(), key.ID, key.CreditBudget); serr != nil {
+			g.logger.Warn("credit seed for new key failed", "id", key.ID, "error", serr)
+		}
+	}
+	g.logger.Info("console key created", "id", key.ID, "label", key.Label)
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"key":    keyJSON(key, g.keyUsage()),
+		"secret": secret,
+	})
+}
+
+func (g *Gateway) consoleUpdateKey(w http.ResponseWriter, r *http.Request) {
+	if g.keyStore == nil {
+		writeError(w, http.StatusServiceUnavailable, "keystore_unavailable", "no key store configured")
+		return
+	}
+	id := r.PathValue("id")
+	var body struct {
+		RateLimitRpm int   `json:"rateLimitRpm"`
+		CreditBudget int64 `json:"creditBudget"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "body must be valid JSON")
+		return
+	}
+	key, err := g.keyStore.UpdateLimits(r.Context(), id, body.RateLimitRpm, body.CreditBudget)
+	if errors.Is(err, keystore.ErrNotFound) {
+		writeError(w, http.StatusNotFound, "not_found", "no such key")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "keystore_error", err.Error())
+		return
+	}
+	g.logger.Info("console key limits updated", "id", key.ID, "rateLimitRpm", key.RateLimitRpm, "creditBudget", key.CreditBudget)
+	writeJSON(w, http.StatusOK, keyJSON(key, g.keyUsage()))
+}
+
+func (g *Gateway) consoleRevokeKey(w http.ResponseWriter, r *http.Request) {
+	if g.keyStore == nil {
+		writeError(w, http.StatusServiceUnavailable, "keystore_unavailable", "no key store configured")
+		return
+	}
+	id := r.PathValue("id")
+	key, err := g.keyStore.Revoke(r.Context(), id)
+	if errors.Is(err, keystore.ErrNotFound) {
+		writeError(w, http.StatusNotFound, "not_found", "no such key")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "keystore_error", err.Error())
+		return
+	}
+	g.logger.Info("console key revoked", "id", key.ID)
+	writeJSON(w, http.StatusOK, keyJSON(key, g.keyUsage()))
+}
+
+// liveConfig builds the /v1/console/config response from live cascade/pipeline
+// state, falling back to the static env-derived values when the concrete types
+// aren't wired (prototype-guards-only mode).
+func (g *Gateway) liveConfig() map[string]any {
+	mlThreshold := g.cfg.Pipeline.MLJudgeThreshold
+	judgeThreshold := g.cfg.Pipeline.MLBlockThreshold
+	if c, ok := g.ingress.(*ingress.Cascade); ok {
+		// The cascade's judge threshold gates ml_classifier -> llm_judge
+		// escalation; its block threshold is the ml_classifier hard-block bar.
+		judge, block := c.Thresholds()
+		mlThreshold = block
+		judgeThreshold = judge
+	}
+	ingressLayers := []map[string]any{
+		{"layer": "heuristics", "enabled": true, "threshold": 0.35},
+		{"layer": "ml_classifier", "enabled": g.cfg.Pipeline.MLBaseURL != nil, "threshold": mlThreshold, "model": "layer2-threat-distilbert"},
+		{"layer": "llm_judge", "enabled": g.cfg.Pipeline.JudgeBaseURL != nil, "threshold": judgeThreshold, "model": "claude-judge"},
+	}
+
+	pii := g.egress != nil
+	policy := g.egress != nil
+	classifier := g.egressMLEnabled
+	if p, ok := g.egress.(*egress.Pipeline); ok {
+		pii = p.ScannerEnabled("pii")
+		policy = p.ScannerEnabled("response_policy")
+		// response_classifier only exists when the ML cascade was wired.
+		classifier = g.egressMLEnabled && p.ScannerEnabled("response_classifier")
+	}
+
 	providers := make([]string, 0)
 	if g.upstreamRouter != nil {
 		for name := range g.upstreamRouter.Providers() {
 			providers = append(providers, name)
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ingress": ingress,
+	return map[string]any{
+		"ingress": ingressLayers,
 		"egress": map[string]any{
-			"piiMasking":        g.egress != nil,
-			"policyEnforcement": g.egress != nil,
-			"toxicityScan":      g.egressMLEnabled,
-			"maliciousCodeScan": g.egressMLEnabled,
+			"piiMasking":        pii,
+			"policyEnforcement": policy,
+			"toxicityScan":      classifier,
+			"maliciousCodeScan": classifier,
 		},
 		"providers": providers,
-	})
+	}
+}
+
+func (g *Gateway) consoleConfig(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, g.liveConfig())
+}
+
+func (g *Gateway) consoleUpdateConfig(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Ingress []struct {
+			Layer     string   `json:"layer"`
+			Threshold *float64 `json:"threshold"`
+		} `json:"ingress"`
+		Egress *struct {
+			PIIMasking        *bool `json:"piiMasking"`
+			PolicyEnforcement *bool `json:"policyEnforcement"`
+			ToxicityScan      *bool `json:"toxicityScan"`
+			MaliciousCodeScan *bool `json:"maliciousCodeScan"`
+		} `json:"egress"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_request", "body must be valid JSON")
+		return
+	}
+
+	// Start from whatever is already persisted (if anything) rather than a zero
+	// value, so a PATCH that only touches one side (e.g. egress toggles only)
+	// merges on top of a previously-saved override instead of silently erasing
+	// it on the next restart. Best-effort: a load failure just starts from zero,
+	// matching Save's own best-effort (warn-and-continue) failure handling below.
+	var ov runtimeconfig.Overrides
+	if g.runtimeConfig != nil {
+		if loaded, found, err := g.runtimeConfig.Load(r.Context()); err != nil {
+			g.logger.Warn("runtime config load failed", "error", err)
+		} else if found {
+			ov = loaded
+		}
+	}
+
+	// Apply ingress thresholds. Only ml_classifier (block) and llm_judge (judge)
+	// are live-mutable; heuristics is a no-op (non-editable, see design). We read
+	// the current live pair and overlay whatever the request specified so a
+	// single-layer edit doesn't disturb the other.
+	if cascade, ok := g.ingress.(*ingress.Cascade); ok && len(body.Ingress) > 0 {
+		judge, block := cascade.Thresholds()
+		for _, l := range body.Ingress {
+			if l.Threshold == nil {
+				continue
+			}
+			switch l.Layer {
+			case "ml_classifier":
+				block = *l.Threshold
+			case "llm_judge":
+				judge = *l.Threshold
+			default:
+				// heuristics and unknown layers are accepted but ignored.
+			}
+		}
+		if err := cascade.SetThresholds(judge, block); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid_threshold", err.Error())
+			return
+		}
+		ov.JudgeThreshold = &judge
+		ov.BlockThreshold = &block
+	}
+
+	// Apply egress toggles. Skip gracefully when there is no pipeline at all.
+	if body.Egress != nil {
+		if p, ok := g.egress.(*egress.Pipeline); ok {
+			if body.Egress.PIIMasking != nil {
+				p.SetScannerEnabled("pii", *body.Egress.PIIMasking)
+				ov.PIIMasking = body.Egress.PIIMasking
+			}
+			if body.Egress.PolicyEnforcement != nil {
+				p.SetScannerEnabled("response_policy", *body.Egress.PolicyEnforcement)
+				ov.PolicyEnforcement = body.Egress.PolicyEnforcement
+			}
+			// toxicityScan OR maliciousCodeScan both drive the single
+			// response_classifier scanner (one classifier call yields both
+			// verdicts). Either turning off disables it for both. When no ML
+			// cascade is wired, SetScannerEnabled on an absent name is a no-op.
+			var tox *bool
+			if body.Egress.ToxicityScan != nil {
+				tox = body.Egress.ToxicityScan
+			}
+			if body.Egress.MaliciousCodeScan != nil {
+				// If both are present and disagree, "disabled wins" (either false
+				// disables). Combine by AND.
+				if tox == nil {
+					tox = body.Egress.MaliciousCodeScan
+				} else {
+					v := *tox && *body.Egress.MaliciousCodeScan
+					tox = &v
+				}
+			}
+			if tox != nil {
+				p.SetScannerEnabled("response_classifier", *tox)
+				ov.ToxicityScan = tox
+			}
+		}
+	}
+
+	// Persist when a durable store is configured; otherwise the change is live
+	// but lost on restart (honest degradation, consistent with the rest of the
+	// codebase's no-Postgres behavior).
+	if g.runtimeConfig != nil {
+		if err := g.runtimeConfig.Save(r.Context(), ov); err != nil {
+			g.logger.Warn("runtime config persist failed", "error", err)
+		}
+	}
+	g.logger.Info("console config updated",
+		"judgeThreshold", ov.JudgeThreshold, "blockThreshold", ov.BlockThreshold,
+		"piiMasking", ov.PIIMasking, "policyEnforcement", ov.PolicyEnforcement, "toxicityScan", ov.ToxicityScan)
+
+	writeJSON(w, http.StatusOK, g.liveConfig())
 }
 
 func corsForConsole(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/v1/console/") {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusNoContent)

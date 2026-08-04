@@ -5,45 +5,75 @@ import { PageHeader } from "@/components/page-header";
 import { KeyCard } from "@/components/keys/key-card";
 import { CreateKeyBar, RevealBanner } from "@/components/keys/create-key";
 import { useApiKeys } from "@/lib/hooks/useEchelon";
+import { createApiKey, revokeApiKey, updateApiKeyLimits } from "@/lib/api/client";
 import type { ApiKey } from "@/types/echelon";
 
-function generateSecret(): { secret: string; last4: string } {
-  const hex = "0123456789abcdef";
-  let body = "";
-  for (let i = 0; i < 32; i++) body += hex[Math.floor(Math.random() * 16)];
-  return { secret: `sk_live_${body}`, last4: body.slice(-4) };
+function InlineError({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-[var(--radius-lg)] border border-[var(--color-block)] bg-[var(--color-block-wash)] p-4">
+      <div className="text-xs leading-relaxed text-[var(--color-ink-soft)]">
+        <span className="font-medium text-[var(--color-block)]">Action failed.</span> {message}
+      </div>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        className="rounded-[var(--radius)] px-2 py-1 text-[var(--color-muted)] hover:bg-[var(--color-surface)]"
+      >
+        ✕
+      </button>
+    </div>
+  );
 }
 
 export default function KeysPage() {
   const { data: loaded } = useApiKeys();
   const [keys, setKeys] = useState<ApiKey[] | null>(null);
   const [reveal, setReveal] = useState<{ secret: string; label: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (loaded && !keys) setKeys(loaded);
   }, [loaded, keys]);
 
-  const createKey = (label: string) => {
-    const { secret, last4 } = generateSecret();
-    const newKey: ApiKey = {
-      id: `key_${Date.now().toString(36)}`,
-      label,
-      last4,
-      createdAt: new Date().toISOString(),
-      status: "active",
-      rateLimitRpm: 1000,
-      creditBudget: 100_000,
-      creditsUsed: 0,
-    };
-    setKeys((ks) => [newKey, ...(ks ?? [])]);
-    setReveal({ secret, label });
+  const createKey = async (label: string) => {
+    setError(null);
+    try {
+      const { key, secret } = await createApiKey(label);
+      // Prepend the real returned key and show the real, one-time secret.
+      setKeys((ks) => [key, ...(ks ?? [])]);
+      setReveal({ secret, label: key.label });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not create the key.");
+    }
   };
 
-  const updateKey = (updated: ApiKey) =>
+  const updateKey = async (updated: ApiKey) => {
+    setError(null);
+    const prev = keys;
+    // Optimistic update, then roll back on failure.
     setKeys((ks) => ks?.map((k) => (k.id === updated.id ? updated : k)) ?? null);
+    try {
+      const saved = await updateApiKeyLimits(updated.id, updated.rateLimitRpm, updated.creditBudget);
+      setKeys((ks) => ks?.map((k) => (k.id === saved.id ? saved : k)) ?? null);
+    } catch (e) {
+      setKeys(prev);
+      setError(e instanceof Error ? e.message : "Could not update the key.");
+    }
+  };
 
-  const revokeKey = (id: string) =>
+  const revokeKey = async (id: string) => {
+    setError(null);
+    const prev = keys;
     setKeys((ks) => ks?.map((k) => (k.id === id ? { ...k, status: "revoked" } : k)) ?? null);
+    try {
+      const saved = await revokeApiKey(id);
+      setKeys((ks) => ks?.map((k) => (k.id === saved.id ? saved : k)) ?? null);
+    } catch (e) {
+      setKeys(prev);
+      setError(e instanceof Error ? e.message : "Could not revoke the key.");
+    }
+  };
 
   const activeCount = keys?.filter((k) => k.status === "active").length ?? 0;
 
@@ -57,6 +87,8 @@ export default function KeysPage() {
 
       <div className="max-w-4xl space-y-4 p-8">
         <CreateKeyBar onCreate={createKey} />
+
+        {error ? <InlineError message={error} onDismiss={() => setError(null)} /> : null}
 
         {reveal ? (
           <RevealBanner

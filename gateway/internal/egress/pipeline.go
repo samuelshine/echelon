@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/jscyril/echelon/internal/core"
@@ -19,6 +20,11 @@ type PipelineConfig struct {
 type Pipeline struct {
 	config   PipelineConfig
 	scanners []ports.EgressScanner
+	// disabled records which scanners (by Name()) are currently toggled off, so
+	// the console can enable/disable a scanner at runtime without a restart. A
+	// name never present here defaults to enabled.
+	mu       sync.RWMutex
+	disabled map[string]bool
 }
 
 func (p *Pipeline) Name() string { return "egress_pipeline" }
@@ -29,7 +35,33 @@ func NewPipeline(config PipelineConfig, scanners ...ports.EgressScanner) (*Pipel
 			return nil, fmt.Errorf("egress scanner %d is nil", i)
 		}
 	}
-	return &Pipeline{config: config, scanners: append([]ports.EgressScanner(nil), scanners...)}, nil
+	return &Pipeline{
+		config:   config,
+		scanners: append([]ports.EgressScanner(nil), scanners...),
+		disabled: make(map[string]bool),
+	}, nil
+}
+
+// SetScannerEnabled toggles the scanner with the given Name() on or off at
+// runtime. Toggling a name that no scanner in the pipeline actually has (e.g.
+// "response_classifier" when no ML cascade was wired) is a harmless no-op at
+// Scan time — it simply records intent that never matches a real scanner.
+func (p *Pipeline) SetScannerEnabled(name string, enabled bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if enabled {
+		delete(p.disabled, name)
+		return
+	}
+	p.disabled[name] = true
+}
+
+// ScannerEnabled reports whether the named scanner is currently active. Any name
+// never explicitly disabled defaults to true.
+func (p *Pipeline) ScannerEnabled(name string) bool {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return !p.disabled[name]
 }
 
 func (p *Pipeline) Scan(ctx context.Context, response core.ModelResponse) (core.ModelResponse, core.Verdict, error) {
@@ -39,6 +71,11 @@ func (p *Pipeline) Scan(ctx context.Context, response core.ModelResponse) (core.
 	var findings []core.Finding
 
 	for _, scanner := range p.scanners {
+		// A disabled scanner is skipped entirely — no finding, no verdict
+		// contribution — as if it were not in the pipeline at all.
+		if !p.ScannerEnabled(scanner.Name()) {
+			continue
+		}
 		input := current
 		input.Body = bytes.Clone(current.Body)
 		stageCtx, cancel := scannerContext(ctx, p.config.ScannerTimeout)

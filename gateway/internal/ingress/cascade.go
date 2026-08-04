@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"sync/atomic"
 	"time"
 
 	"github.com/jscyril/echelon/internal/core"
@@ -27,18 +29,46 @@ type Cascade struct {
 	heuristic  ports.IngressLayer
 	classifier ports.PromptClassifier
 	judge      ports.PromptJudge
+	// judgeThreshold/blockThreshold are the *live* values, mutable at runtime via
+	// SetThresholds and read lock-free by Evaluate. They hold math.Float64bits so
+	// a concurrent read during request handling is safe. The frozen copies on
+	// config are retained only for the other (read-only) config fields.
+	judgeThreshold atomic.Uint64
+	blockThreshold atomic.Uint64
 }
 
 func NewCascade(config CascadeConfig, heuristic ports.IngressLayer, classifier ports.PromptClassifier, judge ports.PromptJudge) (*Cascade, error) {
 	if heuristic == nil {
 		return nil, fmt.Errorf("%w: heuristic layer is required", ErrInvalidCascadeConfig)
 	}
-	if config.JudgeThreshold < 0 || config.JudgeThreshold > 1 ||
-		config.BlockThreshold < 0 || config.BlockThreshold > 1 ||
-		config.JudgeThreshold > config.BlockThreshold {
+	if !validThresholds(config.JudgeThreshold, config.BlockThreshold) {
 		return nil, fmt.Errorf("%w: thresholds must satisfy 0 <= judge <= block <= 1", ErrInvalidCascadeConfig)
 	}
-	return &Cascade{config: config, heuristic: heuristic, classifier: classifier, judge: judge}, nil
+	c := &Cascade{config: config, heuristic: heuristic, classifier: classifier, judge: judge}
+	c.judgeThreshold.Store(math.Float64bits(config.JudgeThreshold))
+	c.blockThreshold.Store(math.Float64bits(config.BlockThreshold))
+	return c, nil
+}
+
+func validThresholds(judge, block float64) bool {
+	return judge >= 0 && judge <= 1 && block >= 0 && block <= 1 && judge <= block
+}
+
+// Thresholds returns the current live judge/block thresholds.
+func (c *Cascade) Thresholds() (judgeThreshold, blockThreshold float64) {
+	return math.Float64frombits(c.judgeThreshold.Load()), math.Float64frombits(c.blockThreshold.Load())
+}
+
+// SetThresholds atomically swaps the live judge/block thresholds after applying
+// the same validation NewCascade does. It returns ErrInvalidCascadeConfig
+// without mutating anything when the new values are out of range.
+func (c *Cascade) SetThresholds(judgeThreshold, blockThreshold float64) error {
+	if !validThresholds(judgeThreshold, blockThreshold) {
+		return fmt.Errorf("%w: thresholds must satisfy 0 <= judge <= block <= 1", ErrInvalidCascadeConfig)
+	}
+	c.judgeThreshold.Store(math.Float64bits(judgeThreshold))
+	c.blockThreshold.Store(math.Float64bits(blockThreshold))
+	return nil
 }
 
 func (c *Cascade) Name() string { return "ingress_cascade" }
@@ -76,12 +106,13 @@ func (c *Cascade) Evaluate(ctx context.Context, prompt core.Prompt) (core.Verdic
 		Layer: c.classifier.Name(), Code: "semantic_prompt_injection",
 		Message: "semantic classifier detected malicious intent", Confidence: probability,
 	}
-	if probability >= c.config.BlockThreshold {
+	judgeThreshold, blockThreshold := c.Thresholds()
+	if probability >= blockThreshold {
 		blocked := core.Block(finding)
 		blocked.Duration = time.Since(started)
 		return blocked, nil
 	}
-	if probability < c.config.JudgeThreshold {
+	if probability < judgeThreshold {
 		allowed := core.Allow()
 		allowed.Duration = time.Since(started)
 		return allowed, nil

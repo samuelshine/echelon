@@ -10,7 +10,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/jscyril/echelon/internal/auth"
 	"github.com/jscyril/echelon/internal/config"
 	"github.com/jscyril/echelon/internal/core"
 	"github.com/jscyril/echelon/internal/credit"
@@ -18,9 +17,11 @@ import (
 	"github.com/jscyril/echelon/internal/gateway"
 	"github.com/jscyril/echelon/internal/guard"
 	"github.com/jscyril/echelon/internal/ingress"
+	"github.com/jscyril/echelon/internal/keystore"
 	"github.com/jscyril/echelon/internal/observability"
 	"github.com/jscyril/echelon/internal/ports"
 	"github.com/jscyril/echelon/internal/ratelimit"
+	"github.com/jscyril/echelon/internal/runtimeconfig"
 	"github.com/jscyril/echelon/internal/telemetry"
 	"github.com/jscyril/echelon/internal/upstream"
 	"github.com/redis/go-redis/v9"
@@ -50,18 +51,57 @@ func main() {
 	// Hexagonal security composition. The ingress cascade (heuristics -> remote ML
 	// classifier -> remote LLM judge) is wired when ML_BASE_URL is configured; it
 	// then supersedes the prototype guards on the proxied OpenAI path.
+	startupCtx := context.Background()
 	securityClient := &http.Client{Timeout: cfg.Pipeline.JudgeTimeout + cfg.Pipeline.MLTimeout}
 	ingressCascade := buildIngress(cfg, securityClient, logger)
 	egressPipeline, egressMLEnabled := buildEgress(cfg, securityClient, logger)
-	authenticator := buildAuthenticator(logger)
+
+	// Mutable API-key store (Phase 5). Seeded once from ECHELON_API_KEYS, then the
+	// single source of truth for both request auth and the console keys UI.
+	// Postgres-backed when AUDIT_DATABASE_URL is set (survives restarts), else an
+	// in-process memory store (frictionless local dev). Auth turns on whenever
+	// ECHELON_API_KEYS was set OR Postgres is configured (a real deployment) —
+	// the latter gives a clean from-zero bootstrap: point at Postgres with no keys,
+	// auth turns on with an empty store, and the operator creates the first key
+	// from the console.
+	seedKeys := parseSeedKeys(cfg)
+	authEnabled := strings.TrimSpace(os.Getenv("ECHELON_API_KEYS")) != "" || cfg.AuditDatabaseURL != ""
+	var keyStore keystore.Store
+	if cfg.AuditDatabaseURL != "" {
+		ps, kerr := keystore.NewPostgresStore(startupCtx, cfg.AuditDatabaseURL, seedKeys)
+		if kerr != nil {
+			logger.Error("postgres key store init failed", "error", kerr)
+			os.Exit(1)
+		}
+		keyStore = ps
+		defer ps.Close()
+		logger.Info("postgres key store enabled", "keys_seeded", len(seedKeys))
+	} else {
+		keyStore = keystore.NewMemoryStore(seedKeys)
+		logger.Info("in-memory key store enabled", "keys_seeded", len(seedKeys))
+	}
+	var authenticator ports.Authenticator
+	if authEnabled {
+		authenticator = keyStore
+		logger.Info("api-key auth enabled")
+	} else {
+		logger.Info("api-key auth disabled (no ECHELON_API_KEYS and no AUDIT_DATABASE_URL)")
+	}
+
+	// Credit seed derives from the same key list: each seeded key is its own
+	// tenant (id == tenant), seeded to its budget. Matches the pre-Phase-5 seed.
+	creditSeed := map[string]int64{}
+	for _, sk := range seedKeys {
+		creditSeed[sk.Key.ID] = sk.Key.CreditBudget
+	}
 
 	// Rate limiter + credit ledger share a single backend flag (RATE_LIMIT_BACKEND):
 	// "redis" wires both against one shared *redis.Client; "memory" (the default)
 	// wires the in-process adapters. There is deliberately no separate CREDIT_BACKEND
 	// in this phase — one flag governs both distributed adapters.
-	creditSeed := buildCreditSeed(cfg)
 	var rateLimiter ports.RateLimiter
 	var creditLedger ports.CreditLedger
+	var creditSeeder gateway.CreditSeeder
 	switch cfg.RateLimit.Backend {
 	case "redis":
 		opts, err := redis.ParseURL(cfg.RateLimit.RedisURL)
@@ -77,10 +117,13 @@ func main() {
 			os.Exit(1)
 		}
 		creditLedger = ledger
+		creditSeeder = ledger // *RedisLedger already has Seed(ctx, tenant, amount).
 		logger.Info("redis rate limiter + credit ledger enabled", "tenants_seeded", len(creditSeed))
 	default: // "memory"
 		rateLimiter = ratelimit.NewMemoryTokenBucket()
-		creditLedger = credit.NewMemoryLedger(creditSeed)
+		ledger := credit.NewMemoryLedger(creditSeed)
+		creditLedger = ledger
+		creditSeeder = memSeeder{ledger} // adapts MemoryLedger.Credit to the seeder interface.
 		logger.Info("in-memory rate limiter + credit ledger enabled", "tenants_seeded", len(creditSeed))
 	}
 
@@ -119,22 +162,46 @@ func main() {
 		}
 	}
 
+	// Runtime-config overrides (Phase 5). Shares AUDIT_DATABASE_URL with the audit
+	// sink and key store. Persisted threshold/toggle changes are loaded and applied
+	// to the live cascade/pipeline BEFORE the server accepts traffic, so an operator
+	// override survives a restart. Unset Postgres => overrides apply live but are
+	// lost on restart (honest degradation, noted in docs).
+	var runtimeStore gateway.RuntimeConfigStore
+	if cfg.AuditDatabaseURL != "" {
+		rc, rerr := runtimeconfig.NewStore(startupCtx, cfg.AuditDatabaseURL)
+		if rerr != nil {
+			logger.Error("runtime config store disabled", "error", rerr)
+		} else {
+			runtimeStore = rc
+			defer rc.Close()
+			if ov, ok, lerr := rc.Load(startupCtx); lerr != nil {
+				logger.Warn("runtime config load failed", "error", lerr)
+			} else if ok {
+				applyOverrides(ingressCascade, egressPipeline, egressMLEnabled, ov, logger)
+				logger.Info("runtime config overrides applied from postgres")
+			}
+		}
+	}
+
 	app := gateway.New(gateway.Options{
-		Config:          cfg,
-		Logger:          logger,
-		Guards:          filterChain,
-		OutputScanner:   outputScanner,
-		Ingress:         ingressCascade,
-		Egress:          egressPipeline,
-		EgressMLEnabled: egressMLEnabled,
-		Authenticator:   authenticator,
-		RateLimiter:     rateLimiter,
-		CreditLedger:    creditLedger,
-		Telemetry:       telemetryStore,
-		ConsoleKeys:     buildConsoleKeys(cfg),
-		CreditsBudget:   1_000_000,
-		UpstreamRouter:  buildProviderRouter(cfg, logger),
-		TracerProvider:  tracerProvider,
+		Config:             cfg,
+		Logger:             logger,
+		Guards:             filterChain,
+		OutputScanner:      outputScanner,
+		Ingress:            ingressCascade,
+		Egress:             egressPipeline,
+		EgressMLEnabled:    egressMLEnabled,
+		Authenticator:      authenticator,
+		RateLimiter:        rateLimiter,
+		CreditLedger:       creditLedger,
+		Telemetry:          telemetryStore,
+		KeyStore:           keyStore,
+		CreditSeeder:       creditSeeder,
+		RuntimeConfigStore: runtimeStore,
+		CreditsBudget:      1_000_000,
+		UpstreamRouter:     buildProviderRouter(cfg, logger),
+		TracerProvider:     tracerProvider,
 	})
 
 	server := &http.Server{
@@ -315,95 +382,90 @@ func buildEgress(cfg config.Config, client *http.Client, logger *slog.Logger) (p
 	return pipeline, mlEnabled
 }
 
-// buildConsoleKeys renders privacy-safe API-key metadata for the console from the
-// same ECHELON_API_KEYS env ("key:tenant:keyid:plan,..."). Only the last 4 chars
-// of each key are retained.
-func buildConsoleKeys(cfg config.Config) []gateway.ConsoleKeyInfo {
+// parseSeedKeys parses ECHELON_API_KEYS ("key:tenant:keyid:plan,...") into the
+// bootstrap seed for the key store — the single replacement for the three
+// separately-parsed copies of this env var that existed before Phase 5
+// (buildAuthenticator + buildConsoleKeys + buildCreditSeed).
+//
+// Backward-compat note: a seeded key's TenantID stays parts[1] (the tenant), so
+// existing keys keep billing to the same tenant. Because the PostgresStore has
+// no tenant column and derives Identity{TenantID,APIKeyID} = key.ID, the seeded
+// key's ID is set to parts[1] so that derivation preserves the tenant. The
+// MemoryStore honors the full legacy Identity verbatim (keeping parts[2] keyid /
+// parts[3] plan for the zero-Postgres dev path). Only newly created console keys
+// use the pure per-key-tenant scheme (id == tenant == apiKeyId).
+func parseSeedKeys(cfg config.Config) []keystore.SeedKey {
 	raw := strings.TrimSpace(os.Getenv("ECHELON_API_KEYS"))
 	if raw == "" {
 		return nil
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
-	var keys []gateway.ConsoleKeyInfo
+	var seed []keystore.SeedKey
 	for _, entry := range strings.Split(raw, ",") {
 		parts := strings.Split(strings.TrimSpace(entry), ":")
-		if len(parts) < 2 || parts[0] == "" {
+		if len(parts) < 2 || parts[0] == "" || parts[1] == "" {
 			continue
 		}
-		key := parts[0]
-		last4 := key
-		if len(key) > 4 {
-			last4 = key[len(key)-4:]
-		}
-		id := parts[1]
-		if len(parts) > 2 {
-			id = parts[2]
-		}
-		keys = append(keys, gateway.ConsoleKeyInfo{
-			ID: id, Label: parts[1], Last4: last4, CreatedAt: now, Status: "active",
-			RateLimitRpm: int(cfg.RateLimit.Limit), CreditBudget: 100_000,
-		})
-	}
-	return keys
-}
-
-// buildCreditSeed parses ECHELON_API_KEYS ("key:tenant:keyid:plan,...") the same
-// way buildConsoleKeys/buildAuthenticator do (parts[1] is the tenant, matching the
-// core.Identity.TenantID the authenticator emits) and returns each distinct tenant
-// seeded to 100_000 credits — the same budget buildConsoleKeys surfaces to the
-// console. Returns an empty map when auth is disabled (no tenant to bill).
-func buildCreditSeed(cfg config.Config) map[string]int64 {
-	_ = cfg // seeding derives from ECHELON_API_KEYS, kept for signature symmetry
-	seed := map[string]int64{}
-	raw := strings.TrimSpace(os.Getenv("ECHELON_API_KEYS"))
-	if raw == "" {
-		return seed
-	}
-	for _, entry := range strings.Split(raw, ",") {
-		parts := strings.Split(strings.TrimSpace(entry), ":")
-		if len(parts) < 2 || parts[0] == "" {
-			continue
-		}
+		secret := parts[0]
 		tenant := parts[1]
-		if tenant == "" {
-			continue
+		last4 := secret
+		if len(secret) > 4 {
+			last4 = secret[len(secret)-4:]
 		}
-		seed[tenant] = 100_000
+		identity := core.Identity{TenantID: tenant, APIKeyID: tenant}
+		if len(parts) > 2 && parts[2] != "" {
+			identity.APIKeyID = parts[2]
+		}
+		if len(parts) > 3 {
+			identity.Plan = parts[3]
+		}
+		seed = append(seed, keystore.SeedKey{
+			Secret: secret,
+			Key: keystore.Key{
+				ID: tenant, Label: tenant, Last4: last4, CreatedAt: now, Status: "active",
+				RateLimitRpm: int(cfg.RateLimit.Limit), CreditBudget: keystore.DefaultCreditBudget,
+			},
+			Identity: identity,
+		})
 	}
 	return seed
 }
 
-// buildAuthenticator reads ECHELON_API_KEYS ("key:tenant:keyid:plan,...") and
-// returns nil (auth disabled) when unset, keeping local development frictionless.
-func buildAuthenticator(logger *slog.Logger) ports.Authenticator {
-	raw := strings.TrimSpace(os.Getenv("ECHELON_API_KEYS"))
-	if raw == "" {
-		logger.Info("api-key auth disabled (no ECHELON_API_KEYS)")
-		return nil
-	}
-	keys := map[string]core.Identity{}
-	for _, entry := range strings.Split(raw, ",") {
-		parts := strings.Split(strings.TrimSpace(entry), ":")
-		if len(parts) < 2 || parts[0] == "" {
-			continue
+// memSeeder adapts *credit.MemoryLedger (whose Credit(tenant, amount) takes no
+// ctx and returns no error) to gateway.CreditSeeder, so POST /v1/console/keys can
+// seed a new key's balance the same way regardless of the ledger backend.
+type memSeeder struct{ l *credit.MemoryLedger }
+
+func (m memSeeder) Seed(_ context.Context, tenantID string, amount int64) error {
+	m.l.Credit(tenantID, amount)
+	return nil
+}
+
+// applyOverrides applies persisted runtime-config overrides to the live cascade
+// and egress pipeline at startup, before the server accepts traffic. Nil/absent
+// concrete types are skipped gracefully (prototype-guards-only / no-egress modes).
+func applyOverrides(ingressLayer ports.IngressLayer, egressScanner ports.EgressScanner, egressMLEnabled bool, ov runtimeconfig.Overrides, logger *slog.Logger) {
+	if cascade, ok := ingressLayer.(*ingress.Cascade); ok && (ov.JudgeThreshold != nil || ov.BlockThreshold != nil) {
+		judge, block := cascade.Thresholds()
+		if ov.JudgeThreshold != nil {
+			judge = *ov.JudgeThreshold
 		}
-		id := core.Identity{TenantID: parts[1]}
-		if len(parts) > 2 {
-			id.APIKeyID = parts[2]
+		if ov.BlockThreshold != nil {
+			block = *ov.BlockThreshold
 		}
-		if len(parts) > 3 {
-			id.Plan = parts[3]
+		if err := cascade.SetThresholds(judge, block); err != nil {
+			logger.Warn("persisted threshold override rejected", "error", err)
 		}
-		keys[parts[0]] = id
 	}
-	if len(keys) == 0 {
-		return nil
+	if pipeline, ok := egressScanner.(*egress.Pipeline); ok {
+		if ov.PIIMasking != nil {
+			pipeline.SetScannerEnabled("pii", *ov.PIIMasking)
+		}
+		if ov.PolicyEnforcement != nil {
+			pipeline.SetScannerEnabled("response_policy", *ov.PolicyEnforcement)
+		}
+		if ov.ToxicityScan != nil && egressMLEnabled {
+			pipeline.SetScannerEnabled("response_classifier", *ov.ToxicityScan)
+		}
 	}
-	authenticator, err := auth.NewStaticAPIKeyAuthenticator(keys)
-	if err != nil {
-		logger.Error("api-key auth build failed; auth disabled", "error", err)
-		return nil
-	}
-	logger.Info("api-key auth enabled", "key_count", len(keys))
-	return authenticator
 }

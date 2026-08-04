@@ -154,6 +154,41 @@ Status: **Done** (in-memory)
 - [x] Category and per-layer mapping from core verdicts to the console domain model;
   API-key usage aggregated per key. Verified live end-to-end against real traffic.
 
+### Console mutation API (Phase 5)
+
+Status: **Done** (durable when Postgres is configured)
+
+- [x] `internal/keystore` mutable API-key store (memory + Postgres). Keys are
+  created/re-limited/revoked at runtime; it is the single source of truth for
+  both request auth (`ports.Authenticator`) and the console keys UI, replacing
+  the three separately-parsed copies of `ECHELON_API_KEYS`
+  (`buildAuthenticator` + `buildConsoleKeys` + `buildCreditSeed`).
+- [x] New/changed endpoints: `POST /v1/console/keys` (returns the secret once,
+  seeds the new key's credit balance), `PATCH`/`DELETE /v1/console/keys/{id}`
+  (revoke is a soft status flip so historical telemetry keyed on the id stays
+  meaningful), and `GET`/`PATCH /v1/console/config`.
+- [x] Live-mutable ingress thresholds (`Cascade.SetThresholds`/`Thresholds`,
+  atomic float holders) and egress scanner toggles
+  (`Pipeline.SetScannerEnabled`/`ScannerEnabled`). `PATCH /v1/console/config`
+  applies them live; heuristics stays non-editable (accepted-but-ignored).
+- [x] `internal/runtimeconfig` persists threshold/toggle overrides to Postgres
+  (`runtime_config` single-row jsonb); applied at boot before serving so a
+  change survives a restart.
+- [x] Auth-enable rule change: auth turns on whenever `ECHELON_API_KEYS` **or**
+  `AUDIT_DATABASE_URL` is set (Postgres implies a real deployment), enabling a
+  from-zero bootstrap with an empty key store.
+- [x] Credit-ledger `Seed` hook added to `RedisLedger` (mirrors `MemoryLedger.Credit`)
+  so a newly created key's tenant gets a spendable balance without adding a method
+  to the `ports.CreditLedger` interface.
+- [x] `internal/gateway/console_mutations_test.go`: create-key secret
+  authenticates a real request; revoke → 401; `PATCH /v1/console/config` lowers a
+  block threshold and a previously-passing probability then blocks. Verified live
+  against a real local Postgres, including a **kill/restart** proving the threshold
+  and the revoked key survive the restart.
+- Known limitations (unchanged by this phase): the `/v1/console/*` surface has no
+  operator authentication; per-key `rateLimitRpm` is display/budget-only and is
+  not yet enforced independently of the global `RATE_LIMIT_*`.
+
 ## Phase 6 — Production hardening and delivery
 
 Status: **Pending** (Docker/Compose done; the rest not started)

@@ -139,6 +139,16 @@ configured value through readiness or admin responses.
 | `GET` | `/v1/models` | Proxied OpenAI-compatible model listing. |
 | `POST` | `/v1/chat/completions` | Guarded chat completions. |
 | `POST` | `/v1/responses` | Guarded Responses API call. |
+| `GET` | `/v1/console/keys` | List API keys (from the mutable key store). |
+| `POST` | `/v1/console/keys` | Create an API key; returns its secret once. |
+| `PATCH` | `/v1/console/keys/{id}` | Update a key's rate-limit / credit budget. |
+| `DELETE` | `/v1/console/keys/{id}` | Revoke a key (soft; subsequent auth fails). |
+| `GET` | `/v1/console/config` | Live ingress thresholds + egress scanner toggles. |
+| `PATCH` | `/v1/console/config` | Change thresholds / toggles (applied live, persisted when Postgres is set). |
+
+> The `/v1/console/*` surface has **no operator authentication** — it is an
+> internal ops dashboard, not a customer-facing surface. This is a pre-existing,
+> still-open gap that Phase 5 did not change.
 
 ## Configuration
 
@@ -154,7 +164,17 @@ are:
 | Classifiers | `ML_BASE_URL`, `JUDGE_BASE_URL`, `ML_*_THRESHOLD` |
 | Failure policy | `SECURITY_FAIL_CLOSED` |
 | Quota | `RATE_LIMIT_BACKEND`, `REDIS_URL`, `RATE_LIMIT_*` |
-| Observability | `AUDIT_DATABASE_URL` (durable audit sink), standard `OTEL_*` (tracing) |
+| Observability | `AUDIT_DATABASE_URL` (shared Postgres: durable audit sink, API-key store, and runtime-config overrides), standard `OTEL_*` (tracing) |
+
+> `AUDIT_DATABASE_URL` is a single optional Postgres instance backing three
+> durable stores: the audit sink (`prompt_events`), the mutable API-key store
+> (`api_keys`), and runtime threshold/toggle overrides (`runtime_config`). When
+> it is set, API-key auth is enabled even without `ECHELON_API_KEYS` — giving a
+> clean from-zero bootstrap (create the first key from the console). When it is
+> unset, all three degrade to in-memory only: keys and config changes still work
+> live but are lost on restart. Note: per-key `rateLimitRpm` is display/budget
+> metadata only — rate-limit enforcement still uses the global `RATE_LIMIT_*`
+> limit for every key (independent per-key enforcement is a known follow-up).
 
 Configuration is rejected at startup if URLs are malformed, thresholds are
 inverted, Redis is selected without a URL, values are non-positive, or the global

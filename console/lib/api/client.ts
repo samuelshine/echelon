@@ -5,7 +5,12 @@ import {
   generateMetricSeries,
   getDashboardSummary,
 } from "@/lib/api/mock";
-import { promptEventSchema } from "@/lib/api/schemas";
+import {
+  apiKeySchema,
+  createKeyResponseSchema,
+  echelonConfigSchema,
+  promptEventSchema,
+} from "@/lib/api/schemas";
 import type {
   ApiKey,
   DashboardSummary,
@@ -32,6 +37,29 @@ async function getJSON<T>(path: string): Promise<T> {
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`Echelon API ${path} -> HTTP ${res.status}`);
+  return (await res.json()) as T;
+}
+
+/**
+ * Mutating request. Unlike the read helpers above, this NEVER falls back to mock
+ * data: a write that silently "succeeds" against no backend would lie to the
+ * operator that their change took effect. If the gateway URL is unset or the
+ * request fails, it throws — the calling page must catch, roll back its
+ * optimistic update, and surface the error.
+ */
+async function mutateJSON<T>(method: string, path: string, body?: unknown): Promise<T> {
+  if (!BASE_URL) {
+    throw new Error(
+      "This action requires a live Echelon gateway (NEXT_PUBLIC_ECHELON_API_URL is not set).",
+    );
+  }
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    cache: "no-store",
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Echelon API ${method} ${path} -> HTTP ${res.status}`);
   return (await res.json()) as T;
 }
 
@@ -81,4 +109,33 @@ export async function fetchConfig(): Promise<EchelonConfig> {
   } catch {
     return DEFAULT_CONFIG;
   }
+}
+
+// --- Mutations (throw on failure; never fall back to mock) --------------------
+
+export async function createApiKey(label: string): Promise<{ key: ApiKey; secret: string }> {
+  const raw = await mutateJSON<unknown>("POST", "/v1/console/keys", { label });
+  return createKeyResponseSchema.parse(raw);
+}
+
+export async function updateApiKeyLimits(
+  id: string,
+  rateLimitRpm: number,
+  creditBudget: number,
+): Promise<ApiKey> {
+  const raw = await mutateJSON<unknown>("PATCH", `/v1/console/keys/${id}`, {
+    rateLimitRpm,
+    creditBudget,
+  });
+  return apiKeySchema.parse(raw);
+}
+
+export async function revokeApiKey(id: string): Promise<ApiKey> {
+  const raw = await mutateJSON<unknown>("DELETE", `/v1/console/keys/${id}`);
+  return apiKeySchema.parse(raw);
+}
+
+export async function updateConfig(config: EchelonConfig): Promise<EchelonConfig> {
+  const raw = await mutateJSON<unknown>("PATCH", "/v1/console/config", config);
+  return echelonConfigSchema.parse(raw);
 }

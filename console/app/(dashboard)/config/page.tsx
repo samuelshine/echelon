@@ -6,6 +6,7 @@ import { LayerControl } from "@/components/config/layer-control";
 import { EgressControl } from "@/components/config/egress-control";
 import { WhatIfBar } from "@/components/config/what-if-bar";
 import { useConfig, useEvents } from "@/lib/hooks/useEchelon";
+import { updateConfig } from "@/lib/api/client";
 import { DEFAULT_CONFIG } from "@/lib/api/mock";
 import { computeImpact, configsEqual } from "@/lib/whatif";
 import type { CascadeLayer, EchelonConfig, LayerConfig } from "@/types/echelon";
@@ -20,6 +21,22 @@ export default function ConfigPage() {
 
   const [saved, setSaved] = useState<EchelonConfig | null>(null);
   const [pending, setPending] = useState<EchelonConfig | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async () => {
+    if (!pending) return;
+    setError(null);
+    try {
+      const persisted = await updateConfig(pending);
+      // Adopt the server's authoritative live state as the new saved baseline.
+      setSaved(persisted);
+      setPending(persisted);
+    } catch (e) {
+      // Keep the operator's edits (pending) intact so nothing is lost; surface
+      // the failure so they know it did not persist.
+      setError(e instanceof Error ? e.message : "Could not save the configuration.");
+    }
+  };
 
   // Seed local state once the saved config arrives.
   useEffect(() => {
@@ -122,12 +139,22 @@ export default function ConfigPage() {
           />
         </section>
 
+        {error ? (
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-block)] bg-[var(--color-block-wash)] p-4 text-xs leading-relaxed text-[var(--color-ink-soft)]">
+            <span className="font-medium text-[var(--color-block)]">Save failed.</span> {error} Your
+            edits are still here — try again.
+          </div>
+        ) : null}
+
         {impact ? (
           <WhatIfBar
             impact={impact}
             dirty={dirty}
-            onSave={() => setSaved(pending)}
-            onReset={() => setPending(saved)}
+            onSave={save}
+            onReset={() => {
+              setPending(saved);
+              setError(null);
+            }}
           />
         ) : null}
       </div>

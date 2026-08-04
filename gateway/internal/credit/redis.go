@@ -159,6 +159,14 @@ func NewRedisLedger(client *redis.Client, seed map[string]int64, ttl time.Durati
 	return l, nil
 }
 
+// Seed sets tenantID's initial balance if (and only if) it has never been set
+// before, so it never clobbers a balance that's already been drawn down. This is
+// the runtime analogue of NewRedisLedger's boot-time seed loop, used when the
+// console creates a brand-new key/tenant after startup.
+func (l *RedisLedger) Seed(ctx context.Context, tenantID string, amount int64) error {
+	return l.client.SetNX(ctx, l.balKey(tenantID), amount, 0).Err()
+}
+
 func (l *RedisLedger) balKey(tenant string) string   { return l.prefix + "bal:" + tenant }
 func (l *RedisLedger) holdsKey(tenant string) string { return l.prefix + "holds:" + tenant }
 func (l *RedisLedger) resPrefix() string             { return l.prefix + "res:" }

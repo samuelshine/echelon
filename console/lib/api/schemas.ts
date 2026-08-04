@@ -93,6 +93,14 @@ export const echelonConfigSchema = z.object({
   providers: z.array(z.string()).optional(),
 });
 
+// POST /v1/console/keys returns the created key plus its plaintext secret,
+// shown to the operator exactly once.
+export const createKeyResponseSchema = z.object({
+  key: apiKeySchema,
+  secret: z.string(),
+});
+
 export type PromptEventDTO = z.infer<typeof promptEventSchema>;
 export type ApiKeyDTO = z.infer<typeof apiKeySchema>;
 export type EchelonConfigDTO = z.infer<typeof echelonConfigSchema>;
+export type CreateKeyResponseDTO = z.infer<typeof createKeyResponseSchema>;

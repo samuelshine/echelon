@@ -158,8 +158,18 @@ interface PromptEvent {
 > /v1/console/{keys,config}`) via `mutateJSON` — unlike the read helpers,
 > mutations never silently fall back to mock data on failure; they throw, and
 > the calling page rolls back its optimistic update and surfaces an inline
-> error. Still open: server-side log filtering/pagination and a real
-> SSE/WebSocket transport for live-tail (see `console/CURRENT_PROGRESS.md`).
+> error.
+>
+> **Server-side log filtering + real SSE live-tail (2026-08-05):** log
+> filtering/pagination moved off the client's fixed window — `useEventsInfinite`
+> (`useInfiniteQuery` keyed on the filter object) drives `GET /v1/console/events`
+> with real query params, and the gateway returns `{events,nextCursor,hasMore}`; a
+> "Load older events" button walks the cursor. `useLiveTail` now opens a real
+> `EventSource` on `/v1/console/events/stream` when `NEXT_PUBLIC_ECHELON_API_URL`
+> is set (validated per-frame via `promptEventSchema`, shared ingest path with the
+> offline sim; no reconnect/backoff in v1), and keeps the `Math.random` sim when
+> the URL is unset. Only open console item now: component-level RTL/Playwright
+> tests (see `console/CURRENT_PROGRESS.md`).
 
 ---
 

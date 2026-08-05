@@ -139,6 +139,10 @@ configured value through readiness or admin responses.
 | `GET` | `/v1/models` | Proxied OpenAI-compatible model listing. |
 | `POST` | `/v1/chat/completions` | Guarded chat completions. |
 | `POST` | `/v1/responses` | Guarded Responses API call. |
+| `GET` | `/v1/console/summary` | Aggregated dashboard summary. |
+| `GET` | `/v1/console/metrics` | Time-bucketed metric series. |
+| `GET` | `/v1/console/events` | Server-side filtered + cursor-paginated event log. Query params: `verdict`, `direction`, `layer`, `apiKeyId`, `q` (substring on excerpt+id), `minRisk`, `before` (exclusive cursor), `limit` (default 100, max 500). Returns `{"events":[…],"nextCursor":<id|null>,"hasMore":<bool>}`. |
+| `GET` | `/v1/console/events/stream` | SSE live-tail (`text/event-stream`) of newly-recorded events, one `data: <event-json>` frame each. Best-effort; a slow consumer drops frames, never slowing the request path. |
 | `GET` | `/v1/console/keys` | List API keys (from the mutable key store). |
 | `POST` | `/v1/console/keys` | Create an API key; returns its secret once. |
 | `PATCH` | `/v1/console/keys/{id}` | Update a key's rate-limit / credit budget. |

@@ -153,6 +153,30 @@ Status: **Done** (in-memory)
   `GET /v1/console/{summary,metrics,events,keys,config}` with CORS for the browser.
 - [x] Category and per-layer mapping from core verdicts to the console domain model;
   API-key usage aggregated per key. Verified live end-to-end against real traffic.
+- [x] **Server-side log filtering + pagination (2026-08-05).** `Store.Query`
+  (`internal/telemetry`) applies the console's exact `applyFilters` predicate
+  (verdict/direction/layer/apiKeyId/`q`/minRisk) newest-first with an exclusive
+  `before` cursor + `limit` (default 100, max 500); an evicted/unknown cursor
+  degrades to "start from newest" rather than erroring. `GET /v1/console/events`
+  parses these as query params and returns the wrapped
+  `{events,nextCursor,hasMore}` shape (a coordinated wire-shape change made in
+  lockstep with the console client). Filtering/pagination moved off the client's
+  fixed 500-event window.
+- [x] **Real SSE live-tail (2026-08-05).** `Store.Subscribe` broadcasts each newly
+  recorded event to console subscribers via small buffered channels with the same
+  non-blocking-send discipline as the durable sink (a slow/absent subscriber drops
+  frames, never adding latency to `Record`); unsubscribe deletes-then-closes under
+  the store mutex the send loop holds, so a send can never race a close.
+  `GET /v1/console/events/stream` serves this as `text/event-stream`. Replaces the
+  console's fabricated `Math.random` live-tail.
+- [x] `internal/telemetry/query_test.go` (each filter dimension in isolation +
+  combined; multi-page cursor walk with no dupes/gaps; `hasMore` accurate at the
+  exact boundary; evicted/unknown cursor degrades; subscriber delivery/unsubscribe/
+  slow-subscriber-doesn't-block, all under `-race`) and
+  `internal/gateway/console_events_test.go` (HTTP filter subsets in the new shape;
+  SSE frame arrival over a real `httptest.Server` with a concurrent `Record`).
+  Verified live against the built binary via `curl` (filter combos + cursor pages +
+  `-N` stream).
 
 ### Console mutation API (Phase 5)
 

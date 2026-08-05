@@ -5,28 +5,37 @@ import { PageHeader } from "@/components/page-header";
 import { LogFilters } from "@/components/logs/log-filters";
 import { ThreatTable } from "@/components/logs/threat-table";
 import { DrillDown } from "@/components/logs/drill-down";
-import { useEvents, useApiKeys } from "@/lib/hooks/useEchelon";
+import { useEventsInfinite, useApiKeys } from "@/lib/hooks/useEchelon";
 import { useLiveTail } from "@/lib/hooks/useLiveTail";
-import { applyFilters, DEFAULT_FILTERS } from "@/lib/logs";
+import { DEFAULT_FILTERS } from "@/lib/logs";
 import { cn } from "@/lib/cn";
 import type { PromptEvent } from "@/types/echelon";
 
 export default function LogsPage() {
-  const { data: events, isLoading } = useEvents(500);
-  const { data: keys } = useApiKeys();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useEventsInfinite(filters);
+  const { data: keys } = useApiKeys();
   const [selected, setSelected] = useState<PromptEvent | null>(null);
   const [live, setLive] = useState(false);
   const { streamed, freshIds } = useLiveTail({ enabled: live });
 
-  const merged = useMemo(
-    () => [...streamed, ...(events ?? [])],
-    [streamed, events],
+  // Filtering + pagination are now server-side: flatten whatever pages we've
+  // loaded so far. Live-tail's streamed events are still prepended ahead of the
+  // fetched list, exactly as before.
+  const events = useMemo(
+    () => (data?.pages ?? []).flatMap((p) => p.events),
+    [data],
   );
 
-  const filtered = useMemo(
-    () => applyFilters(merged, filters),
-    [merged, filters],
+  const merged = useMemo(
+    () => [...streamed, ...events],
+    [streamed, events],
   );
 
   return (
@@ -58,19 +67,36 @@ export default function LogsPage() {
           filters={filters}
           onChange={setFilters}
           keys={keys ?? []}
-          resultCount={filtered.length}
-          totalCount={merged.length}
+          loadedCount={merged.length}
+          hasMore={hasNextPage}
         />
 
         {isLoading ? (
           <div className="h-[600px] animate-pulse rounded-[var(--radius-lg)] bg-[var(--color-surface-sunken)]" />
         ) : (
-          <ThreatTable
-            events={filtered}
-            selectedId={selected?.id}
-            onSelect={setSelected}
-            freshIds={freshIds}
-          />
+          <>
+            <ThreatTable
+              events={merged}
+              selectedId={selected?.id}
+              onSelect={setSelected}
+              freshIds={freshIds}
+            />
+            {hasNextPage && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className={cn(
+                    "rounded-full border border-[var(--color-line-strong)] px-4 py-1.5 text-xs font-medium text-[var(--color-muted)] transition-colors hover:bg-[var(--color-surface-sunken)]",
+                    isFetchingNextPage && "cursor-not-allowed opacity-60",
+                  )}
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load older events"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

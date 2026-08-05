@@ -8,6 +8,7 @@ import (
 	"context"
 	"log/slog"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -69,6 +70,13 @@ type Store struct {
 	logger   *slog.Logger
 	dropped  int64
 	lastWarn time.Time
+
+	// Live-tail broadcast plumbing. Each console SSE subscriber gets a small
+	// buffered channel; Record does a best-effort non-blocking send to each under
+	// the same mutex Subscribe's unsubscribe uses to delete+close, so a send can
+	// never race a close (no send-on-closed-channel panic). A slow/absent
+	// subscriber simply misses frames and never adds latency to Record.
+	subscribers map[chan PromptEvent]struct{}
 }
 
 func NewStore(capacity int) *Store {
@@ -91,6 +99,15 @@ func (s *Store) Record(e PromptEvent) {
 	s.events = append(s.events, e)
 	if len(s.events) > s.capacity {
 		s.events = s.events[len(s.events)-s.capacity:]
+	}
+	// Best-effort live-tail broadcast. Done under the lock (non-blocking sends, so
+	// it never stalls) precisely so a concurrent unsubscribe — which deletes then
+	// closes the channel under this same lock — can never race an in-flight send.
+	for sub := range s.subscribers {
+		select {
+		case sub <- e:
+		default:
+		}
 	}
 	ch := s.sinkCh
 	s.mu.Unlock()
@@ -200,6 +217,134 @@ func (s *Store) Events(limit int) []PromptEvent {
 		out = append(out, s.events[i])
 	}
 	return out
+}
+
+// QueryOptions is the server-side filter + pagination request for the console's
+// log surface. It ports console/lib/logs.ts's applyFilters faithfully: an empty
+// (or "all") string dimension means "no filter". Iteration is newest-first,
+// mirroring Events.
+type QueryOptions struct {
+	Verdict   string  // "", "all", "pass", "flag", "block" — exact match on FinalVerdict
+	Direction string  // "", "all", "ingress", "egress"
+	Layer     string  // "", "all", or a layer name — exact match on BlockedAtLayer
+	APIKeyID  string  // "", "all", or exact match on APIKeyID
+	Query     string  // "", case-insensitive substring match against Excerpt + ID
+	MinRisk   float64 // events with RiskScore < MinRisk are excluded
+	Before    string  // "" (start from newest), or an event ID — resume strictly after it (exclusive cursor)
+	Limit     int     // page size; <=0 or >500 clamps to the default (100)
+}
+
+const (
+	defaultQueryLimit = 100
+	maxQueryLimit     = 500
+)
+
+// Query returns a filtered, cursor-paginated page of events, newest-first.
+//
+// nextCursor is the last returned event's ID when (and only when) more matching
+// events exist beyond this page; it is "" otherwise. hasMore is true iff at least
+// one more matching event exists after the page cutoff. A Before cursor that is
+// not found in the buffer (e.g. evicted by the ring's capacity cap, or bogus)
+// degrades to "start from newest" rather than erroring.
+func (s *Store) Query(opts QueryOptions) (events []PromptEvent, nextCursor string, hasMore bool) {
+	limit := opts.Limit
+	if limit <= 0 || limit > maxQueryLimit {
+		limit = defaultQueryLimit
+	}
+	loweredQuery := strings.ToLower(strings.TrimSpace(opts.Query))
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	n := len(s.events)
+	// Newest-first start index. When Before is set, find that event and resume
+	// strictly after it (a lower index). If not found, start from the newest.
+	start := n - 1
+	if opts.Before != "" {
+		for i := n - 1; i >= 0; i-- {
+			if s.events[i].ID == opts.Before {
+				start = i - 1
+				break
+			}
+		}
+	}
+
+	out := make([]PromptEvent, 0, limit)
+	for i := start; i >= 0; i-- {
+		if !matchesQuery(&s.events[i], opts, loweredQuery) {
+			continue
+		}
+		if len(out) >= limit {
+			// One more match exists past the page boundary.
+			hasMore = true
+			break
+		}
+		out = append(out, s.events[i])
+	}
+	if hasMore && len(out) > 0 {
+		nextCursor = out[len(out)-1].ID
+	}
+	return out, nextCursor, hasMore
+}
+
+// matchesQuery is the exact predicate console/lib/logs.ts's applyFilters
+// implements, ported field-for-field (same "empty/all means no filter"
+// convention, same substring-on-excerpt-and-id search).
+func matchesQuery(e *PromptEvent, opts QueryOptions, loweredQuery string) bool {
+	if !unfiltered(opts.Verdict) && e.FinalVerdict != opts.Verdict {
+		return false
+	}
+	if !unfiltered(opts.Direction) && e.Direction != opts.Direction {
+		return false
+	}
+	if !unfiltered(opts.Layer) && e.BlockedAtLayer != opts.Layer {
+		return false
+	}
+	if e.RiskScore < opts.MinRisk {
+		return false
+	}
+	if !unfiltered(opts.APIKeyID) && e.APIKeyID != opts.APIKeyID {
+		return false
+	}
+	if loweredQuery != "" &&
+		!strings.Contains(strings.ToLower(e.Excerpt), loweredQuery) &&
+		!strings.Contains(strings.ToLower(e.ID), loweredQuery) {
+		return false
+	}
+	return true
+}
+
+// unfiltered reports whether a string filter dimension means "no filter" — an
+// empty value or the sentinel "all".
+func unfiltered(v string) bool {
+	return v == "" || v == "all"
+}
+
+// Subscribe registers a new live-tail subscriber and returns a channel of newly
+// recorded events plus an unsubscribe function the caller must call exactly once
+// (e.g. via defer) when done, to release the subscription. Delivery is
+// best-effort: if the subscriber falls behind, Record drops frames for it rather
+// than blocking the request hot path. Events recorded before Subscribe returns
+// are not delivered (this is a live tail, not a replay).
+func (s *Store) Subscribe() (<-chan PromptEvent, func()) {
+	ch := make(chan PromptEvent, 16)
+	s.mu.Lock()
+	if s.subscribers == nil {
+		s.subscribers = make(map[chan PromptEvent]struct{})
+	}
+	s.subscribers[ch] = struct{}{}
+	s.mu.Unlock()
+
+	var once sync.Once
+	unsubscribe := func() {
+		once.Do(func() {
+			s.mu.Lock()
+			delete(s.subscribers, ch)
+			close(ch)
+			s.mu.Unlock()
+		})
+	}
+	return ch, unsubscribe
 }
 
 // Summary aggregates the whole buffer into the console's DashboardSummary shape.

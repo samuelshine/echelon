@@ -175,6 +175,7 @@ func (g *Gateway) Routes() http.Handler {
 	mux.HandleFunc("GET /v1/console/summary", g.consoleSummary)
 	mux.HandleFunc("GET /v1/console/metrics", g.consoleMetrics)
 	mux.HandleFunc("GET /v1/console/events", g.consoleEvents)
+	mux.HandleFunc("GET /v1/console/events/stream", g.consoleEventsStream)
 	mux.HandleFunc("GET /v1/console/keys", g.consoleKeysHandler)
 	mux.HandleFunc("POST /v1/console/keys", g.consoleCreateKey)
 	mux.HandleFunc("PATCH /v1/console/keys/{id}", g.consoleUpdateKey)
@@ -621,7 +622,7 @@ func normalizeRoute(path string) string {
 		"/v1/guard/preflight", "/v1/guard/output-scan",
 		"/v1/models", "/v1/chat/completions", "/v1/responses",
 		"/v1/console/summary", "/v1/console/metrics", "/v1/console/events",
-		"/v1/console/keys", "/v1/console/config":
+		"/v1/console/events/stream", "/v1/console/keys", "/v1/console/config":
 		return path
 	default:
 		return "other"
@@ -828,12 +829,84 @@ func (g *Gateway) consoleMetrics(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, g.telemetry.Series(time.Hour, 24))
 }
 
-func (g *Gateway) consoleEvents(w http.ResponseWriter, _ *http.Request) {
+// consoleEvents serves GET /v1/console/events with server-side filtering and
+// cursor pagination.
+//
+// WIRE-SHAPE CHANGE: this deliberately no longer returns a bare JSON array. It now
+// returns {"events":[...],"nextCursor":<id|null>,"hasMore":<bool>}. The console
+// client (console/lib/api/client.ts fetchEvents/fetchEventsPage) is updated in this
+// same change to consume the wrapped shape — both sides of the contract move
+// together. Query params (symmetric with the camelCase JSON fields used elsewhere):
+// verdict, direction, layer, apiKeyId, q, minRisk, before, limit.
+func (g *Gateway) consoleEvents(w http.ResponseWriter, r *http.Request) {
 	if g.telemetry == nil {
-		writeJSON(w, http.StatusOK, []any{})
+		writeJSON(w, http.StatusOK, map[string]any{"events": []any{}, "nextCursor": nil, "hasMore": false})
 		return
 	}
-	writeJSON(w, http.StatusOK, g.telemetry.Events(500))
+	q := r.URL.Query()
+	minRisk, _ := strconv.ParseFloat(q.Get("minRisk"), 64)
+	limit, _ := strconv.Atoi(q.Get("limit"))
+	events, nextCursor, hasMore := g.telemetry.Query(telemetry.QueryOptions{
+		Verdict:   q.Get("verdict"),
+		Direction: q.Get("direction"),
+		Layer:     q.Get("layer"),
+		APIKeyID:  q.Get("apiKeyId"),
+		Query:     q.Get("q"),
+		MinRisk:   minRisk,
+		Before:    q.Get("before"),
+		Limit:     limit,
+	})
+	var cursor any // JSON null when there is no next page
+	if nextCursor != "" {
+		cursor = nextCursor
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"events":     events,
+		"nextCursor": cursor,
+		"hasMore":    hasMore,
+	})
+}
+
+// consoleEventsStream serves GET /v1/console/events/stream as an SSE feed of
+// newly-recorded events, driving the console's real live-tail. Best-effort: a slow
+// consumer simply misses frames (the Store drops non-blocking sends to it) — it
+// never slows Record. No reconnect/backoff is implemented here; the client reopens
+// the EventSource when the operator re-enables live-tail.
+func (g *Gateway) consoleEventsStream(w http.ResponseWriter, r *http.Request) {
+	if g.telemetry == nil {
+		writeError(w, http.StatusServiceUnavailable, "telemetry_unavailable", "no telemetry store configured")
+		return
+	}
+	ch, unsubscribe := g.telemetry.Subscribe()
+	defer unsubscribe()
+
+	setSSEHeaders(w.Header())
+	w.WriteHeader(http.StatusOK)
+	flusher, _ := w.(http.Flusher)
+	if flusher != nil {
+		flusher.Flush() // establish the stream immediately, before the first event
+	}
+
+	for {
+		select {
+		case <-r.Context().Done():
+			return
+		case e, ok := <-ch:
+			if !ok {
+				return
+			}
+			data, err := json.Marshal(e)
+			if err != nil {
+				continue
+			}
+			_, _ = w.Write([]byte("data: "))
+			_, _ = w.Write(data)
+			_, _ = w.Write([]byte("\n\n"))
+			if flusher != nil {
+				flusher.Flush()
+			}
+		}
+	}
 }
 
 // keyUsage returns the telemetry usage map, or an empty map when telemetry is

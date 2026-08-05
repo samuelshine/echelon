@@ -27,14 +27,16 @@ export function LogFilters({
   filters,
   onChange,
   keys,
-  resultCount,
-  totalCount,
+  loadedCount,
+  hasMore,
 }: {
   filters: LogFilterState;
   onChange: (next: LogFilterState) => void;
   keys: ApiKey[];
-  resultCount: number;
-  totalCount: number;
+  /** How many matching events have been paginated in so far. */
+  loadedCount: number;
+  /** Whether more matching events exist beyond what's loaded. */
+  hasMore?: boolean;
 }) {
   const set = <K extends keyof LogFilterState>(k: K, v: LogFilterState[K]) =>
     onChange({ ...filters, [k]: v });
@@ -124,9 +126,12 @@ export function LogFilters({
         </div>
       </Field>
 
+      {/* Filtering + pagination are server-side, so the true total matching count
+          is not known up front — show how many have been loaded so far, with a
+          "+" when more pages remain. */}
       <div className="ml-auto self-end pb-1 font-[family-name:var(--font-mono)] text-xs text-[var(--color-muted)]">
-        <span className="tnum text-[var(--color-ink)]">{resultCount.toLocaleString()}</span>{" "}
-        / {totalCount.toLocaleString()} events
+        <span className="tnum text-[var(--color-ink)]">{loadedCount.toLocaleString()}</span>
+        {hasMore ? "+" : ""} loaded
       </div>
     </div>
   );

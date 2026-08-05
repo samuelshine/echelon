@@ -63,6 +63,16 @@ export const promptEventSchema = z.object({
   excerpt: z.string(),
 });
 
+// GET /v1/console/events response — server-side filtered + cursor-paginated.
+// Coordinated wire-shape change from the original bare array (see the gateway's
+// consoleEvents handler). nextCursor is the id to resume after, or null when
+// there is no next page.
+export const eventsResponseSchema = z.object({
+  events: z.array(promptEventSchema),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean(),
+});
+
 export const apiKeySchema = z.object({
   id: z.string(),
   label: z.string(),
@@ -101,6 +111,7 @@ export const createKeyResponseSchema = z.object({
 });
 
 export type PromptEventDTO = z.infer<typeof promptEventSchema>;
+export type EventsResponseDTO = z.infer<typeof eventsResponseSchema>;
 export type ApiKeyDTO = z.infer<typeof apiKeySchema>;
 export type EchelonConfigDTO = z.infer<typeof echelonConfigSchema>;
 export type CreateKeyResponseDTO = z.infer<typeof createKeyResponseSchema>;

@@ -1,6 +1,6 @@
 # Echelon Frontend — Current Progress
 
-_Last updated: 2026-08-04 · Phase 6 + Hardening pass — **complete & verified**; Phase 7 reads done 2026-07-25, mutations done 2026-08-04_
+_Last updated: 2026-08-05 · Phase 6 + Hardening pass — **complete & verified**; Phase 7 reads done 2026-07-25, mutations done 2026-08-04, server-side log filtering + real SSE live-tail done 2026-08-05_
 
 ---
 
@@ -10,10 +10,10 @@ Reads (`lib/api/client.ts` against `/v1/console/*`) landed 2026-07-25. Key/confi
 local-React-state-only until 2026-08-04, when the gateway grew a real mutable
 key store and live-mutable cascade/pipeline config — `keys/page.tsx` and
 `config/page.tsx` now call real `POST`/`PATCH`/`DELETE` endpoints with
-optimistic UI + rollback on failure. Remaining console work is two items never
-covered by any phase: server-side log filtering/pagination, and a real
-SSE/WebSocket transport for live-tail (still `Math.random`-simulated) — see
-"Next Up" below.
+optimistic UI + rollback on failure. The two remaining items never covered by an
+earlier phase — server-side log filtering/pagination and a real SSE transport for
+live-tail — both landed 2026-08-05 (see "Next Up" below). The only open console
+item now is component-level (RTL/Playwright) tests.
 
 ## ✅ Just Done (Hardening pass)
 - **Automated tests** — Vitest suite, **24 tests across 3 files**, all green:
@@ -41,10 +41,11 @@ SSE/WebSocket transport for live-tail (still `Math.random`-simulated) — see
 - **Component-level tests** (rendering) not added — the suite covers pure logic + formatters; interactive components are covered by build + manual/preview QA. RTL/Playwright is a reasonable next step.
 
 ## ⏭️ Next Up
-Reads and mutations are both wired to the real backend now. What's left is two
-items that were never in scope for any prior phase:
-1. Move log filtering/sorting/pagination server-side via the existing `applyFilters` seam (currently client-side over the fetched window).
-2. Swap `useLiveTail`'s simulated interval for a real SSE/WebSocket transport.
+Reads and mutations are both wired to the real backend; server-side filtering and
+real live-tail transport both landed 2026-08-05. What remains open:
+1. ~~Move log filtering/pagination server-side~~ → **done 2026-08-05**: the logs page now uses a filter- and cursor-aware `useEventsInfinite` (`useInfiniteQuery` keyed on the filter object) hitting `GET /v1/console/events` with real query params; the gateway filters + paginates and returns `{events,nextCursor,hasMore}`. A "Load older events" button walks the cursor. `applyFilters` is retained only as the offline-mock fallback path. Client no longer re-filters a fixed 500-event window.
+2. ~~Swap `useLiveTail`'s simulated interval for a real transport~~ → **done 2026-08-05**: when `NEXT_PUBLIC_ECHELON_API_URL` is set, `useLiveTail` opens a real `EventSource` on `/v1/console/events/stream`, validates each frame with `promptEventSchema`, and feeds it through the same streamed/freshIds path the sim uses (shared `push`); unset URL keeps the exact `Math.random` sim. v1 simplification: on SSE error we close without reconnect/backoff.
+3. **Still open (out of scope here):** component-level tests (RTL/Playwright) for the interactive log/filter/live-tail UI — the suite still covers pure logic + formatters only (added `buildEventsQuery` mapping tests 2026-08-05).
 
 ## 📌 Decisions Log
 | Date | Decision | Rationale |

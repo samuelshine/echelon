@@ -9,8 +9,10 @@ import {
   apiKeySchema,
   createKeyResponseSchema,
   echelonConfigSchema,
+  eventsResponseSchema,
   promptEventSchema,
 } from "@/lib/api/schemas";
+import { applyFilters, type LogFilterState } from "@/lib/logs";
 import type {
   ApiKey,
   DashboardSummary,
@@ -81,12 +83,73 @@ export async function fetchMetricSeries(hours = 24): Promise<MetricPoint[]> {
   }
 }
 
+export interface EventsPage {
+  events: PromptEvent[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+/**
+ * Map the log filter state (+ an optional resume cursor) to the query string the
+ * gateway's GET /v1/console/events now expects. Field names are 1:1 with the
+ * gateway params (`verdict`, `direction`, `layer`, `apiKeyId`, `q`, `minRisk`,
+ * `before`, `limit`); "all"/empty/zero dimensions are omitted (they mean "no
+ * filter" on both sides). Pure and exported so it can be unit-tested directly.
+ */
+export function buildEventsQuery(
+  filters: LogFilterState,
+  cursor?: string | null,
+  limit = 100,
+): string {
+  const params = new URLSearchParams();
+  if (filters.verdict !== "all") params.set("verdict", filters.verdict);
+  if (filters.direction !== "all") params.set("direction", filters.direction);
+  if (filters.layer !== "all") params.set("layer", filters.layer);
+  if (filters.apiKeyId !== "all") params.set("apiKeyId", filters.apiKeyId);
+  const q = filters.query.trim();
+  if (q) params.set("q", q);
+  if (filters.minRisk > 0) params.set("minRisk", String(filters.minRisk));
+  if (cursor) params.set("before", cursor);
+  params.set("limit", String(limit));
+  return params.toString();
+}
+
+/**
+ * One filtered, cursor-paginated page of events. Against a live gateway this is a
+ * true server-side query. Offline (no gateway URL, or on failure) it falls back to
+ * running the same filter predicate over the seeded mock and synthesizes a single
+ * page — so callers need no separate offline code path.
+ */
+export async function fetchEventsPage(
+  filters: LogFilterState,
+  cursor?: string | null,
+): Promise<EventsPage> {
+  if (!BASE_URL) return mockEventsPage(filters);
+  try {
+    const raw = await getJSON<unknown>(`/v1/console/events?${buildEventsQuery(filters, cursor)}`);
+    const parsed = eventsResponseSchema.parse(raw);
+    return { events: parsed.events, nextCursor: parsed.nextCursor, hasMore: parsed.hasMore };
+  } catch {
+    return mockEventsPage(filters);
+  }
+}
+
+function mockEventsPage(filters: LogFilterState): EventsPage {
+  const all = generateEvents(500).map((e) => promptEventSchema.parse(e));
+  return { events: applyFilters(all, filters), nextCursor: null, hasMore: false };
+}
+
+/**
+ * A flat batch of the most-recent events (unfiltered), used by the dashboard and
+ * config pages. Consumes the same wrapped wire shape as fetchEventsPage and
+ * returns just the events array.
+ */
 export async function fetchEvents(count = 500): Promise<PromptEvent[]> {
   if (!BASE_URL) return generateEvents(count).map((e) => promptEventSchema.parse(e));
   try {
-    const raw = await getJSON<unknown[]>("/v1/console/events");
-    // Validate at the boundary — this is where the real API's shape gets enforced.
-    return raw.map((e) => promptEventSchema.parse(e));
+    const params = new URLSearchParams({ limit: String(Math.min(count, 500)) });
+    const raw = await getJSON<unknown>(`/v1/console/events?${params.toString()}`);
+    return eventsResponseSchema.parse(raw).events;
   } catch {
     return generateEvents(count).map((e) => promptEventSchema.parse(e));
   }

@@ -395,3 +395,18 @@ Not a retrain — a pattern-based mitigation. Heavily obfuscated or
 unusually-shaped code that matches none of the markers and has low symbol
 density can still slip past the floor; an output-aware retrain remains the
 real fix and is out of scope for this pass.
+
+## Layer 2 retrain scoped, not started (2026-08-05)
+
+Wrote `docs/LAYER2_RETRAIN_PLAN.md` — scoping only, grounded in the current
+model card (macro-F1 0.696; `malicious_code` test support is **2 rows**,
+`system_prompt_leakage` is **40**) and a direct read of
+`generate_targeted_v02.py` (confirms the v0.2 pilot only ever produced
+~2.5% of `TARGETED_CURATION_SPEC.md`'s own malicious-code-intent target, and
+has no response-shaped generation capability at all). Splits the fix into
+two independent tracks: **Track A** (ingress precision — run the existing,
+proven curation/review/training pipeline at the volume the spec always
+called for) and **Track B** (egress output-awareness — a new response-shaped
+data type this pipeline has never produced, needs its own spec/sourcing/
+labeling-boundary design before generation can start). Not authorized to
+execute either track; this is a plan, not a training run.

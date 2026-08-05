@@ -8,10 +8,14 @@
 gateway; egress ML-cascade escalation added 2026-08-01 (see bottom entry).
 Consolidated into the `main` monorepo under `pipeline/` (was branch `rnd`).
 
-**Checkpoint:** Production e2e verified live (see root `DEMO.md`). Open:
-Redis-backed distributed state, CI, observability, output-aware retrain for
-egress `malicious_code` detection — tracked in the root `README.md`/
-`gateway/EXECUTION_PLAN.md` production-hardening list.
+**Checkpoint:** Production e2e verified live (see root `DEMO.md`). Redis-backed
+distributed state, CI, and observability (metrics/tracing/durable audit sink)
+are now done (2026-08-01 – 2026-08-04, `gateway/EXECUTION_PLAN.md`). Still
+open on the ML/data side: an output-aware retrain for egress `malicious_code`
+detection (the current fix is a code-shape heuristic mitigation, not a
+retrain — see `DEMO.md` → "Honest limitations") and more targeted training
+data for `malicious_code`/`system_prompt_leakage`, both low-precision on tiny
+support (macro-F1 0.696 overall; see the 2026-07-25 entry below).
 
 <!-- Historical status line, kept for context: originally "Phase 3 — Layer 1
 heuristic engine complete; human dataset review remains in parallel". The

@@ -151,9 +151,15 @@ interface PromptEvent {
 > `NEXT_PUBLIC_ECHELON_API_URL` is set it fetches the gateway's
 > `/v1/console/{summary,metrics,events,keys,config}` (Zod-validated at the
 > boundary), falling back to the seeded mock if unset or on fetch failure.
-> Verified live end-to-end against the real gateway. **Still open:** config
-> toggles and API-key create/revoke are local-state only — no `POST`/`DELETE`
-> wired yet, so mutations don't persist against the real backend.
+> Verified live end-to-end against the real gateway.
+>
+> **Mutations (2026-08-04):** config toggles and API-key create/revoke/
+> re-limit now call the real gateway (`POST`/`PATCH`/`DELETE
+> /v1/console/{keys,config}`) via `mutateJSON` — unlike the read helpers,
+> mutations never silently fall back to mock data on failure; they throw, and
+> the calling page rolls back its optimistic update and surfaces an inline
+> error. Still open: server-side log filtering/pagination and a real
+> SSE/WebSocket transport for live-tail (see `console/CURRENT_PROGRESS.md`).
 
 ---
 

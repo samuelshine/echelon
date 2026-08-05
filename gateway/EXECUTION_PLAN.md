@@ -191,21 +191,32 @@ Status: **Done** (durable when Postgres is configured)
 
 ## Phase 6 — Production hardening and delivery
 
-Status: **Pending** (Docker/Compose done; the rest not started)
+Status: **Partially done.** Docker/Compose, CI, observability (metrics/tracing/
+audit sink), Redis-backed distributed rate-limit/credit, the mutable console
+key/config API, and the streaming security-mode fix are all done (see the
+addenda below and the "Console mutation API" section above). **Genuinely
+still open:** Kubernetes (on hold — deployment target not yet decided),
+fuzzing/benchmarks/profiling/static-analysis/dependency scans, latency SLOs
+and incident runbooks, and ADRs/the engineering article.
 
 - [x] Add Prometheus-compatible metrics, OpenTelemetry spans, and privacy-safe audit
   sinks. See "Observability addendum" below.
 - [x] Add Docker image (`deploy/Dockerfile.gateway`) and Compose development
   stack (`docker-compose.yml`) for all three services.
-- [ ] Add Kubernetes probes/resources and example production configuration.
+- [ ] Add Kubernetes probes/resources and example production configuration. **On
+  hold** — deployment target (Kubernetes vs. something else) not yet decided.
 - [ ] Run fuzzing, `go test -race`, benchmarks, profiling, static analysis, and
-  dependency/security scans.
+  dependency/security scans. (`go test -race` itself runs in CI already; the
+  rest of this bullet — fuzzing, profiling, dependency/security scanning — is
+  not.)
 - [ ] Establish latency SLOs, overload behavior, rollout/rollback, and incident
   runbooks.
 - [ ] Publish architecture decision records and the completed engineering article.
-- [ ] Replace in-memory rate-limit/credit/telemetry with Redis-backed
-  distributed state (`RATE_LIMIT_BACKEND=redis` exists in config but the
-  distributed limiter/credit ledger/persistent audit sink are not implemented).
+- [x] Replace in-memory rate-limit/credit/telemetry with Redis-backed
+  distributed state (`internal/ratelimit/redis.go`, `internal/credit/redis.go`,
+  `RATE_LIMIT_BACKEND=redis`) and a persistent Postgres audit sink
+  (`internal/telemetry/postgres.go`, `AUDIT_DATABASE_URL`) — see the
+  Observability addendum and the top-level plan history for verification detail.
 - [x] Add CI (GitHub Actions): `.github/workflows/gateway-ci.yml`
   (`go build`/`go vet`/`gofmt -l`/`go test -race`), `console-ci.yml`
   (`tsc --noEmit`/`vitest`/`next build`), `pipeline-ci.yml` (`py_compile` +
@@ -344,7 +355,21 @@ below, and fixes a real egress-scan bypass found while building it.
 
 ## Immediate next steps
 
-1. Extract a transport-independent application use-case type out of the gateway
-   handler (Phase 5).
-3. Implement token-based cost estimation for the credit ledger (replacing the
-   current flat 1-credit-per-completed-request model).
+Everything tracked directly against this repo's own roadmap is done except the
+still-open Phase 6 bullets above (Kubernetes on hold; fuzzing/benchmarks/
+SLOs/runbooks/ADRs not started). Two smaller, real architecture items remain,
+neither blocking anything else:
+
+1. Extract a transport-independent application use-case type out of the
+   `proxyLLM` handler in `internal/gateway/gateway.go` — it has grown large
+   across Phases 3–7 (auth, rate-limit, credit, ingress, egress, streaming all
+   live in one function) and would benefit from being split into a use-case
+   layer independent of `net/http`.
+2. Implement token-based cost estimation for the credit ledger (replacing the
+   current, deliberately-simple flat 1-credit-per-completed-request model).
+
+Also carried as known, documented gaps rather than silently left unmentioned
+(see `DEMO.md` → "Honest limitations" for the canonical list): no operator
+authentication on `/v1/console/*`; per-key `rateLimitRpm` is display/budget
+metadata only, not independently enforced; `STREAM_FAST_MODE`'s per-chunk PII
+scanning can miss a pattern split across a chunk boundary.

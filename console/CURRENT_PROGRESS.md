@@ -1,11 +1,19 @@
 # Echelon Frontend — Current Progress
 
-_Last updated: 2026-07-22 · Phase 6 + Hardening pass — **complete & verified**_
+_Last updated: 2026-08-04 · Phase 6 + Hardening pass — **complete & verified**; Phase 7 reads done 2026-07-25, mutations done 2026-08-04_
 
 ---
 
-## 🏁 Status: 6 of 7 phases done + hardened · all 4 core modules + live/polish shipped
-Only Phase 7 (wire the real backend) remains — and it's a client-swap behind existing typed seams, not new UI.
+## 🏁 Status: 7 of 7 phases done · all 4 core modules + live/polish + real backend wiring shipped
+Reads (`lib/api/client.ts` against `/v1/console/*`) landed 2026-07-25. Key/config
+**mutations** (create/revoke/re-limit a key, edit thresholds/toggles) were still
+local-React-state-only until 2026-08-04, when the gateway grew a real mutable
+key store and live-mutable cascade/pipeline config — `keys/page.tsx` and
+`config/page.tsx` now call real `POST`/`PATCH`/`DELETE` endpoints with
+optimistic UI + rollback on failure. Remaining console work is two items never
+covered by any phase: server-side log filtering/pagination, and a real
+SSE/WebSocket transport for live-tail (still `Math.random`-simulated) — see
+"Next Up" below.
 
 ## ✅ Just Done (Hardening pass)
 - **Automated tests** — Vitest suite, **24 tests across 3 files**, all green:
@@ -28,15 +36,15 @@ Only Phase 7 (wire the real backend) remains — and it's a client-swap behind e
 - **Live-tail / palette / theme-swap are runtime behaviors** not capturable by curl — verified via build/typecheck/200/no-errors + logic review; a real-app pass (`npm run dev`) or updated Artifact would confirm the motion.
 - ~~No focus-trap cycling inside drawer/palette~~ → **done** in the hardening pass (`useFocusTrap`).
 - ~~`npm audit` transitive advisories~~ → **resolved** (0 vulnerabilities via `overrides`).
-- **Live-tail uses `Math.random`** (non-deterministic) by design; fine for a demo stream.
-- All mutations/config/keys remain **local state** — Phase 7 wires persistence.
+- **Live-tail uses `Math.random`** (non-deterministic) by design; fine for a demo stream — real transport is still open, see below.
+- ~~All mutations/config/keys remain local state~~ → **done 2026-08-04**: key create/revoke/re-limit and config threshold/toggle edits call the real gateway (`POST`/`PATCH`/`DELETE /v1/console/{keys,config}`), with optimistic UI + rollback on failure.
 - **Component-level tests** (rendering) not added — the suite covers pure logic + formatters; interactive components are covered by build + manual/preview QA. RTL/Playwright is a reasonable next step.
 
-## ⏭️ Next Up — Phase 7: Wire to the real backend
-1. Replace `lib/api/client.ts` bodies with `fetch` against the Echelon API (schemas already guard the boundary).
-2. Move log filtering/sorting/pagination server-side via the existing `applyFilters` seam.
-3. Swap `useLiveTail`'s interval for the real SSE/WebSocket transport.
-4. Persist config saves and key mutations (POST/DELETE).
+## ⏭️ Next Up
+Reads and mutations are both wired to the real backend now. What's left is two
+items that were never in scope for any prior phase:
+1. Move log filtering/sorting/pagination server-side via the existing `applyFilters` seam (currently client-side over the fetched window).
+2. Swap `useLiveTail`'s simulated interval for a real SSE/WebSocket transport.
 
 ## 📌 Decisions Log
 | Date | Decision | Rationale |

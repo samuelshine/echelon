@@ -35,7 +35,7 @@ func (c *HTTPResponseClassifier) Name() string { return c.name }
 func (c *HTTPResponseClassifier) Classify(ctx context.Context, response core.ModelResponse) (core.Classification, error) {
 	payload := responseSecurityRequest{
 		RequestID: response.RequestID, Model: response.Model,
-		Text: extractAssistantText(response.Body),
+		Text: ExtractAssistantText(response.Body),
 	}
 	var result core.Classification
 	if err := postResponseSecurityJSON(ctx, c.client, c.endpoint, payload, &result); err != nil {
@@ -59,10 +59,13 @@ type responseJudgeResult struct {
 	Code       string  `json:"code"`
 }
 
-// extractAssistantText pulls the assistant's reply text out of an OpenAI-shaped
+// ExtractAssistantText pulls the assistant's reply text out of an OpenAI-shaped
 // chat-completion body (choices[].message.content), the shape every upstream
-// provider adapter normalizes its response into before egress ever sees it.
-func extractAssistantText(body []byte) string {
+// provider adapter normalizes its response into before egress ever sees it. It is
+// exported so the gateway can reuse the exact same completion-shape parsing when
+// synthesizing a single-chunk SSE response — there must be exactly one
+// implementation of "pull assistant text out of a chat-completion JSON body".
+func ExtractAssistantText(body []byte) string {
 	var payload struct {
 		Choices []struct {
 			Message struct {

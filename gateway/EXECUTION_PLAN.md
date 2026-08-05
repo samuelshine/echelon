@@ -296,10 +296,55 @@ default to today's exact behavior; the gateway still runs with zero external dep
   `go_*`/process collectors registered, no spans inside the security cascades
   by design — see "coarse span granularity" above).
 
+### Streaming security mode addendum — bypass fix + opt-in fast streaming (2026-08-04)
+
+Closes the "preserve streaming with an explicit buffered-security mode" next step
+below, and fixes a real egress-scan bypass found while building it.
+
+- **Bypass found (and closed).** `proxyLLM` never inspected the request's `stream`
+  field: a `stream:true` body was forwarded byte-for-byte, the upstream's raw SSE
+  response was fully buffered by `readLimited`, then handed to egress. But
+  `egress.ExtractAssistantText` (`internal/egress/http_response_classifier.go`)
+  `json.Unmarshal`s a normal chat-completion object; raw SSE frames fail that parse
+  and it returns `""` silently. The ML/judge egress classifier was therefore scored
+  on an empty string for **every** streamed response — any client could bypass
+  malicious-code/toxicity egress detection with `stream:true` whenever
+  `EGRESS_ML_BASE_URL` was set. (PII/policy scan raw bytes, so they were unaffected.)
+  The response was also mislabeled `text/event-stream` *with* a `Content-Length`.
+- **Part A — safety fix (new default, always on).** `internal/gateway/streaming.go`
+  adds `isStreamRequested`/`forceNonStreaming`. When a client requests streaming and
+  fast mode is off, `proxyLLM` rewrites the outbound body to `stream:false` (every
+  other field preserved) so the upstream returns a normal JSON completion that
+  `ExtractAssistantText` always parses and egress fully scans. The scanned content is
+  then delivered as a spec-correct single-chunk SSE response (`chat.completion.chunk`
+  → `finish_reason:"stop"` → `[DONE]`, chunked, no `Content-Length`). Falls back to
+  raw JSON when the body isn't chat-completion-shaped (keeps `/v1/responses` safe).
+  `extractAssistantText` was exported to `ExtractAssistantText` so there is exactly
+  one implementation of "pull assistant text out of a completion body".
+- **Part B — opt-in fast mode (`STREAM_FAST_MODE`, `internal/config/config.go`).**
+  When on and the client requested streaming, `proxyLLM` branches into `streamFast`
+  (shares all earlier auth/ratelimit/ingress/credit-reserve setup). It reads upstream
+  SSE frames incrementally, runs `Pipeline.ScanFast` (PII + policy only — the new
+  `ScanFast`/`MLScanner` accessors on `internal/egress/pipeline.go` skip the sole
+  network-bound `response_classifier` scanner and respect the console disabled-set),
+  redacts or truncates per chunk (one-chunk lag; policy block truncates mid-stream
+  since headers are already committed), and defers the full ML/judge cascade to a
+  detached post-hoc goroutine that can flag+log (and increment
+  `echelon_cascade_decisions_total{...,response_classifier}`) but cannot block an
+  already-delivered response. `statusRecorder` gained a `Flush` method so streaming
+  flushes through the request-log middleware.
+- **Verification.** `go build`/`go vet`/`gofmt -l`/`go test -race ./...` all pass.
+  New tests (`internal/gateway/streaming_test.go`): bypass-closed regression (asserts
+  the classifier receives real non-empty text via a recording fake security service),
+  buffered single-flush, fast-mode PII redaction, fast-mode policy-block truncation,
+  and fast-mode deferred-ML-flag recorded in Prometheus. Verified live against a real
+  gateway binary + mock SSE upstream: fast mode TTFB ≈ 2.5ms vs total ≈ 1.51s (genuine
+  incremental delivery); default mode TTFB ≈ total ≈ 1.51s (buffered) with well-formed
+  SSE headers and no contradictory `Content-Length`.
+
 ## Immediate next steps
 
 1. Extract a transport-independent application use-case type out of the gateway
    handler (Phase 5).
-2. Preserve streaming with an explicit buffered-security mode.
 3. Implement token-based cost estimation for the credit ledger (replacing the
    current flat 1-credit-per-completed-request model).

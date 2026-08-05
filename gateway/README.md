@@ -186,6 +186,36 @@ request budget cannot contain the configured sequential stage budgets.
 - Network classifiers are optional adapters, not domain dependencies.
 - Credit usage uses reserve/commit/release semantics and idempotency keys.
 - Redis admission is atomic; the in-memory limiter is development-only.
-- Streaming needs an explicit security mode because content cannot be both fully
-  scanned and immediately forwarded. Phase 5 will expose that tradeoff rather
-  than silently weakening egress guarantees.
+- Streaming exposes an explicit security tradeoff because content cannot be both
+  fully scanned and immediately forwarded (see "Streaming security modes" below).
+
+## Streaming security modes
+
+A client that sets `"stream": true` is served in one of two modes. Neither
+silently weakens egress security; the weaker guarantee is an explicit,
+operator-controlled opt-in.
+
+- **Default (buffered, safe).** The gateway forces the *upstream* call to be
+  non-streaming, so the upstream returns a single, normal, JSON-shaped completion.
+  That response is fully egress-scanned (PII, policy, and the ML/judge cascade)
+  exactly as a non-streaming request, then delivered to the client as a
+  spec-correct single-chunk `text/event-stream` response (`chat.completion.chunk`
+  → terminal `finish_reason:"stop"` → `[DONE]`, chunked transfer, no
+  `Content-Length`). Latency is identical to a non-streaming request (the client
+  still waits for the full response), but the response is now both fully scanned
+  and wire-correct SSE. This closes a real bypass: previously a `stream:true`
+  request forwarded raw SSE frames that the egress ML classifier could not parse,
+  so it was silently handed an empty string and scored every streamed response as
+  clean.
+- **Fast (`STREAM_FAST_MODE=true`, opt-in low-latency).** The gateway forwards the
+  real `stream:true` request and relays upstream SSE frames to the client
+  incrementally (genuine low time-to-first-byte). PII redaction and policy blocking
+  are still enforced, at **chunk granularity** with a one-chunk lag (a caught
+  policy/canary leak truncates the stream one chunk late rather than pre-emptively;
+  a pattern split across a chunk boundary can be missed — a known limitation). The
+  ML/judge cascade is necessarily **post-hoc**: it runs once, after the full
+  response has already been streamed, against the accumulated text. It can flag and
+  log an already-delivered response (and increment
+  `echelon_cascade_decisions_total{direction="egress",layer="response_classifier"}`),
+  but it cannot block it. This is a real, documented detection-lag tradeoff the
+  operator opts into — not a silent change.

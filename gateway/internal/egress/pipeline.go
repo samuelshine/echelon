@@ -12,6 +12,8 @@ import (
 	"github.com/jscyril/echelon/internal/ports"
 )
 
+var _ ports.EgressScanner = (*Pipeline)(nil)
+
 type PipelineConfig struct {
 	ScannerTimeout time.Duration
 	FailClosed     bool
@@ -65,12 +67,51 @@ func (p *Pipeline) ScannerEnabled(name string) bool {
 }
 
 func (p *Pipeline) Scan(ctx context.Context, response core.ModelResponse) (core.ModelResponse, core.Verdict, error) {
+	return p.scan(ctx, response, func(string) bool { return true })
+}
+
+// ScanFast runs the pipeline exactly like Scan but skips the sole network-bound,
+// slow scanner ("response_classifier" — the ML/judge cascade), keeping only the
+// fast/local PII ("pii") and policy ("response_policy") scanners. It backs the
+// per-chunk scanning of STREAM_FAST_MODE, where the ML cascade is instead run
+// post-hoc against the full accumulated response (see gateway/streaming.go). A
+// console-disabled scanner stays disabled here too — the same disabled-set governs
+// both Scan and ScanFast.
+func (p *Pipeline) ScanFast(ctx context.Context, response core.ModelResponse) (core.ModelResponse, core.Verdict, error) {
+	return p.scan(ctx, response, func(name string) bool { return name != "response_classifier" })
+}
+
+// MLScanner returns the pipeline's "response_classifier" scanner (the ML/judge
+// cascade) when present and currently enabled, else nil. The fast-mode deferred
+// goroutine uses it to run just that one scanner against the full response after
+// the content has already been streamed to the client.
+func (p *Pipeline) MLScanner() ports.EgressScanner {
+	if !p.ScannerEnabled("response_classifier") {
+		return nil
+	}
+	for _, scanner := range p.scanners {
+		if scanner.Name() == "response_classifier" {
+			return scanner
+		}
+	}
+	return nil
+}
+
+// scan is the shared pipeline loop. include selects which scanners (by Name())
+// participate, so Scan (all) and ScanFast (all but the ML cascade) share one
+// findings/redact/block accumulation implementation rather than duplicating it.
+func (p *Pipeline) scan(ctx context.Context, response core.ModelResponse, include func(name string) bool) (core.ModelResponse, core.Verdict, error) {
 	started := time.Now()
 	current := response
 	action := core.ActionAllow
 	var findings []core.Finding
 
 	for _, scanner := range p.scanners {
+		// A scanner excluded by the selection predicate (e.g. the ML cascade under
+		// ScanFast) is skipped as if it were not in the pipeline at all.
+		if !include(scanner.Name()) {
+			continue
+		}
 		// A disabled scanner is skipped entirely — no finding, no verdict
 		// contribution — as if it were not in the pipeline at all.
 		if !p.ScannerEnabled(scanner.Name()) {

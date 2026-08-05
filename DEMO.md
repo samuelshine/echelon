@@ -193,7 +193,12 @@ co-located monorepo layout (`pipeline/`, `gateway/`, `console/`); see
   customer-facing surface; **(2)** a key's `rateLimitRpm` is **display/budget metadata
   only** — rate-limit enforcement still uses the global `RATE_LIMIT_*` for every key,
   so per-key rate limits are not yet enforced independently. Both are known follow-ups.
-- **Streaming** responses are buffered before scanning (documented buffered-security).
+- **Streaming** defaults to buffered-and-fully-scanned, now delivered as spec-correct
+  single-chunk SSE (this closed a real bypass: a `stream:true` request used to forward
+  raw SSE the egress ML classifier couldn't parse, so it silently scored every streamed
+  response as clean). `STREAM_FAST_MODE=true` opts into genuine incremental delivery,
+  where PII/policy still apply at chunk granularity but ML/judge detection is post-hoc
+  (flags and logs an already-delivered response, cannot block it) — a documented tradeoff.
 
 ## Consolidation
 

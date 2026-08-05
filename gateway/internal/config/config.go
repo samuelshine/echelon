@@ -72,6 +72,13 @@ type Config struct {
 	Pipeline        PipelineConfig
 	RateLimit       RateLimitConfig
 	Providers       ProvidersConfig
+	// StreamFastMode opts into genuine incremental (low-latency) streaming for
+	// clients that request stream:true. Off by default: the default buffered mode
+	// fully egress-scans a response before delivering it. Fast mode is a real,
+	// documented tradeoff — PII/policy are still enforced at chunk granularity
+	// (one-chunk lag), but ML/judge egress detection becomes post-hoc (it can flag
+	// and log an already-delivered response but cannot block it). See README.
+	StreamFastMode bool
 	// AuditDatabaseURL, when set, enables the durable Postgres audit sink for the
 	// telemetry ring buffer. Unset (the default) keeps the gateway purely
 	// in-memory with no Postgres dependency.
@@ -130,6 +137,9 @@ func Load() (Config, error) {
 		RateLimit:        rateLimit,
 		Providers:        loadProvidersConfig(),
 		AuditDatabaseURL: strings.TrimSpace(os.Getenv("AUDIT_DATABASE_URL")),
+	}
+	if cfg.StreamFastMode, err = envBool("STREAM_FAST_MODE", false); err != nil {
+		return Config{}, err
 	}
 	if cfg.ReadTimeout, err = envDuration("HTTP_READ_TIMEOUT", 5*time.Second); err != nil {
 		return Config{}, err

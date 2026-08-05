@@ -417,6 +417,29 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	var providerName string
 	model := extractModel(body)
 
+	// Streaming disposition. Whether the client asked for stream:true governs both
+	// the safety fix (Part A) and the opt-in fast path (Part B). /v1/models is never
+	// a streaming route.
+	streamRequested := upstreamPath != "/v1/models" && isStreamRequested(body)
+	fastMode := streamRequested && g.cfg.StreamFastMode
+
+	// Safety fix: when the client requested streaming but fast mode is NOT active,
+	// force the upstream call to be non-streaming so it returns a single, normal,
+	// JSON-shaped completion. This is what makes egress ExtractAssistantText always
+	// succeed and closes the stream:true egress-scan bypass. Fast mode instead
+	// honors real streaming (forwards the original body) and is handled below.
+	forwardBody := body
+	if streamRequested && !fastMode {
+		if rewritten, ok := forceNonStreaming(body); ok {
+			forwardBody = rewritten
+		} else {
+			// Body was already validated as parseable JSON earlier in proxyLLM, so
+			// this should not happen; forward the original unchanged rather than
+			// erroring the request.
+			g.logger.Warn("could not rewrite streaming request to non-streaming; forwarding original", "route", upstreamPath)
+		}
+	}
+
 	upCtx, upSpan := g.tracer.Start(r.Context(), "upstream.forward")
 	if upstreamPath == "/v1/models" {
 		provider := g.upstreamRouter.DefaultProvider()
@@ -425,7 +448,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	} else {
 		provider := g.upstreamRouter.Resolve(model)
 		providerName = provider.Name()
-		resp, err = provider.ForwardChat(upCtx, model, body)
+		resp, err = provider.ForwardChat(upCtx, model, forwardBody)
 	}
 	upSpan.SetAttributes(attribute.String("echelon.provider", providerName))
 	if err != nil {
@@ -447,6 +470,25 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		return
 	}
 	defer resp.Body.Close()
+
+	// Fast streaming path (Part B): the earlier auth/ratelimit/ingress/credit-reserve
+	// setup is fully shared — only what happens from "call the upstream" onward
+	// differs. streamFast reads resp.Body incrementally, enforces PII/policy at chunk
+	// granularity, defers ML scanning post-hoc, and owns its own credit commit.
+	if fastMode {
+		g.streamFast(w, r, fastStreamParams{
+			resp:         resp,
+			identity:     identity,
+			model:        model,
+			upstreamPath: upstreamPath,
+			providerName: providerName,
+			requestID:    r.Header.Get("X-Request-ID"),
+			start:        start,
+			creditRes:    creditRes,
+			creditHeld:   creditHeld,
+		})
+		return
+	}
 
 	// A response was received: the upstream provider actually ran the request, so
 	// the tenant is charged regardless of what egress later decides.
@@ -510,6 +552,17 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	)
 
 	g.recordEvent(identity, finalVerdict, start, respBody, providerName, direction)
+
+	// Safety fix (Part A) wire-correctness: the response was produced by a
+	// non-streaming upstream call and fully egress-scanned above. If the original
+	// client asked for streaming, deliver the scanned content as a spec-correct
+	// single-chunk SSE response instead of a raw-JSON blob mislabeled as SSE. This
+	// is functionally identical latency to today (still fully buffered) but safe and
+	// wire-correct. Falls back to raw JSON when the body is not chat-completion
+	// shaped (e.g. a non-standard /v1/responses body or an upstream error body).
+	if streamRequested && g.writeSyntheticSSE(w, respBody, model) {
+		return
+	}
 
 	copyResponseHeaders(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
@@ -1243,4 +1296,14 @@ type statusRecorder struct {
 func (r *statusRecorder) WriteHeader(statusCode int) {
 	r.statusCode = statusCode
 	r.ResponseWriter.WriteHeader(statusCode)
+}
+
+// Flush delegates to the underlying ResponseWriter's flusher when it has one, so
+// the streaming paths (which type-assert w to http.Flusher) can actually flush
+// through this request-log wrapper. Embedding the http.ResponseWriter interface
+// alone would not promote Flush, so it must be declared explicitly.
+func (r *statusRecorder) Flush() {
+	if flusher, ok := r.ResponseWriter.(http.Flusher); ok {
+		flusher.Flush()
+	}
 }

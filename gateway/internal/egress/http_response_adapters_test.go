@@ -101,7 +101,7 @@ func TestExtractAssistantText(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := extractAssistantText([]byte(tt.body))
+			got := ExtractAssistantText([]byte(tt.body))
 			if got != tt.want {
 				t.Fatalf("got %q, want %q", got, tt.want)
 			}

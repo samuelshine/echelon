@@ -29,7 +29,7 @@ func (j *HTTPResponseJudge) Name() string { return j.name }
 func (j *HTTPResponseJudge) Judge(ctx context.Context, response core.ModelResponse) (core.Verdict, error) {
 	payload := responseSecurityRequest{
 		RequestID: response.RequestID, Model: response.Model,
-		Text: extractAssistantText(response.Body),
+		Text: ExtractAssistantText(response.Body),
 	}
 	var result responseJudgeResult
 	if err := postResponseSecurityJSON(ctx, j.client, j.endpoint, payload, &result); err != nil {

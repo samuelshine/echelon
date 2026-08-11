@@ -410,3 +410,19 @@ called for) and **Track B** (egress output-awareness — a new response-shaped
 data type this pipeline has never produced, needs its own spec/sourcing/
 labeling-boundary design before generation can start). Not authorized to
 execute either track; this is a plan, not a training run.
+
+## Track B design draft written (2026-08-11)
+
+Wrote `docs/RESPONSE_CURATION_SPEC.md` — the design-review artifact
+`LAYER2_RETRAIN_PLAN.md` §3 called for before any Track B generation could
+start. Proposes a 4,000/400/400 positive slice (operational malicious-code
+output) with a 1:1 (not 2:1) matched-negative ratio against defensive/
+explanatory response text, since response-side false positives are the
+documented risk this track exists to close. Lays out the labeling-boundary
+question for mixed explanation+code responses (harder than the prompt-side
+boundary, expected to need its own resolution rather than reuse), a
+synthetic-for-positive / real-source-for-negative sourcing split
+recommendation, and five explicit open decisions (boundary rule, sourcing
+split, target volumes, reviewer capacity, blended-vs-separate model) that
+still need review before generation starts. Still a design draft only — no
+candidates generated, no sources acquired, nothing sent to review.

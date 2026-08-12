@@ -128,21 +128,44 @@ co-located monorepo layout (`pipeline/`, `gateway/`, `console/`); see
 
 ## Honest limitations
 
-- **Model precision on sparse categories.** `malicious_code` and
-  `system_prompt_leakage` had very small training support and the model scores them
-  non-monotonically (it flags defensive-cyber *higher* than actual malware). Rather
-  than trust the raw score, any non-trivial sparse signal is mapped into the escalate
-  band so it is **always routed to the LLM judge**, which adjudicates. A model with
-  more matched defensive/offensive training data would need this crutch less.
-- **Egress `malicious_code` detection is mitigated by a code-shape heuristic, not
-  solved by a retrain.** The Layer 2 model was trained exclusively on prompt/attack
-  text — assistant responses were explicitly excluded from its training corpus. On
-  ingress, prompts *requesting* malicious code still often score high enough (≥0.30
-  raw) for the sparse-category mitigation to force escalation to the judge. On egress,
-  actual generated code (Python/C snippets) scores consistently near-zero on the
-  `malicious_code` head (~0.0003 observed on a live operational-keylogger sample) — the
-  model has simply never seen code syntax as an input feature — so left alone the
-  aggregate never crosses the escalate threshold and the judge is never invoked. To
+- **Model precision on sparse categories — mostly resolved 2026-08-12, ingress-side.**
+  `malicious_code` and `system_prompt_leakage` used to have very small training
+  support (2 and 40 test rows) and the model scored them non-monotonically
+  (flagging defensive-cyber *higher* than actual malware). A retrain on a
+  ~4x-larger, AI-reviewed round (`pipeline/CURRENT_PROGRESS.md`'s "Track A executed"
+  entry, `pipeline/docs/LAYER2_RETRAIN_PLAN.md`) fixed this for the currently-served
+  model: `malicious_code` F1 0.50→0.99 (support 2→148), `system_prompt_leakage`
+  F1 0.42→0.94 (support 40→161), macro-F1 0.696→0.899, with 0% false positives on
+  the defensive-cyber slice. Still real gaps: this round generated ~900 malicious
+  candidates per family, well below `TARGETED_CURATION_SPEC.md`'s 4,000/4,000 target
+  (full-spec volume remains a larger follow-up), and review was AI-assisted, not
+  native-human (see the adjudication bullet below). The sparse-category
+  escalate-to-judge mitigation described below is left in place regardless — a better
+  model needs the safety net less, not zero.
+- **Egress `malicious_code` detection now has a real fix candidate, not yet served.**
+  The served model above was still trained exclusively on prompt/attack text —
+  assistant responses were excluded, same as before — so the egress gap this
+  paragraph originally described is otherwise unchanged: actual generated code
+  scores near-zero on the `malicious_code` head, the aggregate never crosses the
+  escalate threshold on its own, and the code-shape heuristic below is still what
+  closes it in production. What's new: a separate pilot round
+  (`pipeline/docs/RESPONSE_CURATION_SPEC.md`, "Track B executed" in
+  `CURRENT_PROGRESS.md`) generated the first response-shaped (assistant-authored)
+  training data this pipeline has ever had — 300 AI-reviewed examples — blended it
+  into the corpus, and retrained. The resulting candidate model (evaluated, **not
+  promoted**) scores `response_shaped_malicious_code` at F1 1.0 on the *in-distribution*
+  test split — but a post-hoc out-of-distribution probe (2026-08-12) showed that
+  number is **template memorization, not generalization**: on operational responses
+  outside the 8 generator archetypes (e.g. a SQL-exfil snippet, a `rm -rf`/fork-bomb
+  shell block) the candidate scores `malicious_code` ≈ 0.001 — as blind as the
+  untrained model — and actually scores a *benign* defensive log-analysis explanation
+  higher (≈0.32). So the response-shaped gap is **not** closed by this pilot; it
+  demonstrates the pipeline mechanics end-to-end but the 300 pure-synthetic,
+  8-archetype rows are far too few/narrow to teach real response-shaped detection.
+  The candidate sits at `pipeline/models/layer2-threat-distilbert/v03-full-candidate/`,
+  correctly unpromoted. The code-shape-floor mitigation below remains the real egress
+  protection, and an output-aware retrain at genuine volume/diversity (ideally with
+  the real-source negatives deferred in `RESPONSE_CURATION_SPEC.md`) is still needed. To
   close that gap without an output-aware retrain, the egress routes now run a cheap,
   deterministic **code-shape detector** (`_looks_like_code` in `service/security_api.py`:
   compiled-regex markers for imports/defs/`subprocess`/`socket`/`eval(`/`curl -`/
@@ -167,9 +190,11 @@ co-located monorepo layout (`pipeline/`, `gateway/`, `console/`); see
   the content intact — the judge correctly tells operational and defensive code apart, so
   there's no new false-positive block. This is a pattern-based mitigation, not perfect
   coverage: heavily obfuscated or unusually-shaped malicious code that matches none of the
-  markers and carries low symbol density could still slip past the floor — an
-  output-aware retrain remains the real fix. `toxicity_harm` and PII never shared this
-  gap — they block/redact correctly on their own.
+  markers and carries low symbol density could still slip past the floor. An
+  output-aware retrain is the real fix — see the Track B candidate described above,
+  which is evaluated but not yet promoted, so this coverage hole is still live in the
+  served system today. `toxicity_harm` and PII never shared this gap — they block/redact
+  correctly on their own.
 - **Ollama judge instruction tuning is prompt-sensitive.** The first version of the
   egress judge instruction incorrectly flagged a defensive YARA-rule explanation as
   malicious; it needed an explicit "detection signatures/explanations are benign,
@@ -178,8 +203,11 @@ co-located monorepo layout (`pipeline/`, `gateway/`, `console/`); see
 - **Judge** is a local **Ollama** model (set `ECHELON_OLLAMA_MODEL`, e.g.
   `qwen2.5:14b`); unset falls back to a deterministic stand-in. Judge calls cost a few
   seconds each, so raise the gateway budgets when enabled (see run instructions).
-- **Expert adjudication was AI-assisted** (`ai_claude`), recorded as provisional and
-  human-overridable — not native-human review.
+- **Review is AI-assisted throughout, not native-human.** v0.2's 152-conflict expert
+  adjudication (`ai_claude`), v0.3 Track A's full-coverage dual review, and v0.3
+  Track B's response-shaped dual review are all recorded as provisional and
+  human-overridable in their respective manifests/provenance sidecars — none of this
+  is a substitute for a real human review pass before high-stakes production use.
 - **Telemetry & rate/credit state default to in-memory** (single process); Redis-backed
   distributed rate-limit/credit enforcement and a persistent Postgres audit sink are
   opt-in via `RATE_LIMIT_BACKEND=redis` / `AUDIT_DATABASE_URL` (Phases 3–4).

@@ -298,3 +298,20 @@ defensive-cyber false positives via `malicious_code` — remediable with more ta
 data or a higher per-category threshold. The model is wired into `echelon/layer2.py`
 and exposed by `service/security_api.py` in the exact JSON the Go gateway's remote
 adapters require. Next: wire the Go gateway to this service (backend Phases 4–5).
+
+## Layer 2 retrain — v0.3 round served, response-shaped candidate evaluated (2026-08-12)
+
+The sparse-category limitation above is now mostly resolved for the served model:
+a ~4x-larger, AI-reviewed v0.3 round (`CURRENT_PROGRESS.md` → "Track A executed";
+full design in `docs/LAYER2_RETRAIN_PLAN.md`) lifted macro-F1 to **0.899**
+(`malicious_code` F1 0.50→0.99, `system_prompt_leakage` F1 0.42→0.94), with the
+defensive-cyber false-positive rate at 0% — promoted to `best/`
+(`legacy-pre-v03/` keeps the prior model, not deleted). Still below
+`docs/TARGETED_CURATION_SPEC.md`'s full target volume, and review was
+AI-assisted, not native human. Separately, a Track B pilot
+(`docs/RESPONSE_CURATION_SPEC.md`) produced this pipeline's first
+response-shaped (assistant-authored) training data, blended it in, and
+retrained a candidate that scores `response_shaped_malicious_code` at F1 1.0 —
+evaluated but **not promoted** (kept at `v03-full-candidate/`), since blending
+shifted the semantic-split boundaries enough to move other categories'
+test-set composition and that tradeoff wants a real decision first.

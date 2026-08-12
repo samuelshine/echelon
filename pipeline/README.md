@@ -8,16 +8,19 @@ the reviewed training corpus.
 
 **Current state (see `CURRENT_PROGRESS.md` for the full log, `../DEMO.md` for
 the live end-to-end contracts):** the training gate has passed, Layer 2 is
-trained and calibrated on the reviewed corpus (macro-F1 0.696;
-`models/layer2-threat-distilbert/best`, weights git-ignored), and
-`service/security_api.py` serves it over HTTP (`/classify`, `/judge`,
-`/classify_response`, `/judge_response`) to the Go gateway. Known limitation:
-the rare categories (`system_prompt_leakage`, `malicious_code`) have low
-precision/tiny support and are mitigated by forced judge escalation rather
-than fixed at the classifier level — see `DEMO.md` → "Honest limitations."
-Expert adjudication of the 152 review conflicts was AI-assisted
-(`ai_claude`), recorded as provisional and human-overridable, not native
-human review.
+trained and calibrated on the reviewed corpus (macro-F1 **0.899** as of the
+2026-08-12 v0.3 retrain, up from 0.696 — `malicious_code` F1 0.50→0.99,
+`system_prompt_leakage` F1 0.42→0.94; `models/layer2-threat-distilbert/best`,
+weights git-ignored), and `service/security_api.py` serves it over HTTP
+(`/classify`, `/judge`, `/classify_response`, `/judge_response`) to the Go
+gateway. Known limitations: this round is still well below
+`docs/TARGETED_CURATION_SPEC.md`'s full target volume; egress (response-shaped)
+`malicious_code` detection still relies on the `_apply_code_shape_floor`
+heuristic in production — a candidate retrain that closes it directly
+(response-shaped F1 1.0) exists but is not yet promoted, see `DEMO.md` →
+"Honest limitations." Review throughout (v0.2's 152 conflicts, v0.3's full
+corpus, v0.3's response-shaped pilot) was AI-assisted, recorded as
+provisional and human-overridable, not native human review.
 
 The sections below (datasets, legacy training commands, project structure)
 describe the original R&D/data-governance workspace and the superseded

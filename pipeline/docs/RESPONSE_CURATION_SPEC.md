@@ -181,19 +181,49 @@ are provenance-tagged and reviewed."
 
 ## Decisions required before generation can start
 
-This document does not resolve these; it exists to make them explicit for
-whoever reviews this design:
+**Resolved 2026-08-11/12**, as part of executing a pilot round (see
+`CURRENT_PROGRESS.md`'s Track B entry for the actual generation/review/
+training run these decisions fed). All five were decided by the same author
+who wrote this spec, under time pressure to produce a working round in one
+session — reasonable engineering calls, not the outcome of the independent
+design review this document originally called for. A real review should
+still happen before any larger/production round.
 
-1. Lock the labeling-boundary rule for mixed explanation+code responses.
-2. Choose the synthetic/real-source split for the positive and negative
-   slices (recommendation above is a starting point, not a decision).
-3. Confirm target volumes in the table above, or revise after a small pilot
-   batch (recommend piloting at ~5-10% of target volume first, mirroring how
-   v0.2 was itself a pilot before this document's Track A counterpart scales
-   it up).
-4. Decide reviewer capacity/headcount for this slice specifically — it is
-   expected to be harder per-item than prompt-side review (see "Labeling
-   boundary"), so v0.2's reviewer-hours-per-item should not be assumed to
-   transfer directly.
-5. Decide blended-vs-separate-model (see "Open modeling question") — does
-   not block data collection, but should be decided before training starts.
+1. **Mixed explanation+code labeling: resolved as "operational-portion
+   controls."** A response is labeled `malicious_code` if it contains an
+   operational (non-defensive) code portion, regardless of surrounding
+   explanatory text — matching the judge layer's existing operational-vs-
+   defensive distinction (`OLLAMA_OUTPUT_JUDGE_INSTRUCTION`) rather than
+   inventing a new rule. A majority-of-content threshold was rejected as
+   gameable (padding operational code with defensive-sounding prose would
+   flip the label). A code portion that is itself a detection artifact (a
+   YARA/Sigma rule, a regex signature) does not count as operational.
+2. **Sourcing split: resolved as synthetic-only for this round**, not the
+   synthetic-positive/real-negative split recommended above. Real-source
+   acquisition (malware-analysis writeups, YARA/Sigma repositories) needs
+   its own registry-approval and license-vetting pass that doesn't fit
+   inside one session — deferred, not abandoned. This is a real, documented
+   deviation from this spec's own recommendation, and the resulting
+   negative-control diversity is narrower than a real-source-backed round
+   would achieve.
+3. **Target volumes: resolved as a pilot scale well below the 4,000/400/400
+   table above** — see `CURRENT_PROGRESS.md` for exact counts. Deliberately
+   smaller than Track A's already-below-spec v0.3 round, both because Track
+   B is "one new slice, not two" (§5 above) and because a bad synthetic
+   "operational" response is a worse failure mode than a bad synthetic
+   prompt. Full spec volume remains a distinct, larger follow-up.
+4. **Reviewer capacity: resolved as the same AI-assisted dual-review
+   process used for Track A** (`scripts/ai_reviewers_v03.py`, extended with
+   response-specific signals), not native human review. Carries the same
+   provisional/AI-assisted caveat as Track A and the v0.2 precedent, and is
+   arguably weaker here given point 2 in "Labeling boundary" above — mixed-
+   content ambiguity is harder to review than prompt-side ambiguity, and
+   operational-code detection misses have higher stakes than prompt-intent
+   misses.
+5. **Blended vs. separate model: resolved as blended** — Track B's
+   reviewed rows are merged into the same training corpus as Track A's v0.3
+   round (one combined manifest, one model), per this document's own
+   recommendation to try blending first. Per `LAYER2_RETRAIN_PLAN.md` §6's
+   instruction not to conflate the two tracks, evaluation still reports
+   Track A's prompt-shaped and Track B's response-shaped `malicious_code`
+   performance as distinct slices, not one merged number.

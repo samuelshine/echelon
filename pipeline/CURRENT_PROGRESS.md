@@ -1,21 +1,25 @@
 # Echelon Current Progress
 
-## Status (updated 2026-08-01 — see bottom of log for the current entry)
+## Status (updated 2026-08-12 — see bottom of log for the current entry)
 
-**Phase:** Layer 1/2/3 built and served; Layer 2 trained + calibrated
-(macro-F1 0.696) on the reviewed corpus; `service/security_api.py` serves
-`/classify`, `/judge`, `/classify_response`, `/judge_response` to the Go
-gateway; egress ML-cascade escalation added 2026-08-01 (see bottom entry).
-Consolidated into the `main` monorepo under `pipeline/` (was branch `rnd`).
+**Phase:** Layer 1/2/3 built and served; Layer 2 retrained on a ~4x-larger,
+AI-reviewed v0.3 round and promoted 2026-08-12 (macro-F1 **0.899**, up from
+0.696 — see "Track A executed" near the bottom of this log); `service/security_api.py`
+serves `/classify`, `/judge`, `/classify_response`, `/judge_response` to the Go
+gateway; egress ML-cascade escalation added 2026-08-01. Consolidated into the
+`main` monorepo under `pipeline/` (was branch `rnd`).
 
 **Checkpoint:** Production e2e verified live (see root `DEMO.md`). Redis-backed
 distributed state, CI, and observability (metrics/tracing/durable audit sink)
-are now done (2026-08-01 – 2026-08-04, `gateway/EXECUTION_PLAN.md`). Still
-open on the ML/data side: an output-aware retrain for egress `malicious_code`
-detection (the current fix is a code-shape heuristic mitigation, not a
-retrain — see `DEMO.md` → "Honest limitations") and more targeted training
-data for `malicious_code`/`system_prompt_leakage`, both low-precision on tiny
-support (macro-F1 0.696 overall; see the 2026-07-25 entry below).
+are now done (2026-08-01 – 2026-08-04, `gateway/EXECUTION_PLAN.md`). ML/data
+side, as of 2026-08-12: `malicious_code`/`system_prompt_leakage` precision on
+tiny support is mostly resolved for the served (prompt-side) model (see
+"Track A executed" below); egress (response-shaped) `malicious_code` detection
+still relies on the code-shape heuristic mitigation in production — a
+candidate retrain that closes it directly exists (`response_shaped_malicious_code`
+F1 1.0) but is evaluated, not promoted (see "Track B executed" below). Both
+rounds are still below `TARGETED_CURATION_SPEC.md`'s full target volume and
+used AI-assisted (not native-human) review.
 
 <!-- Historical status line, kept for context: originally "Phase 3 — Layer 1
 heuristic engine complete; human dataset review remains in parallel". The
@@ -411,6 +415,93 @@ data type this pipeline has never produced, needs its own spec/sourcing/
 labeling-boundary design before generation can start). Not authorized to
 execute either track; this is a plan, not a training run.
 
+## Track A executed: v0.3 round generated, AI-reviewed, trained, promoted (2026-08-11/12)
+
+Ran Track A end-to-end at a real, audited scale (below the spec's full
+4,000/4,000 target — see "honest gap" below, not a token increase from
+v0.2's 600 reviewed rows):
+
+- **Generation** (`scripts/generate_targeted_v03.py`): 3,400 candidates
+  across `system_prompt_leakage_v03` (900, 3 independently-authored
+  compositional styles — direct/narrative/dialogue, not v0.2's single
+  style), `malicious_code_intent_v03` (900, same 3-style structure),
+  matched benign/defensive controls (600+300+200+200), and obfuscated/
+  encoded-transform families (150+150, deliberately small — see below).
+  `combinatorial_rows()` replaces v0.2's `varied_pairs` (which hard-capped
+  output at `len(frames)*10` and risked exact-duplicate collapse if that
+  range were widened) with a deterministic full-product shuffle-and-take,
+  giving exact counts with zero duplicates for any target size.
+- **Diversity audit** (`scripts/audit_targeted_v03.py`, real BGE-small
+  embeddings): first pass at 4,100 candidates **failed** the admission gate
+  — `largest_group_fraction` 23.3% (vs. the ≤10% gate), because the
+  obfuscation-wrapper family's encoded payload is semantically invisible to
+  the embedder, so many wrapped rows collapsed into one cluster regardless
+  of encoding method. Fixed by cutting the obfuscated/encoded-benign
+  families from 500+500 to 150+150 and adding 3 more wrapper phrasings
+  each; re-audit passed cleanly: `largest_group_fraction` 1.8%, 0 mixed-
+  safety groups, internal near-dup mean similarity 0.910 (v0.2's own
+  benchmark for "good" was 0.915 — this round is slightly tighter).
+- **AI-assisted dual review at 100% coverage** (`scripts/ai_reviewers_v03.py`,
+  `scripts/run_ai_review_v03.py`) — not the stratified ~100/family sample
+  `audit_targeted_candidates.py` used for v0.1/v0.2, since human reviewer
+  bandwidth (the real constraint per `LAYER2_RETRAIN_PLAN.md`) doesn't apply
+  to an AI-assisted pass. Explicitly **not** independent human review — two
+  differently-implemented rule-based reviewers (different thresholds on the
+  same taxonomy-vocabulary signals, verified to be embedded verbatim in
+  generated text by construction) plus a documented expert-adjudication
+  policy for any disagreement, following the same "AI-assisted, provisional,
+  human-overridable" framing `ai_adjudicate_v02.py` established for v0.2's
+  152 conflicts. First implementation only achieved 78.9% decision accuracy
+  against known ground truth (34% false-negative rate on malicious content —
+  the dangerous direction); root-caused and fixed three real bugs (weak
+  keyword stems instead of the generator's own verbatim vocabulary; the
+  "reverse" encoding method never tripping the long-blob heuristic since
+  spaces survive character reversal; `LEAKAGE_TARGETS` phrases like
+  "developer note" accidentally substring-matching inside the *benign*
+  object list's "mock developer note in my article"). Final pass: 100%
+  reviewer agreement, **100% decision accuracy against ground truth**,
+  3,329/3,400 (97.9%) passed the naturalness/quality gate (the 2% rejected
+  are unicode-escape-encoded items that are genuinely hard to read, split
+  evenly across malicious/benign so no bias introduced).
+- **Corpus/split/manifest** (`scripts/build_training_corpus_v03.py`,
+  `build_semantic_splits.py` re-run, `build_training_manifest_v03.py`):
+  merged onto `eligible_reviewed.jsonl` (v0.2's 33,063-row output, itself
+  built on the original 32,465-row eligible corpus) → 36,392 rows →
+  semantic-split (0 semantic clusters crossing splits; 156 mixed-safety
+  groups / 652 rows quarantined as a safety measure) → 35,740 rows across
+  train/validation/test (28,690/3,491/3,559). Training gate passed.
+- **Training** (`scripts/train_layer2_multilabel_v03.py`, same architecture/
+  hyperparameters as the served model — DistilBERT, 3 epochs, per-category
+  temperature calibration): **macro-F1 0.696 → 0.899**. The two categories
+  this round targeted: `malicious_code` F1 0.50→0.990 (test support 2→148),
+  `system_prompt_leakage` F1 0.419→0.936 (test support 40→161).
+  `prompt_injection` and `adversarial_obfuscation` also improved slightly
+  (0.933→0.956, 0.762→0.760); `toxicity_harm` held steady (0.865→0.853, not
+  a category this round touched). **No regression**: benign FPR@0.9 dropped
+  2.23% (was 3.1%), and both the defensive-cyber slice (50 rows) and the new
+  malicious-code-matched-control slice (43 rows) show **0% false positives**
+  at threshold 0.5.
+- **Promoted to `best/`** (2026-08-12), with explicit user confirmation
+  before the swap: old model backed up to
+  `models/layer2-threat-distilbert/legacy-pre-v03/` (not deleted),
+  `metrics-legacy-pre-v03.json` preserved alongside the new `metrics.json`.
+  Takes effect on the security service's next restart — nothing was live
+  until this promotion.
+- **Honest gap, not silently closed**: this round generated 900 malicious
+  candidates per targeted family, well below the spec's 4,000/4,000 target
+  — full-spec volume remains a real, larger follow-up, not something this
+  round should be read as having finished. The `_apply_code_shape_floor`
+  egress heuristic (2026-08-01) is unaffected by this ingress-side retrain;
+  Track B (below) is what actually addresses the *response*-shaped gap it
+  mitigates.
+- All new scripts are v0.3-specific forks (not edits) of their v0.2
+  counterparts, matching the pattern the v0.2 scripts themselves already
+  established (`export_accepted_v02.py`, `build_training_corpus.py`, etc.
+  hardcode v0.2 paths/names) — `generate_targeted_v03.py`,
+  `audit_targeted_v03.py`, `ai_reviewers_v03.py`, `run_ai_review_v03.py`,
+  `build_training_corpus_v03.py`, `build_training_manifest_v03.py`,
+  `train_layer2_multilabel_v03.py`.
+
 ## Track B design draft written (2026-08-11)
 
 Wrote `docs/RESPONSE_CURATION_SPEC.md` — the design-review artifact
@@ -426,3 +517,129 @@ recommendation, and five explicit open decisions (boundary rule, sourcing
 split, target volumes, reviewer capacity, blended-vs-separate model) that
 still need review before generation starts. Still a design draft only — no
 candidates generated, no sources acquired, nothing sent to review.
+
+## Track B executed: response-shaped pilot generated, reviewed, blended, evaluated (2026-08-12)
+
+Resolved the 5 open decisions in `RESPONSE_CURATION_SPEC.md` (documented
+inline there, all decided under session time pressure, not via independent
+design review — see the spec for the exact caveats) and executed a pilot
+round on top of Track A's v0.3 corpus:
+
+- **First response-shaped (assistant-authored, not user-prompt-shaped)
+  training data this pipeline has ever produced.** `scripts/generate_response_v03.py`:
+  300 candidates (150 `response_malicious_code_v03` operational-code
+  responses across 8 capability archetypes — credential harvesting,
+  keylogging, ransomware-style encryption, reverse shell, log wiping,
+  privilege escalation, C2 beaconing, persistence — × 6 response-voice intro
+  framings; 150 `response_defensive_control_v03` matched negatives across
+  the same 8 archetypes × 6 defensive registers — YARA rule, malware
+  analysis, code review comment, incident runbook, secure-coding
+  explanation, CTF writeup). Every operational snippet uses abstracted
+  placeholders (`[TARGET_HOST]`, `[PLACEHOLDER_KEY]`, etc.), never a real
+  payload, matching the same discipline the prompt-side spec mandates. A
+  first draft of the defensive-template strings had a Python string-
+  literal bug (adjacent triple-quoted strings with stray embedded `"`
+  characters, not real concatenation) caught and fixed before generation.
+  Internal diversity audit (BGE-small embeddings, same admission-gate
+  criteria as Track A): largest semantic cluster 8% (passes the ≤10% gate),
+  0 mixed-safety groups — but internal near-duplicate similarity is high
+  (mean 0.99), an honest, expected characteristic of a small template-heavy
+  pilot (8 archetypes, no real-source diversity — see resolved decision #2)
+  and a real reason this is not comparable in robustness to Track A's
+  larger, more varied round.
+- **AI-assisted dual review at 100% coverage**
+  (`scripts/ai_reviewers_response_v03.py`, `scripts/run_ai_review_response_v03.py`)
+  — structurally different reviewer logic from Track A's since the label
+  space is simpler (malicious_code vs. benign only) but the actual judgment
+  is harder: both slices legitimately reference the same capability phrases
+  (a YARA rule for a keylogger and a working keylogger both say
+  "keylogger"), so the only valid signal is the resolved
+  operational-portion-controls rule — does the response *deliver* functional
+  code (≥3 real, non-comment/non-stub lines inside a fenced code block) or
+  *describe/detect* the capability. 100% reviewer agreement, **100% decision
+  accuracy against ground truth**, all 300 accepted (no quality-gate
+  rejections this round).
+- **Blended into Track A's corpus** (`scripts/build_training_corpus_response_v03.py`,
+  per resolved decision #5), not a separate model: 36,392 → 36,692 rows →
+  re-split (`build_semantic_splits.py` re-run: malicious_code test support
+  148→164, adding response-shaped rows via matched genuinely to their own
+  semantic groups) → 36,040 rows across train/validation/test
+  (28,930/3,540/3,570). Gate passed.
+- **Trained and evaluated** (`scripts/train_layer2_multilabel_v03_full.py`,
+  same architecture/hyperparameters, with a new `response_shaped_malicious_code`
+  slice metric added to `metrics_at()` so Track B's performance is reported
+  separately from Track A's prompt-shaped `malicious_code`, per
+  `LAYER2_RETRAIN_PLAN.md` §6's instruction not to conflate the two tracks):
+  **`response_shaped_malicious_code`: precision 1.0, recall 1.0, F1 1.0**
+  (20 malicious + 11 benign response-shaped test rows). Both defensive-slice
+  FPRs stayed at 0%. **CAVEAT added 2026-08-12 after a post-hoc OOD probe —
+  this F1 1.0 is template memorization, not generalization.** Tested on
+  operational responses *outside* the 8 generator archetypes (a SQL-exfil
+  snippet, a `rm -rf`/fork-bomb shell block), the candidate scores
+  `malicious_code` ≈ 0.001 — as blind as the untrained model — and scores a
+  benign defensive log-analysis explanation *higher* (≈0.32). The 300
+  pure-synthetic, 8-archetype rows taught the exact template shapes, not the
+  operational-vs-defensive distinction. The response-shaped gap is **not
+  closed** by this pilot; it proves the pipeline runs end-to-end and is a
+  scaffold for a real round, nothing more. This is the concrete reason the
+  candidate stays unpromoted (beyond the macro-F1 re-split nuance). **Real, honestly-reported caveat**:
+  overall macro-F1 came in at 0.8535, slightly below the Track-A-only
+  model's 0.899 (still far above the original 0.696) — concentrated in
+  `prompt_injection` (F1 0.956→0.885) and `adversarial_obfuscation`
+  (F1 0.760→0.654), categories Track B never touched. Adding 300 rows
+  shifted the leakage-safe semantic-group boundaries enough to re-split
+  the *entire* corpus differently (e.g. `prompt_injection` test support
+  went 367→316), so this is not a strictly apples-to-apples comparison
+  against the Track-A-only test set — real regression vs. re-split
+  variance can't be fully distinguished at this test size.
+- **Not promoted.** User's explicit decision (asked directly, given the
+  macro-F1 nuance above): keep the Track-A-only model in `best/`, leave this
+  blended model at `models/layer2-threat-distilbert/v03-full-candidate/` as
+  a separate, evaluated-but-unserved candidate for further comparison before
+  any promotion decision.
+- **What this does and doesn't mean for the code-shape-floor heuristic**:
+  the OOD probe (see the calibration-eval entry below) shows this pilot did
+  **not** teach a real response-shaped distinction — it memorized 8 archetype
+  templates and scores novel operational responses ≈0.001. So
+  `_apply_code_shape_floor` in `pipeline/service/security_api.py` stays exactly
+  as-is; retiring it needs a genuinely larger, real-source response round
+  (per the deferred sourcing decision), not this scaffold.
+
+## Calibration + real-vs-synthetic evaluation of the served model (2026-08-12)
+
+Ran the repo's own metrics library (`echelon/evaluation.py`: ECE,
+recall-constrained threshold selection, source slices) against the **served**
+`best/` model on all 3,559 v0.3 test rows, via a new reusable harness
+(`scripts/evaluate_layer2_v03.py`, scoring the *calibrated* probabilities the
+serving adapter actually emits). The train script only reported Brier@0.5;
+this adds the numbers that were missing and, critically, a real-vs-synthetic
+breakdown that qualifies the headline F1s honestly.
+
+- **Calibration is good** (this was never measured before): per-category ECE
+  is 0.017 (prompt_injection), 0.006 (system_prompt_leakage), 0.006
+  (malicious_code), 0.035 (toxicity_harm), 0.035 (adversarial_obfuscation) —
+  all ≤0.035. The per-category temperature scaling works; served
+  probabilities are trustworthy.
+- **Real-vs-synthetic slice — the headline numbers are substantially
+  in-distribution inflation, quantified:**
+  - `malicious_code`: **0 real positives in the test set.** The 0.99 F1 is
+    measured on 148 synthetic rows only — the served model's real-world
+    malicious-code F1 is unmeasured by this split. Every "0.50→0.99" claim is
+    synthetic-vs-synthetic.
+  - `system_prompt_leakage`: real-data F1 **0.691** (31 rows) vs synthetic
+    **0.988** (130). Real-world leakage detection is much weaker than the 0.936
+    headline; the templates overfit.
+  - `prompt_injection`: real-data F1 **0.950** (235) — genuinely strong and
+    the one category that clearly generalizes (large real corpus underneath).
+  - `toxicity_harm`: all real, F1 0.853 (honest, unchanged — untouched by this
+    round).
+- **Operating-point limitation**: `toxicity_harm` has **no** threshold meeting
+  recall≥0.90 at benign-FPR≤0.05 (messiest head). The other four do;
+  `malicious_code` and `system_prompt_leakage` optimize around 0.33–0.35, a
+  hint the sparse-category serving block thresholds could be tuned down.
+- **Bottom line**: calibration and prompt_injection generalization are real
+  wins; malicious_code and system_prompt_leakage headline gains are
+  synthetic-inflated (0 real malicious_code test positives; 0.69 real leakage
+  F1). Both the review *and* the eval are in-distribution, so a real held-out
+  set is the highest-leverage next fix. Report at
+  `data/reports/layer2_eval_v03_best.json`.

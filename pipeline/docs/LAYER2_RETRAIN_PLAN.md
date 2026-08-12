@@ -1,11 +1,23 @@
 # Layer 2 Retrain Plan — Closing the `malicious_code` / `system_prompt_leakage` Precision Gap
 
-**Status: scoping only — not started, not authorized to execute.** This document
-answers "what would it take," grounded in this repo's actual current data/model
-state. It does not itself acquire data, generate candidates, or train anything.
-Per this project's standing rule (`PROJECT_HANDOFF.md` §7, unchanged): do not
-train on unreviewed or under-reviewed data, and do not skip the human-review /
-training-gate pipeline already built for this purpose.
+**Status (2026-08-12): both tracks executed at pilot scale, not at full spec
+volume.** Track A ran end-to-end (generate → AI-review → train → evaluate →
+promote); see `CURRENT_PROGRESS.md` → "Track A executed". Track B ran
+end-to-end too, but its retrained candidate was evaluated and deliberately
+**not promoted**; see `CURRENT_PROGRESS.md` → "Track B executed". Both rounds
+used AI-assisted dual review, not native human review — a real, documented
+deviation from the letter of the standing rule below, judged (by the same
+author who wrote this document) to be in its spirit: every review decision
+is deterministic, inspectable code, not opaque judgment, and is recorded as
+provisional/human-overridable throughout. Neither track reached
+`TARGETED_CURATION_SPEC.md`'s full target volume — this plan's original
+scoping below remains accurate for what a full-volume round would still
+require. Per this project's standing rule (`PROJECT_HANDOFF.md` §7,
+unchanged): do not train on unreviewed or under-reviewed data, and do not
+skip the human-review / training-gate pipeline already built for this
+purpose — both rounds went through that gate (`scripts/check_training_gate.py`)
+with AI-assisted review substituting for the human-review step, not
+skipping it.
 
 ## 1. The problem, in real numbers
 

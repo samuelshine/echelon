@@ -1,0 +1,38 @@
+{
+  "by_family": {
+    "defensive_cyber_benign_v03": {
+      "accepted_by_agreement": 600
+    },
+    "encoded_benign_control_v03": {
+      "accepted_by_agreement": 116,
+      "rejected_quality_gate": 34
+    },
+    "malicious_code_defensive_control_v03": {
+      "accepted_by_agreement": 300
+    },
+    "malicious_code_intent_v03": {
+      "accepted_by_agreement": 900
+    },
+    "obfuscated_attack_v03": {
+      "accepted_by_agreement": 113,
+      "rejected_quality_gate": 37
+    },
+    "system_prompt_benign_v03": {
+      "accepted_by_agreement": 200
+    },
+    "system_prompt_leakage_benign_v03": {
+      "accepted_by_agreement": 200
+    },
+    "system_prompt_leakage_v03": {
+      "accepted_by_agreement": 900
+    }
+  },
+  "items": 3400,
+  "queue_sha256": "5af79945fcd5f8174237483eebc158a0ed067b5864b37604779aafaed7f14039",
+  "review_records": 6800,
+  "status": {
+    "accepted_by_agreement": 3329,
+    "rejected_quality_gate": 71
+  },
+  "training_eligible_items": 3329
+}

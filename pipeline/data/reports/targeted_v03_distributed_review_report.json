@@ -1,0 +1,14 @@
+{
+  "conflicts": 0,
+  "errors": [],
+  "expert_complete": false,
+  "items": 3400,
+  "primary_reviewers": 2,
+  "queue_sha256": "5af79945fcd5f8174237483eebc158a0ed067b5864b37604779aafaed7f14039",
+  "status": {
+    "accepted_by_agreement": 3329,
+    "rejected_quality_gate": 71
+  },
+  "training_eligible_items": 3329,
+  "valid": true
+}

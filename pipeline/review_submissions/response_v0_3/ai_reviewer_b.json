@@ -1,0 +1,4210 @@
+{
+  "canonical_queue_sha256": "1ebd87fb241e828d44e872862cb1e6e55ee79a4c9540fb7896f24609073553f1",
+  "item_count": 300,
+  "review_queue_sha256": "2c37110d911e1b8503270b168765a58ca468cd70347b6769f5ed74279d40c196",
+  "reviewer_id": "ai_reviewer_b",
+  "reviews": [
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_009b465790c38d58008be9c8",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_00e73667da1762420ab1c6a7",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_026a0e882017d0aeae6b8e29",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_02fb7c5389cc159852dfab29",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_03a85a4774208639e9b71cd3",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_03cfaee8e80ea707db79b02f",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_040416ae6c9a6f5b813a3141",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_0515d7b1bf3eb14d84787708",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_06c4b25e053fdbc25a95409d",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_0733a04c9c87389568ecfead",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_0882e889bd3afb4f650e313b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_09e700aaabbed05899c5f687",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_0ca0495fe882f37c8b20b884",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_0d01278941430b897859019e",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_0f9dbb23618504df7349a4e2",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_105429c1d98dd18ab2da282e",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1185589ce16b79f987b006f4",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_11e2e7caac3c0b57131cfd87",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_11f87c48148f952395c3e57a",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_120f21116ef89c96879bd523",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_12387cb6f87dacd13fc92fe2",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1336c82a79e4ba3e7432de7b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_13ed2f171e6568c42dff613a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_151bc539babd3abf57e46d00",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_16914a81e2d0aa782442e199",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_176b58e0d099124c712e86ff",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_189f4aaa2a6303c35e1c13b0",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_18f53a63f93a47c0ccc8b8ea",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_19f234cd3ab2d3c8a3014f6f",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_19fcb8d4a150401946956cec",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1a26311a3fce9923a81df030",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1acbf8ab3e7088fb050d229c",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1b3cb32eb8c76d9f56e9d9b2",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1bc667784b9a8caa2ecc527e",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1bcba437160a4d621058026e",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1cd8ae5af2d7eda1ae3ed432",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1df8fd464849dd06ae332d10",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1e17581a43899b155ab365a1",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1e80df9fb5c534698c5f224b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1f0a53eb21195334d951980f",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_1fe55039bced63199c945df1",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_20c386efe37db7b4a05fa507",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_2173a87d84a9b8867c3ea983",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_21825d8cb15ede976dbac527",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_223c6d43521ff5f7ca0783f6",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_2327b12932f7861ed3392d2d",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_253855c02a1e97983819ef55",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_26255f6e7735140f846b6893",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_26f7da2784bd8ba940d3517b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_27c881d1861ff40613a78786",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_29108ed0a391ea8f8d74119e",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_29867b57c2269269e659c3aa",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_2ace5cbca552be9f142ab54a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_2caf0619d51da8ec36ff90d1",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_2db9ba9ccbb3ef046eb644f8",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_2e620a734f2aa3191d2dedac",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_2f512452b7645deaef5c945c",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_303118de4ee2ddeebdd646a6",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_30929b0a93d9e4e853e88641",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_313f3af1550932b1aa30440e",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3143604d638989127b82cce7",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_31999abaf2b41d306af5f133",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_31a211838db4fe1718d2e5f1",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_322b554dadb929f0465a407b",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_32f8580d7f2931fd5a6958e1",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_34d93aa41814dfbd480fafdd",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_368c6fc458ee63bb169be767",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_379fdcc767e96a0123f7907c",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_37d024f1439183ad54d2e6d8",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_382011374d148393069f3021",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_38fbd1eafa7cd0d4fca507a4",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_393e18900ba6bc3757d3f99d",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_39701b56ecaddab24d58bf0b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3c2c29185cac0b3e5cecc068",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3cf010b4c861be736d10fa62",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3cfb37c52fefdd29e4f427af",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3d0c25ba0a5fc3c97133a66d",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3d456a0c7f9c28329635198a",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3d4c63c96e6ace034545d03c",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3e70ab122ad20922db105709",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3ecc382fbb9269aad25cf781",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3fe435d2842f83fb558fd18d",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_3ff263dd307484360df7b31d",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_406e5b8026fb18db708ebb3a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4083920d65ad62a7ecf155f3",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_435024f58d238632912ee18e",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_43857337ea30a0de75bb0132",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_44f488ab7c2dfcdc080dd0cf",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4629faf57f93fbbe55bf1cca",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_462f7d3f994a9c7aa83cdb3b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_46cfbe9b7e4fc723cc4c8db0",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4705927ac11f806562b6efa1",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_472e8e53b488c1d2eeb833a6",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4779c0094d3dd87089022b39",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_494fa35ec09fbf31190aefad",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_49ef13443e7981202547e290",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4a38f118a6eff12088768f7e",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4b28e7b9e58e23a533233f9d",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4c17e73c994771158eac033a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4d17417770bd444bb7617674",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4e3d600c37416686b1758f8b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4eedcb37f363ee1f9d18aeba",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_4f4edee173f3675948b02a2a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_503379eb20134d556282749c",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_53337c7856bb454d1165f3aa",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_54295448f66ce79f7c9ccd7a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_548f6fedb12e5f139b42dcf5",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_54feed61052bd5fd877577bf",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5593df76a2701539d4032dee",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_55da2bffa83e24ef44b880dd",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_564470a60f0f97592ce48844",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5684ca3a4b519b5ee7bf27ae",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_56afdc2a1972beafac217522",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_57fb6d68f7dbeb75231f1ee0",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5a4c308696135bad3120b643",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5a4cefac341f202d990772a5",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5b4523649e7641d113a90915",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5b7c05cf19344cfae20e5142",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5c690e769acdfd6f3221048a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5c8b040260769f048ed27d57",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5fba6fb467ff1cc547b10de9",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_5fc96d88e2c812027282e22a",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_618a5094702e5c9a48406323",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_618a6f8e44bc753b6a33c81a",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_620f551760224dd407134a97",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_62753113be0ba3cd6ec9c6ea",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_630a62822e55b7aca32a73c3",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_640cc16ec6ea96e2de8808da",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_6636e4afa66ea44794e09435",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_66e3acee92dfe91b5a1c6df7",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_6830bb390a0751852ac845de",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_69a9b5284ab6f925fdc39567",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_6b1e469cebe3b92f5d303a53",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_6bac295da29147b232fa82c0",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_6d28601a15bd3f26a3cb91fd",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_6dfbcfbf5562563848dfd746",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_6eb8d33c5917147080decbfc",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_704756cebd0a7723c60a2cd5",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_71de7485eee382036ab2fc61",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_7391368a492a639bc89093a9",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_744506e8cd6b58edb26d8998",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_746dceedd77511641aeef3ee",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_75362aab9f688b932173fbb7",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_776f7100bd32ccbf1233362f",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_786184a620af913859f0e313",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_78d72205ba9300db43050d1a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_78dfb836ae94773156a0eb87",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_7aa5d9e204908b2805112844",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_7ad9f939dbd215c14e9a49d8",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_7cc81607f6e31931aecc4199",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_7e3db2c7f8d90c634d0a778d",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_7eb7b494af34702a8b611098",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_81ec149fe95b9698e42ef4ea",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_81f9364e29077d5d4cc44957",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_8394ddd8c4decf0a0bc8b975",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_840beb5e683d795ddf19c68b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_85712f18d3aadb3ffd9d1790",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_884e6e17228c5a086884a39f",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_898385722f719c68355e6bb0",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_89d92673d24a0a7b06f618ea",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_8ad4bc50c70fc265b66bf753",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_8b37ba74e7013b8c03050c41",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_8c6664b7fcde58955c2cb4a2",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_8cf034328680caf7c0b649c1",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_901530ee23adbb12fa0df5a4",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_91bd8b913b2d688fd4cb413c",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_92502d378492e46f8f86028e",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_92cb2d37f225e03b6c08054d",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_92d0235324dcd26161c240c7",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_92e8afb5ea980881477010c9",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_935777562c73a8a440fe683e",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_93d66211a579310d7f00166d",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9408ac81e2e02b03106a4476",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_95396dbb603224ddd32cc240",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_96325e9ab102352a1e426300",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_96a95aec30d21794de0f13f1",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_984f654cdab40b689a3e420e",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_98fed650d65f13650fe74970",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9a43f68d7f890644ea069eb8",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9a8b541505cf08c196d46d98",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9ab237530f070dcf825eefc4",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9bfc4d7728b96aa123d19a2a",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9c365344c78bfd095c8ce0ed",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9de90beeb4689a9952243b87",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9ea04f58e0bea2e5a34328c6",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9f2ecc6f8f8fddebaee897a2",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9f3b5f2ebcc0eb5da3deab9c",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_9f3ff052aa078dbc496b091c",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a08d90433be039fabfce76d9",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a2004caee9daa7e5cfde8708",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a36ac7ba1f5e3ba7341c659f",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a388fc6ee27876ca116fdf26",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a40fd887f0273b7b8f06f9dc",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a4a52f41cf6c5a6cfb9f3b28",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a655ebb540fcce5f6270f13d",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a6765e83f8f96d1914aaafef",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a6976cb69905ba7b461a5733",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a6d6fc6156ee1b6443f10229",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a7a1621d1170e1cca2a62b4d",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a7ac717486165e9d4d79a9fd",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a7e72c169588b0cfb0aa311c",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a8087e119f2bfe56763d6fbf",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_a849d661a10a350335573fbe",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_aa2c9e84421d01485e6699ef",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_aa7ebf4e233c083ee2367d58",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_aabe68819dec2836cd8eb934",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_ab04cc547fb56aec13bff360",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_ac8ff07057517fd9eecf64b1",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_aca4878ec60f45706ee69ee8",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_adaad5c6a15744665b92628f",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b03df66a53fc35e59771143c",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b118c53c0195a8502f1b9e51",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b1e58247912fdfd11717101b",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b206987b9a0158a62d681003",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b25a2c8a9a393e599b903dde",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b3a2c91e417d0f2d48d997b7",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b515ac75b6f220375446f8a2",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b641b0aad6a070c3525e627a",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b6422903dd21e9bea5dd8e09",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b73ad72ea7912f87852b904f",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b816d3d4c825d834b8d397e4",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b91eb9cac792c46271be8376",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b940ed57bbdc113e6853db3d",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_b9785e34a05ccd46f4998ed8",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_bb1aeaba79608acc75c5e2d8",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_bbe9390ca26b32ea34f1c9ed",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_bc579d1bf403b2267e9f64d2",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_bd77f447341eda9da856e9ea",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_be3ce2d3469670121dd0e923",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_bf099ec7577d8148baeddc05",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_bfa89449e2378b788866d565",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_bfbfb2fe8d2ec9d6d97d1b90",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_bfc3e43eed31651a6b5846f8",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c06dd6ba4f4268306c7414b6",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c1a5c8788754f64aac78c632",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c1d5c024a00a7942dea81c3e",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c1f89f7d1355692fb3e7b318",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c255e99b38b8f0d95a78af65",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c3474f669d6718c6f46745f3",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c3b567cee1e61f926ebc39fb",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c4c4109abf00ffdd77f475a6",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c6608d07ded08c682b0c8a6d",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c9738a9ba3b62b0febdda19b",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_c9830397b1312f9ec22d9b56",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_ca3c275fd053c35f40ead99b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_cd215b3dc80a4946033f42f8",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_cfcfb934c43e9055559442a4",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d14970be64faccadd5e9da09",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d208a98174b587b3e6b1ff8b",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d25d096db2ba8925e40da109",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d2f6b31d8d4e4d14fa70fca8",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d326530088d6665f4f234901",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d4e13b9e7a358360d16cc34d",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d7ad55177ce9db87fd658ce5",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d925a8e9e4ad68ae7fb56cd9",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_d9ab288572b73c4a47407ac8",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_da04c4dcf0e7fffa3d413021",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_dab5af1ca79c6a7131a60f49",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_dcde0e969e7ac4add22c59da",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_de38675b343a0246f0504c56",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e2092078176d59363dbf4a06",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e2fd89fa99d0a26976120234",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e3ed62197600d5d467741ce3",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e41613bc802c00500611074c",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e4b33a74d4114b433b68ea44",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e5239670a81e58871cd50cf2",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e5e5d192df7c71a7f0276c02",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e705b26fe91321964f450698",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_e83d3a7fd373bf6fce3e9884",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_ea9cd1076d617a153b8dc526",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_edd2ba53efdd3275aa41007d",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_ee4c0c45dc058cf72d7a0550",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_ee5052c0ae968dd9d4b6c1ab",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_eeb38a13e7667032888bcc1b",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f035a2f24c45baefc4d6e805",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f1344697e77f1085e266de0e",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f18fddcafb5771c82b1db2a9",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f21c925b8c9bc9ac3e5b6aed",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f26ffbeb2e08fc63810501fb",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f2db38d6280f8d69ffa13c04",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f4dc905bfa6dc11dfed2e66f",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f54c1a0123af479492b0fa64",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f5e592b27958c7d349ef6829",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f5f8a9b40f4595aff02fe8cb",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f60ccfce0c005ee35aa24fc0",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f652b77e90e824256f73e00a",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f6a6e9e05420c716b804ec49",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f71865e3d23c312709c670c6",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f7683069c2ed2f0888205779",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f782f680345940761dcfa44e",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f84414762b2f96ed8fbe27b5",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f91315847afeb85af8d4a6e2",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f91d805f9fc1454d06b0009c",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_f9c803fabc0524699c1ebd38",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_fae17312cd0c4d9ac6c84998",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "malicious",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_fc27ab799e23f8258e5406ab",
+      "labels": [
+        "malicious_code"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_fc55a089bcf78b3cd812f4cc",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_fcfb8d666fa8659b8371b2b4",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_fd63fc3fa53e83e638a93902",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    },
+    {
+      "decision": "benign",
+      "intent_correct": true,
+      "is_expert_adjudication": false,
+      "item_id": "resp03_ff0cc4dbf41c142436233488",
+      "labels": [
+        "benign"
+      ],
+      "labels_correct": true,
+      "naturalness": 5,
+      "non_operational": true,
+      "rationale_code": "label_confirmed",
+      "reviewer_id": "ai_reviewer_b"
+    }
+  ],
+  "role": "primary",
+  "schema_version": "1.0.0"
+}

@@ -13,64 +13,66 @@
   "epochs": 3,
   "lr": 3e-05,
   "seed": 42,
-  "dataset_sha256": "b4b71f072498f2952b9e9cb866b151975a52e2b2d5ef23dcf6d4a17479e9a181",
+  "dataset_sha256": "52f550ff58e00c27f3bd7045ff96ea8b7aa204d79e03cff89e6472e8d523d0ff",
   "rows": {
-    "train": 25918,
-    "validation": 3272,
-    "test": 3221
+    "train": 28690,
+    "validation": 3491,
+    "test": 3559
   },
-  "best_val_macro_f1": 0.5745,
+  "best_val_macro_f1": 0.688,
   "calibration_temperatures": {
-    "prompt_injection": 0.8,
-    "system_prompt_leakage": 1.55,
-    "malicious_code": 1.0,
-    "toxicity_harm": 1.05,
-    "adversarial_obfuscation": 1.2
+    "prompt_injection": 1.2,
+    "system_prompt_leakage": 0.95,
+    "malicious_code": 1.3,
+    "toxicity_harm": 1.5,
+    "adversarial_obfuscation": 1.1
   },
   "test": {
     "per_category": {
       "prompt_injection": {
-        "support": 280,
-        "precision": 0.8951,
-        "recall": 0.975,
-        "f1": 0.9333,
-        "brier": 0.0096
+        "support": 367,
+        "precision": 0.9395,
+        "recall": 0.9728,
+        "f1": 0.9558,
+        "brier": 0.0078
       },
       "system_prompt_leakage": {
-        "support": 40,
-        "precision": 0.2671,
-        "recall": 0.975,
-        "f1": 0.4194,
-        "brier": 0.0234
+        "support": 161,
+        "precision": 0.9669,
+        "recall": 0.9068,
+        "f1": 0.9359,
+        "brier": 0.0045
       },
       "malicious_code": {
-        "support": 2,
-        "precision": 0.3333,
-        "recall": 1.0,
-        "f1": 0.5,
+        "support": 148,
+        "precision": 0.9866,
+        "recall": 0.9932,
+        "f1": 0.9899,
         "brier": 0.0008
       },
       "toxicity_harm": {
-        "support": 1347,
-        "precision": 0.8485,
-        "recall": 0.8812,
-        "f1": 0.8645,
-        "brier": 0.084
+        "support": 1328,
+        "precision": 0.8373,
+        "recall": 0.8682,
+        "f1": 0.8525,
+        "brier": 0.0784
       },
       "adversarial_obfuscation": {
-        "support": 70,
-        "precision": 0.6216,
-        "recall": 0.9857,
-        "f1": 0.7624,
-        "brier": 0.0108
+        "support": 52,
+        "precision": 0.6364,
+        "recall": 0.9423,
+        "f1": 0.7597,
+        "brier": 0.0089
       }
     },
-    "macro_f1": 0.6959,
-    "benign_rows": 1613,
-    "benign_fpr_at_0.5": 0.1389,
-    "benign_fpr_at_0.9": 0.031,
-    "defensive_cyber_slice_rows": 9,
-    "defensive_cyber_fpr_at_0.5": 0.2222
+    "macro_f1": 0.8988,
+    "benign_rows": 1752,
+    "benign_fpr_at_0.5": 0.1273,
+    "benign_fpr_at_0.9": 0.0223,
+    "defensive_cyber_slice_rows": 50,
+    "defensive_cyber_fpr_at_0.5": 0.0,
+    "malicious_code_matched_control_rows": 43,
+    "malicious_code_matched_control_fpr_at_0.5": 0.0
   },
-  "provenance_note": "labels include AI-assisted provisional adjudication of 152 v0.2 conflicts"
+  "provenance_note": "labels include AI-assisted provisional review: v0.2's 152-conflict expert adjudication, and v0.3's full-coverage AI dual review (scripts/ai_reviewers_v03.py)"
 }

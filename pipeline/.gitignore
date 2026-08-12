@@ -7,6 +7,12 @@ __pycache__/
 /data/normalized_v2/
 /data/review_v2/
 /data/splits_v2/
+/data/splits_v2_v03/
+/data/splits_v2_v03_full/
 /models/research-embeddings/
 /models/layer2-threat-distilbert/best/
+/models/layer2-threat-distilbert/legacy-pre-v03/
+/models/layer2-threat-distilbert/v03-candidate/
+/models/layer2-threat-distilbert/v03-full-candidate/
 /.review-venv/
+/.venv313/

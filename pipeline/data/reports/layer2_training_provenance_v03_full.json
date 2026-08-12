@@ -1,0 +1,33 @@
+{
+  "caveat": "The v0.3 dual review (100% coverage) and the v0.2 152-conflict adjudication are both AI-assisted and provisional; a human expert should confirm or override before production use, per this project's standing human-review-gate rule.",
+  "dataset_sha256": "809a9bfe295e2f99aa2a86555d9d0c7ff7564bf3ec280f71339e678734fe562c",
+  "human_review_complete": {
+    "expert_provenance_v0_2": "AI-assisted (Claude), provisional, human-overridable",
+    "response_v0_3_expert_adjudicated": 0,
+    "response_v0_3_generated": 300,
+    "response_v0_3_primary_agreement": 300,
+    "response_v0_3_reviewer_provenance": "AI-assisted dual review at 100% coverage (scripts/ai_reviewers_response_v03.py), provisional, human-overridable. First response-shaped (assistant-authored, not prompt-shaped) training data this pipeline has ever produced -- see docs/RESPONSE_CURATION_SPEC.md.",
+    "reviewed_response_v0_3": 300,
+    "reviewed_synthetic_v0_2": 598,
+    "reviewed_synthetic_v0_3": 3329,
+    "source_corpus": "governed published datasets (Aegis/neuralchemy/jackhhao/Do-Not-Answer): license/provenance/dedup/quarantine controls; assistant responses excluded",
+    "v0_3_expert_adjudicated": 0,
+    "v0_3_generated": 3400,
+    "v0_3_primary_agreement": 3400,
+    "v0_3_rejected_quality_gate": 71,
+    "v0_3_reviewer_provenance": "AI-assisted dual review at 100% coverage (scripts/ai_reviewers_v03.py), provisional, human-overridable -- NOT native-human independent review. See docs/LAYER2_RETRAIN_PLAN.md and CURRENT_PROGRESS.md's v0.3 entry."
+  },
+  "privacy_review_complete": "prompt-only records; no assistant responses; no PII fields beyond prompt text; raw data git-ignored",
+  "rows": 36040,
+  "semantic_split_verified": "no semantic cluster crosses a split (validate_split_rows)",
+  "splits": {
+    "test": 3570,
+    "train": 28930,
+    "validation": 3540
+  },
+  "validated_split_counts": {
+    "test": 3570,
+    "train": 28930,
+    "validation": 3540
+  }
+}

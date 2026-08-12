@@ -1,0 +1,76 @@
+{
+  "base_model": "distilbert-base-uncased",
+  "categories": [
+    "prompt_injection",
+    "system_prompt_leakage",
+    "malicious_code",
+    "toxicity_harm",
+    "adversarial_obfuscation"
+  ],
+  "device": "mps",
+  "max_length": 256,
+  "batch_size": 16,
+  "epochs": 3,
+  "lr": 3e-05,
+  "seed": 42,
+  "dataset_sha256": "b4b71f072498f2952b9e9cb866b151975a52e2b2d5ef23dcf6d4a17479e9a181",
+  "rows": {
+    "train": 25918,
+    "validation": 3272,
+    "test": 3221
+  },
+  "best_val_macro_f1": 0.5745,
+  "calibration_temperatures": {
+    "prompt_injection": 0.8,
+    "system_prompt_leakage": 1.55,
+    "malicious_code": 1.0,
+    "toxicity_harm": 1.05,
+    "adversarial_obfuscation": 1.2
+  },
+  "test": {
+    "per_category": {
+      "prompt_injection": {
+        "support": 280,
+        "precision": 0.8951,
+        "recall": 0.975,
+        "f1": 0.9333,
+        "brier": 0.0096
+      },
+      "system_prompt_leakage": {
+        "support": 40,
+        "precision": 0.2671,
+        "recall": 0.975,
+        "f1": 0.4194,
+        "brier": 0.0234
+      },
+      "malicious_code": {
+        "support": 2,
+        "precision": 0.3333,
+        "recall": 1.0,
+        "f1": 0.5,
+        "brier": 0.0008
+      },
+      "toxicity_harm": {
+        "support": 1347,
+        "precision": 0.8485,
+        "recall": 0.8812,
+        "f1": 0.8645,
+        "brier": 0.084
+      },
+      "adversarial_obfuscation": {
+        "support": 70,
+        "precision": 0.6216,
+        "recall": 0.9857,
+        "f1": 0.7624,
+        "brier": 0.0108
+      }
+    },
+    "macro_f1": 0.6959,
+    "benign_rows": 1613,
+    "benign_fpr_at_0.5": 0.1389,
+    "benign_fpr_at_0.9": 0.031,
+    "defensive_cyber_slice_rows": 9,
+    "defensive_cyber_fpr_at_0.5": 0.2222
+  },
+  "provenance_note": "labels include AI-assisted provisional adjudication of 152 v0.2 conflicts"
+}

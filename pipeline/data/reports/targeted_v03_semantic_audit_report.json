@@ -1,0 +1,107 @@
+{
+  "admission_gate": {
+    "passed": true,
+    "reasons": []
+  },
+  "candidates": 3400,
+  "cross_label_existing_neighbors_at_threshold": 0,
+  "internal_nearest_similarity": {
+    "max": 1.0,
+    "mean": 0.90979874,
+    "min": 0.73049086
+  },
+  "largest_group": 62,
+  "largest_group_fraction": 0.018235,
+  "lexical_by_family": {
+    "defensive_cyber_benign_v03": {
+      "bigrams": 10862,
+      "distinct_2": 0.113239,
+      "tokens": 11462,
+      "type_token_ratio": 0.0342,
+      "unique_bigrams": 1230,
+      "unique_first_8_token_prefixes": 237,
+      "unique_tokens": 392
+    },
+    "encoded_benign_control_v03": {
+      "bigrams": 6805,
+      "distinct_2": 0.226451,
+      "tokens": 6955,
+      "type_token_ratio": 0.107261,
+      "unique_bigrams": 1541,
+      "unique_first_8_token_prefixes": 40,
+      "unique_tokens": 746
+    },
+    "malicious_code_defensive_control_v03": {
+      "bigrams": 4448,
+      "distinct_2": 0.089029,
+      "tokens": 4748,
+      "type_token_ratio": 0.045493,
+      "unique_bigrams": 396,
+      "unique_first_8_token_prefixes": 20,
+      "unique_tokens": 216
+    },
+    "malicious_code_intent_v03": {
+      "bigrams": 20975,
+      "distinct_2": 0.06975,
+      "tokens": 21875,
+      "type_token_ratio": 0.018057,
+      "unique_bigrams": 1463,
+      "unique_first_8_token_prefixes": 322,
+      "unique_tokens": 395
+    },
+    "obfuscated_attack_v03": {
+      "bigrams": 7375,
+      "distinct_2": 0.244881,
+      "tokens": 7525,
+      "type_token_ratio": 0.113887,
+      "unique_bigrams": 1806,
+      "unique_first_8_token_prefixes": 36,
+      "unique_tokens": 857
+    },
+    "system_prompt_benign_v03": {
+      "bigrams": 3029,
+      "distinct_2": 0.114889,
+      "tokens": 3229,
+      "type_token_ratio": 0.048312,
+      "unique_bigrams": 348,
+      "unique_first_8_token_prefixes": 166,
+      "unique_tokens": 156
+    },
+    "system_prompt_leakage_benign_v03": {
+      "bigrams": 3214,
+      "distinct_2": 0.110765,
+      "tokens": 3414,
+      "type_token_ratio": 0.043937,
+      "unique_bigrams": 356,
+      "unique_first_8_token_prefixes": 200,
+      "unique_tokens": 150
+    },
+    "system_prompt_leakage_v03": {
+      "bigrams": 18963,
+      "distinct_2": 0.080631,
+      "tokens": 19863,
+      "type_token_ratio": 0.020037,
+      "unique_bigrams": 1529,
+      "unique_first_8_token_prefixes": 304,
+      "unique_tokens": 398
+    }
+  },
+  "mixed_safety_groups": 0,
+  "mixed_safety_rows": 0,
+  "model": "BAAI/bge-small-en-v1.5",
+  "model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "multi_record_groups": 258,
+  "nearest_existing_overlap_buckets": {
+    "boundary_0.90_0.94": 1,
+    "novel_below_0.90": 3399
+  },
+  "nearest_existing_similarity": {
+    "max": 0.90446109,
+    "mean": 0.72964895,
+    "min": 0.54269809
+  },
+  "report_version": "0.3.0",
+  "semantic_parent_groups": 2566,
+  "status": "pending_review",
+  "threshold": 0.94
+}

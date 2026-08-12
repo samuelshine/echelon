@@ -1,0 +1,35 @@
+{
+  "by_family": {
+    "defensive_cyber_benign_v03": 600,
+    "encoded_benign_control_v03": 150,
+    "malicious_code_defensive_control_v03": 300,
+    "malicious_code_intent_v03": 900,
+    "obfuscated_attack_v03": 150,
+    "system_prompt_benign_v03": 200,
+    "system_prompt_leakage_benign_v03": 200,
+    "system_prompt_leakage_v03": 900
+  },
+  "by_overlap_bucket": {
+    "boundary_0.90_0.94": 1,
+    "novel_below_0.90": 3399
+  },
+  "by_transformation": {
+    "base64": 60,
+    "hex": 60,
+    "none": 3100,
+    "reverse": 60,
+    "unicode_escape": 60,
+    "url": 60
+  },
+  "coverage": "full (100%)",
+  "queue_rows": 3400,
+  "report_version": "0.3.0",
+  "required_review_fields": [
+    "naturalness",
+    "intent_correct",
+    "labels_correct",
+    "non_operational",
+    "accept"
+  ],
+  "training_eligible": false
+}

@@ -1,0 +1,85 @@
+{
+  "base_model": "distilbert-base-uncased",
+  "categories": [
+    "prompt_injection",
+    "system_prompt_leakage",
+    "malicious_code",
+    "toxicity_harm",
+    "adversarial_obfuscation"
+  ],
+  "device": "mps",
+  "max_length": 256,
+  "batch_size": 16,
+  "epochs": 3,
+  "lr": 3e-05,
+  "seed": 42,
+  "dataset_sha256": "809a9bfe295e2f99aa2a86555d9d0c7ff7564bf3ec280f71339e678734fe562c",
+  "rows": {
+    "train": 28930,
+    "validation": 3540,
+    "test": 3570
+  },
+  "best_val_macro_f1": 0.8025,
+  "calibration_temperatures": {
+    "prompt_injection": 1.2,
+    "system_prompt_leakage": 0.65,
+    "malicious_code": 0.85,
+    "toxicity_harm": 1.2,
+    "adversarial_obfuscation": 0.85
+  },
+  "test": {
+    "per_category": {
+      "prompt_injection": {
+        "support": 316,
+        "precision": 0.8089,
+        "recall": 0.9778,
+        "f1": 0.8854,
+        "brier": 0.0168
+      },
+      "system_prompt_leakage": {
+        "support": 102,
+        "precision": 0.8522,
+        "recall": 0.9608,
+        "f1": 0.9032,
+        "brier": 0.0042
+      },
+      "malicious_code": {
+        "support": 164,
+        "precision": 0.9704,
+        "recall": 1.0,
+        "f1": 0.985,
+        "brier": 0.0012
+      },
+      "toxicity_harm": {
+        "support": 1346,
+        "precision": 0.858,
+        "recall": 0.8217,
+        "f1": 0.8395,
+        "brier": 0.0819
+      },
+      "adversarial_obfuscation": {
+        "support": 37,
+        "precision": 0.5,
+        "recall": 0.9459,
+        "f1": 0.6542,
+        "brier": 0.0083
+      }
+    },
+    "macro_f1": 0.8535,
+    "benign_rows": 1776,
+    "benign_fpr_at_0.5": 0.1346,
+    "benign_fpr_at_0.9": 0.0242,
+    "defensive_cyber_slice_rows": 80,
+    "defensive_cyber_fpr_at_0.5": 0.0,
+    "malicious_code_matched_control_rows": 15,
+    "malicious_code_matched_control_fpr_at_0.5": 0.0,
+    "response_shaped_malicious_code": {
+      "rows": 31,
+      "support": 20,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "provenance_note": "labels include AI-assisted provisional review: v0.2's 152-conflict expert adjudication, v0.3 Track A's full-coverage AI dual review (scripts/ai_reviewers_v03.py), and v0.3 Track B's response-shaped AI dual review (scripts/ai_reviewers_response_v03.py) -- see docs/RESPONSE_CURATION_SPEC.md"
+}

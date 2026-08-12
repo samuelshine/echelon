@@ -1,0 +1,13 @@
+{
+  "benign": 150,
+  "candidates": 300,
+  "family_counts": {
+    "response_defensive_control_v03": 150,
+    "response_malicious_code_v03": 150
+  },
+  "malicious": 150,
+  "pending_review": 300,
+  "report_version": "0.3.0",
+  "scale_note": "Track B pilot round -- see docs/RESPONSE_CURATION_SPEC.md resolved decision #3",
+  "training_eligible": false
+}

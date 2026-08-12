@@ -1,0 +1,13 @@
+{
+  "conflicts": 0,
+  "errors": [],
+  "expert_complete": false,
+  "items": 300,
+  "primary_reviewers": 2,
+  "queue_sha256": "1ebd87fb241e828d44e872862cb1e6e55ee79a4c9540fb7896f24609073553f1",
+  "status": {
+    "accepted_by_agreement": 300
+  },
+  "training_eligible_items": 300,
+  "valid": true
+}

@@ -33,10 +33,24 @@ CATEGORIES = [
     "toxicity_harm", "adversarial_obfuscation",
 ]
 CAT_INDEX = {c: i for i, c in enumerate(CATEGORIES)}
-MANIFEST = PROJECT_ROOT / "data" / "manifests" / "layer2_training_manifest_v03.json"
-SPLIT_ROOT = PROJECT_ROOT / "data" / "splits_v2_v03"
-OUTPUT_DIR = PROJECT_ROOT / "models" / "layer2-threat-distilbert" / "v03-candidate"
-METRICS_PATH = PROJECT_ROOT / "models" / "layer2-threat-distilbert" / "metrics_v03.json"
+
+
+def _path_env(name: str, default: Path) -> Path:
+    """Env override for a path constant; defaults reproduce the promoted run exactly.
+
+    Relative overrides resolve against PROJECT_ROOT, not the caller's cwd.
+    """
+    override = os.environ.get(name)
+    if not override:
+        return default
+    path = Path(override)
+    return path if path.is_absolute() else (PROJECT_ROOT / path)
+
+
+MANIFEST = _path_env("MANIFEST", PROJECT_ROOT / "data" / "manifests" / "layer2_training_manifest_v03.json")
+SPLIT_ROOT = _path_env("SPLIT_ROOT", PROJECT_ROOT / "data" / "splits_v2_v03")
+OUTPUT_DIR = _path_env("OUTPUT_DIR", PROJECT_ROOT / "models" / "layer2-threat-distilbert" / "v03-candidate")
+METRICS_PATH = _path_env("METRICS_PATH", PROJECT_ROOT / "models" / "layer2-threat-distilbert" / "metrics_v03.json")
 BASE_MODEL = "distilbert-base-uncased"
 MAX_LEN = 256
 BATCH = 16

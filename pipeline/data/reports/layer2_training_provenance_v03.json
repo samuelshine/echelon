@@ -14,7 +14,16 @@
   },
   "privacy_review_complete": "prompt-only records; no assistant responses; no PII fields beyond prompt text; raw data git-ignored",
   "rows": 35740,
+  "rows_by_source": {
+    "aegis_safety_2": 24767,
+    "do_not_answer": 936,
+    "echelon_targeted_v0_2": 598,
+    "echelon_targeted_v0_3": 3329,
+    "jackhhao_jailbreak_classification": 638,
+    "neuralchemy_prompt_injection": 5472
+  },
   "semantic_split_verified": "no semantic cluster crosses a split (validate_split_rows)",
+  "sources_without_documented_review": {},
   "splits": {
     "test": 3559,
     "train": 28690,

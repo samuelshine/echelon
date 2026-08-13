@@ -1,0 +1,48 @@
+{
+  "addition_rows_merged": 3599,
+  "addition_rows_offered": 3733,
+  "addition_rows_skipped": {
+    "duplicate_normalized_text": 134
+  },
+  "additions": "data/normalized_v2/wildguard_sources_clean.jsonl",
+  "base": "data/normalized_v2/eligible_reviewed_v07_stage1.jsonl",
+  "base_rows": 38113,
+  "holdout_scan": {
+    "contaminated_rows_excluded": 0,
+    "contamination_reasons": {},
+    "report": "data/reports/wildguard_vs_holdout_scan.json"
+  },
+  "label_occurrences_by_source_kind": {
+    "real": {
+      "adversarial_obfuscation": 432,
+      "benign": 19182,
+      "malicious_code": 686,
+      "prompt_injection": 2866,
+      "system_prompt_leakage": 213,
+      "toxicity_harm": 15520
+    },
+    "synthetic": {
+      "adversarial_obfuscation": 221,
+      "benign": 1714,
+      "malicious_code": 1000,
+      "prompt_injection": 1221,
+      "system_prompt_leakage": 1100
+    }
+  },
+  "output": "data/normalized_v2/eligible_reviewed_v07.jsonl",
+  "output_rows": 41712,
+  "output_sha256": "ae05398eef89c70a5a9d8f6fccfb8b64ebd69af8cd8c421a305dd485bf28752a",
+  "report_version": "0.1.0",
+  "rows_by_source": {
+    "aegis_safety_2": 25415,
+    "catqa_english": 542,
+    "do_not_answer": 937,
+    "echelon_targeted_v0_2": 598,
+    "echelon_targeted_v0_3": 3329,
+    "jackhhao_jailbreak_classification": 638,
+    "jailbreakv_redteam_2k": 1179,
+    "neuralchemy_prompt_injection": 5475,
+    "wildguardmix": 3599
+  },
+  "status": "merged_pending_split"
+}

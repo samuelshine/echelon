@@ -12,6 +12,7 @@ __pycache__/
 /data/splits_v2_v04/
 /data/splits_v2_v05/
 /data/splits_v2_v06/
+/data/splits_v2_v07/
 /data/holdout_v1/
 /models/research-embeddings/
 /models/layer2-threat-distilbert/best/
@@ -22,6 +23,7 @@ __pycache__/
 /models/layer2-threat-distilbert/v04-candidate/
 /models/layer2-threat-distilbert/v05-candidate/
 /models/layer2-threat-distilbert/v06-candidate/
+/models/layer2-threat-distilbert/v07-candidate/
 /.review-venv/
 /.venv313/
 /data/splits_response_v1/

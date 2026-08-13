@@ -1,0 +1,28 @@
+{
+  "clean_label_occurrences": {
+    "benign": 3200,
+    "malicious_code": 533
+  },
+  "clean_rows": 3733,
+  "clean_rows_by_source": {
+    "wildguardmix": 3733
+  },
+  "contaminated_label_occurrences": {},
+  "contaminated_rows": 0,
+  "contamination_reasons": {},
+  "corpus": "data/holdout_v1/holdout_eval_clean.jsonl",
+  "corpus_rows": 2063,
+  "cosine_threshold": 0.94,
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "holdout": "data/normalized_v2/wildguard_sources.jsonl",
+  "holdout_rows": 3733,
+  "report_version": "0.1.0",
+  "similarity_percentiles": {
+    "100": 0.9065,
+    "50": 0.6939,
+    "90": 0.7918,
+    "99": 0.8558
+  },
+  "status": "scanned"
+}

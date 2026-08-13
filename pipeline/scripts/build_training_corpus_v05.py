@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Merge contamination-scanned real-source rows into the v0.3 training corpus.
+"""Merge contamination-scanned real-source rows into an existing training corpus.
 
-Produces the v0.5 corpus: v0.3's 36,392 reviewed rows plus the real-source
-malicious-code and harmful-request rows from `normalize_real_code_sources.py`,
-after those have been scanned against the frozen holdout.
+First used to build v0.5 (v0.3's 36,392 reviewed rows plus the real-source rows
+from `normalize_real_code_sources.py`); the base, additions, and scan report are
+all arguments, so later rounds chain onto the previous corpus rather than
+forking a new script each time.
 
 Refuses to run on unscanned input. The scan is not advisory here: the publisher
 provenance filter in the registry removed the 67 rows RedTeam_2K itself

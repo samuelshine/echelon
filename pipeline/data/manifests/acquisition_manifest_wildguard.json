@@ -1,0 +1,28 @@
+{
+  "acquired_at": "2026-08-13T04:45:35.281260+00:00",
+  "manifest_version": "0.1.0",
+  "registry_version": "0.3.0",
+  "sources": [
+    {
+      "artifacts": [
+        {
+          "bytes": 53744450,
+          "path": "train/wildguard_train.parquet",
+          "sha256": "02ecea8a724a9146a1e473a95a7cdf262adfe9c7d5408953ca86d2fcfbdc8953"
+        },
+        {
+          "bytes": 2258878,
+          "path": "test/wildguard_test.parquet",
+          "sha256": "6ccc2909c1ae6d41424fac69f1fc32535b1de39cb8f80407d81e8bc64a0bebca"
+        }
+      ],
+      "gated": true,
+      "host": "huggingface",
+      "id": "wildguardmix",
+      "license_spdx": "ODC-By-1.0",
+      "repo_id": "allenai/wildguardmix",
+      "revision": "d29c47f41c8b51348b5c8e8c81c039b3132b66d1",
+      "role": "train_candidate"
+    }
+  ]
+}

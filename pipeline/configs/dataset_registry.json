@@ -81,23 +81,23 @@
       "role": "train_candidate",
       "threat_coverage": ["prompt_injection", "system_prompt_leakage"],
       "languages": ["en"],
-      "revision": null,
+      "revision": "4de2b2fe01ba0cb6fbf7cbb9f1a3fabaf8157372",
       "license_spdx": null,
-      "review_state": "pending",
+      "review_state": "rejected",
       "holdout": false,
-      "notes": "Human adversarial game data; group by challenge and defense template."
+      "notes": "Rejected 2026-08-13: no license is declared anywhere. The Hugging Face mirror (qxcv/tensor-trust) carries no `license:` field, and the upstream GitHub repo (HumanCompatibleAI/tensor-trust-data) has no LICENSE/COPYING file and no license statement in its README. Same condition that rejected LLM-LAT/harmful-dataset and drove the earlier 5,312-row unverified-upstream-license quarantine. The data itself would be an excellent system_prompt_leakage source -- real human adversarial extraction attempts -- so this is worth revisiting if the authors publish terms."
     },
     {
       "id": "hackaprompt",
-      "uri": "web://paper.hackaprompt.com",
+      "uri": "hf://datasets/hackaprompt/hackaprompt-dataset",
       "role": "train_candidate",
       "threat_coverage": ["prompt_injection", "system_prompt_leakage", "adversarial_obfuscation"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "25b87fbedfb86840abaf8cd09af7a029208a971a",
+      "license_spdx": "MIT",
+      "review_state": "blocked_gated",
       "holdout": false,
-      "notes": "Human competition data; challenge/template grouping is mandatory."
+      "notes": "Vetted 2026-08-13 and BLOCKED on gating, not on merit: MIT-licensed, real human competition data, and now the only viable source for the system_prompt_leakage gap after tensor_trust was rejected as unlicensed. Repository is gated (`gated: auto`), so acquisition needs a human to accept the publisher's terms and supply HF_TOKEN, then --allow-gated. URI corrected from web://paper.hackaprompt.com to the dataset repository. Challenge/template grouping remains mandatory before splitting -- the competition structure means many submissions share one challenge prompt."
     },
     {
       "id": "wildguardmix",

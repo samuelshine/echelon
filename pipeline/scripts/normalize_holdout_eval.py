@@ -10,11 +10,15 @@ revisions under `role: evaluation_only, holdout: true`.
 
 Two rules make the resulting numbers mean something, and both are load-bearing:
 
-1. **Publisher labels only.** Category assignment comes from a declared field on
-   the source row -- JailbreakBench's `Category`, HarmBench's `SemanticCategory`,
-   CyberSecEval's `mitre_category` and `injection_variant`. Nothing is inferred
-   from prompt text. Deriving labels from the text with our own keyword rules
-   would rebuild exactly the circularity this set exists to break.
+1. **Publisher labels, with exactly one documented exception.** Category
+   assignment comes from a declared field on the source row -- JailbreakBench's
+   `Category`, HarmBench's `SemanticCategory`, CyberSecEval's `mitre_category`
+   and `injection_variant`. Nothing is inferred from the attack text; deriving
+   labels from it with our own keyword rules would rebuild exactly the
+   circularity this set exists to break. The one exception is
+   `system_prompt_leakage` (see below), derived from the publisher's stated
+   success criterion rather than from the attack, carried at reduced
+   annotation_confidence and flagged in every affected row's notes.
 2. **Never eligible for training.** Rows are emitted with `split: private_test`
    and `training_eligible: false`. `build_training_corpus_*` reads
    `data/normalized_v2/eligible_reviewed*.jsonl`; this writes elsewhere.
@@ -35,6 +39,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -81,6 +86,34 @@ HARMBENCH_CATEGORY_LABELS = {
 # definition of the variant*, not by inspection of the prompt text.
 OBFUSCATION_VARIANTS = {"token_smuggling", "payload_splitting", "repeated_token_attack"}
 
+# `system_prompt_leakage` had zero held-out coverage of any kind, which left the
+# served model's only wholly unmeasured head also responsible for a measured
+# false escalation on benign traffic. Both registry sources that would close it
+# properly are unavailable -- Tensor Trust publishes no license anywhere, and
+# HackAPrompt is gated.
+#
+# CyberSecEval does carry leakage attacks, identifiable without reading the
+# attack text: a row's `judge_question` states the success criterion, and where
+# the string it targets appears *verbatim* in that row's own system prompt, the
+# attack is by construction an attempt to extract the system prompt. The match is
+# mechanical and auditable rather than a keyword rule over the prompt.
+#
+# This is still a DERIVED label, weaker evidence than a publisher-declared
+# category, so rows carrying it are marked with reduced annotation_confidence and
+# say so in their notes. It is applied alongside prompt_injection, never instead
+# of it, matching the training corpus where system_prompt_leakage never occurs
+# standalone.
+JUDGE_TARGET = re.compile(r"'([^']{2,60})'")
+LEAKAGE_LABEL_CONFIDENCE = 0.8
+
+
+def leakage_targets(judge_question: str, system_prompt: str) -> list[str]:
+    return [
+        target for target in JUDGE_TARGET.findall(judge_question or "")
+        if target.lower() in (system_prompt or "").lower()
+    ]
+
+
 SEVERITY_BY_LABEL = {
     "malicious_code": "high",
     "prompt_injection": "high",
@@ -103,6 +136,7 @@ def record_id(source_id: str, item_id: str, text: str) -> str:
 def make_record(
     *, source_id: str, revision: str, item_id: str, text: str, labels: list[str],
     license_spdx: str, notes: str, template_family: str | None = None,
+    annotation_confidence: float = 1.0,
 ) -> dict[str, Any]:
     text = text.strip()
     if not text:
@@ -122,7 +156,7 @@ def make_record(
         "language": "en",
         "labels": labels,
         "severity": severity,
-        "annotation_confidence": 1.0,
+        "annotation_confidence": annotation_confidence,
         "template_family": template_family,
         "semantic_cluster_id": None,
         "conversation_id": None,
@@ -223,15 +257,25 @@ def normalize_cyberseceval(root: Path, revision: str, license_spdx: str, dropped
         labels = ["prompt_injection"]
         if row["injection_variant"] in OBFUSCATION_VARIANTS:
             labels.append("adversarial_obfuscation")
+        targets = leakage_targets(row.get("judge_question", ""), row.get("test_case_prompt", ""))
+        confidence = 1.0
+        leakage_note = ""
+        if targets:
+            labels.append("system_prompt_leakage")
+            confidence = LEAKAGE_LABEL_CONFIDENCE
+            leakage_note = (
+                ";system_prompt_leakage=derived"
+                ";derivation=judge_question target appears verbatim in this row's system prompt"
+            )
         yield make_record(
             source_id="cyberseceval_injection", revision=revision,
             item_id=f"injection-{row['prompt_id']}", text=row["user_input"], labels=labels,
-            license_spdx=license_spdx,
+            license_spdx=license_spdx, annotation_confidence=confidence,
             notes=(
                 f"injection_variant={row['injection_variant']};"
                 f"injection_type={row['injection_type']};"
                 f"risk_category={row['risk_category']};"
-                "system_prompt_omitted=true"
+                "system_prompt_omitted=true" + leakage_note
             ),
             template_family=f"cyberseceval_injection_{row['injection_variant']}",
         )

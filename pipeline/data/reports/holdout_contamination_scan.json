@@ -4,6 +4,7 @@
     "benign": 100,
     "malicious_code": 1077,
     "prompt_injection": 251,
+    "system_prompt_leakage": 53,
     "toxicity_harm": 635
   },
   "clean_rows": 2063,

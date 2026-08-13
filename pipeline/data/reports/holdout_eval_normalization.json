@@ -6,6 +6,7 @@
     "benign": 100,
     "malicious_code": 1077,
     "prompt_injection": 251,
+    "system_prompt_leakage": 53,
     "toxicity_harm": 636
   },
   "labelling_policy": "publisher-declared category fields only; no text-derived labels",

@@ -6,7 +6,9 @@ DisallowUnknownFields, so a green test here means the Go gateway will accept the
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 from echelon.contracts import ThreatCategory
 from echelon.layer1 import HeuristicAnalyzer
@@ -202,6 +204,71 @@ class ResponseSecurityApiContractTest(unittest.TestCase):
         api._services = fake_services({"malicious_code": 0.0003})
         body = self.client.post("/classify", json={"text": self.KEYLOGGER_CODE}).get_json()
         self.assertAlmostEqual(body["malicious_probability"], 0.0003, places=5)
+
+
+
+
+class PerCategoryThresholdTests(unittest.TestCase):
+    """The ingress aggregate gains per-category operating points; egress must not."""
+
+    THRESHOLDS = {
+        "malicious_code": {"judge": 0.10, "block": 0.30},
+        "toxicity_harm": {"judge": 0.72, "block": 0.94},
+        "prompt_injection": {"judge": 0.10, "block": 0.75},
+        "adversarial_obfuscation": {"judge": 0.10, "block": 0.30},
+        "system_prompt_leakage": {"judge": 0.10, "block": 0.30},
+    }
+
+    def setUp(self):
+        self._saved = api._THRESHOLDS
+        self.addCleanup(lambda: setattr(api, "_THRESHOLDS", self._saved))
+
+    def scores(self, **overrides):
+        base = dict.fromkeys(
+            ["prompt_injection", "system_prompt_leakage", "malicious_code",
+             "toxicity_harm", "adversarial_obfuscation"], 0.01,
+        )
+        base.update(overrides)
+        return base
+
+    def test_absent_thresholds_preserve_the_plain_max_behaviour(self):
+        api._THRESHOLDS = {}
+        scores = self.scores(malicious_code=0.62)
+        self.assertAlmostEqual(api._aggregate(scores), 0.62, places=4)
+
+    def test_malicious_code_can_block_once_it_has_a_threshold(self):
+        # Previously capped at SPARSE_CAP (0.88), below the gateway's 0.90 block
+        # point, so this head could never hard-block however confident it was.
+        api._THRESHOLDS = self.THRESHOLDS
+        self.assertGreaterEqual(api._aggregate(self.scores(malicious_code=0.62)), api.GATEWAY_BLOCK)
+
+    def test_noisy_toxicity_below_its_judge_point_no_longer_escalates(self):
+        api._THRESHOLDS = self.THRESHOLDS
+        self.assertLess(api._aggregate(self.scores(toxicity_harm=0.60)), api.GATEWAY_JUDGE)
+
+    def test_system_prompt_leakage_keeps_the_escalate_only_band(self):
+        # No held-out coverage for this head, so it must never hard-block.
+        api._THRESHOLDS = self.THRESHOLDS
+        aggregate = api._aggregate(self.scores(system_prompt_leakage=0.99))
+        self.assertGreaterEqual(aggregate, api.GATEWAY_JUDGE)
+        self.assertLess(aggregate, api.GATEWAY_BLOCK)
+
+    def test_egress_aggregate_is_unaffected_by_ingress_thresholds(self):
+        api._THRESHOLDS = self.THRESHOLDS
+        self.assertAlmostEqual(
+            api._aggregate_response(self.scores(malicious_code=0.62)), 0.62, places=4,
+        )
+
+    def test_remap_is_monotonic_and_hits_the_band_edges(self):
+        self.assertAlmostEqual(api._remap(0.10, 0.10, 0.30), api.GATEWAY_JUDGE, places=6)
+        self.assertAlmostEqual(api._remap(0.30, 0.10, 0.30), api.GATEWAY_BLOCK, places=6)
+        self.assertAlmostEqual(api._remap(0.0, 0.10, 0.30), 0.0, places=6)
+        values = [api._remap(s / 100, 0.10, 0.30) for s in range(101)]
+        self.assertEqual(values, sorted(values))
+
+    def test_missing_thresholds_file_yields_plain_max(self):
+        with tempfile.TemporaryDirectory() as directory:
+            self.assertEqual(api._load_thresholds(Path(directory)), {})
 
 
 if __name__ == "__main__":

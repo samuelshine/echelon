@@ -36,8 +36,10 @@ stand-in (MockJudge) fed by real Layer 1 + Layer 2 context; set ECHELON_JUDGE_EN
 from __future__ import annotations
 
 import dataclasses
+import json
 import os
 import re
+import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -80,8 +82,59 @@ def _mitigated_scores(scores):
     return out
 
 
+# Optional per-category operating points (models/.../thresholds.json, written by
+# scripts/derive_serving_thresholds.py). The gateway consumes one scalar and cuts
+# it at 0.55/0.90, so a plain max forces every head to share one operating point
+# and the noisiest head sets the false-positive rate on its own -- measured on the
+# holdout, `toxicity_harm` fires on 53% of benign controls while every other head
+# is at or below 5%. When present, each head is remapped onto the gateway band at
+# its own thresholds. Absent, behaviour is exactly as before.
+GATEWAY_JUDGE = 0.55
+GATEWAY_BLOCK = 0.90
+_THRESHOLDS: dict[str, dict[str, float]] = {}
+
+
+def _load_thresholds(model_dir) -> dict:
+    path = Path(model_dir) / "thresholds.json"
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("thresholds", {}) or {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _remap(score: float, judge: float, block: float) -> float:
+    """Piecewise-linear map of one category score onto the gateway's fixed band."""
+    if score <= 0:
+        return 0.0
+    if score < judge:
+        return GATEWAY_JUDGE * (score / judge) if judge > 0 else 0.0
+    if score < block:
+        return GATEWAY_JUDGE + (GATEWAY_BLOCK - GATEWAY_JUDGE) * (
+            (score - judge) / max(block - judge, 1e-9)
+        )
+    return min(1.0, GATEWAY_BLOCK + (1.0 - GATEWAY_BLOCK) * (
+        (score - block) / max(1.0 - block, 1e-9)
+    ))
+
+
 def _aggregate(scores):
-    return max(_mitigated_scores(scores).values(), default=0.0)
+    """Ingress aggregate. Egress deliberately keeps the older path -- see below."""
+    if not _THRESHOLDS:
+        return max(_mitigated_scores(scores).values(), default=0.0)
+    best = 0.0
+    for category, value in scores.items():
+        # system_prompt_leakage keeps the escalate-only band: unlike malicious_code
+        # it still has zero held-out coverage, so there is no evidence on which to
+        # let it hard-block. malicious_code has earned a real threshold -- 0.957
+        # precision on 1,077 real held-out positives -- and is no longer capped.
+        if category == "system_prompt_leakage" and value >= SPARSE_TRIGGER:
+            best = max(best, min(SPARSE_CAP, max(SPARSE_FLOOR, value)))
+            continue
+        bounds = _THRESHOLDS.get(category)
+        best = max(best, _remap(value, bounds["judge"], bounds["block"]) if bounds else value)
+    return best
 
 
 # Only these two categories are conceptually meaningful on LLM OUTPUT text (see
@@ -167,6 +220,12 @@ app.config["MAX_CONTENT_LENGTH"] = 1_048_576  # 1 MiB request cap
 @lru_cache(maxsize=1)
 def _services():
     model_dir = Path(os.environ.get("ECHELON_MODEL_DIR", str(DEFAULT_MODEL_DIR)))
+    global _THRESHOLDS
+    _THRESHOLDS = _load_thresholds(model_dir)
+    print(
+        f"per-category serving thresholds: {_THRESHOLDS or 'none (plain max aggregate)'}",
+        file=sys.stderr,
+    )
     analyzer = HeuristicAnalyzer()
     classifier = Layer2Classifier(MultiLabelTransformersAdapter(model_dir))
     ollama_model = os.environ.get("ECHELON_OLLAMA_MODEL")

@@ -1,0 +1,57 @@
+{
+  "caveat": "Thresholds are fitted on in-distribution validation data and verified once on the holdout. The holdout was not used to choose them. The benign control slice is 100 rows, so benign false-positive figures carry wide error bars.",
+  "holdout_benign_rows": 100,
+  "holdout_rows": 2063,
+  "holdout_verification": {
+    "per_category_thresholds": {
+      "adversarial_obfuscation_blocked": 0.4643,
+      "adversarial_obfuscation_escalated": 0.75,
+      "benign_fpr_at_block": 0.11,
+      "benign_fpr_at_judge": 0.44,
+      "malicious_code_blocked": 0.7484,
+      "malicious_code_escalated": 0.8487,
+      "prompt_injection_blocked": 0.2669,
+      "prompt_injection_escalated": 0.5976,
+      "toxicity_harm_blocked": 0.5055,
+      "toxicity_harm_escalated": 0.8535
+    },
+    "plain_max_aggregate": {
+      "adversarial_obfuscation_blocked": 0.3929,
+      "adversarial_obfuscation_escalated": 0.6071,
+      "benign_fpr_at_block": 0.16,
+      "benign_fpr_at_judge": 0.58,
+      "malicious_code_blocked": 0.5552,
+      "malicious_code_escalated": 0.7363,
+      "prompt_injection_blocked": 0.2311,
+      "prompt_injection_escalated": 0.4781,
+      "toxicity_harm_blocked": 0.6268,
+      "toxicity_harm_escalated": 0.8945
+    }
+  },
+  "model": "models/layer2-threat-distilbert/v06-candidate",
+  "report_version": "0.1.0",
+  "thresholds": {
+    "adversarial_obfuscation": {
+      "block": 0.3,
+      "judge": 0.1
+    },
+    "malicious_code": {
+      "block": 0.3,
+      "judge": 0.1
+    },
+    "prompt_injection": {
+      "block": 0.7498,
+      "judge": 0.1
+    },
+    "system_prompt_leakage": {
+      "block": 0.3,
+      "judge": 0.1
+    },
+    "toxicity_harm": {
+      "block": 0.9436,
+      "judge": 0.7233
+    }
+  },
+  "validation_benign_rows": 1892,
+  "validation_rows": 3978
+}

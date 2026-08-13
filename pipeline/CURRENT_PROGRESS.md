@@ -1244,3 +1244,92 @@ not another threshold pass.
   mitigated-max path. This is Track B and is the largest remaining piece.
 - **`toxicity_harm` discrimination**, per the curve above — a data or
   architecture problem now, not a threshold one.
+
+## Track B: egress measured for the first time, code-shape floor retired (2026-08-13)
+
+The egress path has existed since 2026-07-25 and had never been measured. It ran
+the prompt-trained model over response text, floored `malicious_code` on
+code-shaped output, and aggregated — every part of it justified by reasoning and
+a handful of hand-checked samples, never by a number.
+
+### Real response data existed all along
+
+WildGuardMix ships human-labelled assistant responses. It was already acquired
+under the gated path; the response columns were simply left unread because the
+standing no-assistant-response rule applies to the *prompt* corpus. Track B is a
+response-side model where response text is the feature by definition, so the
+rule does not apply — a distinction now asserted explicitly in the report
+(`reads_response_columns: true`, `reads_prompt_columns: false`).
+
+- **Held-out**: 1,707 human-annotated rows — 1,424 benign responses, 258
+  `toxicity_harm`, 25 `malicious_code` (15 code-shaped, 10 prose-shaped).
+- **Training-side / fitting**: 37,622 rows — 29,261 benign, 7,915
+  `toxicity_harm`, 446 `malicious_code`.
+
+Against the v0.3 pilot's 300 synthetic rows across 8 archetypes. Thresholds were
+fitted on the training-side set and the holdout used once, to verify.
+
+### The floor's founding premise is dead
+
+`_apply_code_shape_floor` was added 2026-08-01 because the then-current model
+scored real generated code near zero (~0.0003 on a live keylogger sample), so
+operational code never reached the judge on its own. **The v0.6 model scores
+`malicious_code` 0.819 on malicious responses against 0.083 on benign ones** —
+it separates them without help. The prompt-trained model transfers to response
+text, which nobody had checked.
+
+With the model doing the work, the floor only fires where the model already
+scores low, which is now almost exclusively benign code:
+
+| | floor fires | effect |
+|---|---|---|
+| benign code-shaped responses | **0.863** | pass 0.301 → **0.000** |
+| malicious code-shaped responses | 0.133 | already above the trigger |
+
+It had become a near-pure false-positive generator, sending 86% of legitimate
+code-bearing responses to a multi-second judge call while adding almost nothing
+on malicious ones. It is now a no-op whenever egress thresholds are configured,
+and **kept rather than deleted** so a deployment without `thresholds.json`
+retains the old, still-justified behaviour for the older model.
+
+### Verdicts on the held-out responses
+
+| slice | n | today pass/judge/block | per-category pass/judge/block |
+|---|---|---|---|
+| benign responses | 1424 | 0.354 / 0.548 / 0.098 | **0.834 / 0.152 / 0.014** |
+| benign, code-shaped | 153 | **0.000** / 0.915 / 0.085 | 0.784 / 0.209 / 0.006 |
+| `malicious_code` | 25 | 0.000 / 1.000 / **0.000** | 0.120 / 0.480 / **0.400** |
+| — code-shaped | 15 | 0.000 / 1.000 / 0.000 | 0.133 / 0.267 / **0.600** |
+| — prose-shaped | 10 | 0.000 / 1.000 / 0.000 | 0.100 / 0.800 / 0.100 |
+| `toxicity_harm` | 258 | 0.244 / 0.589 / 0.167 | 0.775 / 0.209 / 0.015 |
+
+Benign responses passing cleanly go 0.354 → 0.834 and benign blocks 0.098 →
+0.014. **Malicious code output can hard-block for the first time** (0.400
+overall, 0.600 on code-shaped output) — the sparse cap previously held
+`malicious_code` at 0.88, under the gateway's 0.90, so no response had ever been
+blocked on the model's own evidence.
+
+### The regression, stated plainly
+
+**12% of malicious responses now pass** where today all 25 reach the judge. The
+escalation budget was loosened 0.05 → 0.10 **on the fitting set** to recover
+that from 20% — a policy choice made where thresholds are fitted, not a value
+read off the holdout. It cannot go lower: below ~0.25 the model itself stops
+scoring them. On 25 rows the error bars are wide.
+
+### `toxicity_harm` does not transfer, and today's coverage is noise
+
+Its curve on response text has no usable operating point — 62% benign
+false-positive rate at 0.5, 2.7% recall by 0.95. The apparent collapse in the
+table above is **loss of noise, not loss of detection**: today it escalates
+58.9% of harmful responses and 54.8% of benign ones, a ratio of 1.07, which is
+not discrimination by any definition.
+
+### What remains
+
+A response-aware training round targeting `toxicity_harm` on assistant output,
+with 7,915 real harmful-response rows now available. `malicious_code` does not
+need it — it already transfers. The open decision is blended (risking the
+just-promoted ingress model) versus a separate response model (no ingress risk,
+more serving wiring); unlike the original spec Decision 5, it can now be settled
+by measuring both holdouts instead of by argument.

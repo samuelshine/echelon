@@ -227,3 +227,76 @@ still happen before any larger/production round.
    instruction not to conflate the two tracks, evaluation still reports
    Track A's prompt-shaped and Track B's response-shaped `malicious_code`
    performance as distinct slices, not one merged number.
+
+---
+
+## Superseded by real data (2026-08-13)
+
+The five decisions above were resolved under session time pressure for a
+synthetic-only pilot. Real response-shaped data now exists and overturns two of
+them outright. This section records what actually happened; the decisions above
+are kept for provenance, not as current guidance.
+
+### Decision 2 (sourcing: "synthetic-only for this round") — superseded
+
+WildGuardMix ships human-labelled assistant responses, already acquired under
+the gated path. Track B now has **37,622 training-side** and **1,707
+held-out** real response rows, against the pilot's 300 synthetic ones.
+Labels are publisher-declared (`response_harm_label`, plus prompt subcategory to
+separate `malicious_code` from `toxicity_harm`); the service's own
+`_looks_like_code` heuristic is recorded per row as a *slice*, never as a label.
+
+Reading the response columns does not breach the standing no-assistant-response
+rule. That rule stops response content leaking into **prompt** classification;
+Track B is a response-side model where response text is the feature by
+definition. Prompt columns are correspondingly not read.
+
+### Decision 5 (blended vs separate model) — not yet exercised, and now optional
+
+The pilot blended because it had nothing else. The measurement changes the
+premise: the **prompt-trained v0.6 model already transfers to response text for
+`malicious_code`**, scoring 0.819 on malicious responses against 0.083 on benign
+ones. No response-side training was needed to get that. What a response-aware
+round would actually buy is `toxicity_harm` on response text, which is the head
+that does not transfer (see below).
+
+### What the measurement settled
+
+`_apply_code_shape_floor` is **retired** (no-op whenever egress thresholds are
+configured, retained otherwise). Its founding premise — that the model scores
+real generated code near zero — was true of the 2026-08-01 model and is false of
+v0.6. It had become a near-pure false-positive generator, firing on 86.3% of
+benign code-bearing responses and only 13.3% of malicious ones.
+
+Egress gained per-category operating points fitted on the training-side
+responses and verified once on the holdout:
+
+| slice | n | today | per-category |
+|---|---|---|---|
+| benign responses pass | 1424 | 0.354 | **0.834** |
+| benign responses blocked | 1424 | 0.098 | **0.014** |
+| benign code-shaped pass | 153 | **0.000** | 0.784 |
+| `malicious_code` blocked | 25 | **0.000** | 0.400 |
+| `malicious_code` code-shaped blocked | 15 | 0.000 | **0.600** |
+
+Malicious code output can be blocked on the model's own evidence for the first
+time; the sparse cap previously held it at 0.88, under the gateway's 0.90.
+
+### The one genuine regression, and the one head still broken
+
+- **12% of malicious responses now pass** where today all 25 reach the judge.
+  The escalation budget was already loosened (0.05 → 0.10 on the fitting set) to
+  recover this from 20%; it cannot go lower, because below ~0.25 the model
+  itself no longer scores them.
+- **`toxicity_harm` does not transfer to response text.** Its curve has no
+  usable operating point: 62% benign false-positive rate at 0.5, and 2.7% recall
+  by 0.95. Today's apparent egress coverage is noise, not detection — it
+  escalates 58.9% of harmful responses and 54.8% of benign ones, a ratio of 1.07.
+
+**That is the remaining Track B work**, and it is now a well-posed one: a
+response-aware training round targeting `toxicity_harm` on assistant output,
+with 7,915 real harmful-response rows available for it. Whether that round is
+blended (risking the just-promoted ingress model) or trained as a separate
+response model (no ingress risk, more serving wiring) is the open decision — and
+unlike the original Decision 5, it can now be settled with measurements on both
+holdouts rather than by argument.

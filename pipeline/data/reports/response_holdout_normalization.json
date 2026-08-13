@@ -1,0 +1,29 @@
+{
+  "counters": {
+    "benign:code_shaped=False": 1271,
+    "benign:code_shaped=True": 153,
+    "malicious_code:code_shaped=False": 10,
+    "malicious_code:code_shaped=True": 15,
+    "skipped_duplicate_response": 1,
+    "skipped_missing_response_or_label": 16,
+    "skipped_oversized": 1,
+    "toxicity_harm:code_shaped=False": 184,
+    "toxicity_harm:code_shaped=True": 74
+  },
+  "label_occurrences": {
+    "benign": 1424,
+    "malicious_code": 25,
+    "toxicity_harm": 258
+  },
+  "labelling_policy": "publisher response_harm_label plus prompt subcategory; code-shape recorded as a slice, never as a label",
+  "output": "data/holdout_v1/response_holdout.jsonl",
+  "reads_prompt_columns": false,
+  "reads_response_columns": true,
+  "report_version": "0.1.0",
+  "role": "holdout",
+  "rows": 1707,
+  "source": "wildguardmix",
+  "source_split": "test",
+  "status": "normalized_pending_contamination_scan",
+  "training_eligible": false
+}

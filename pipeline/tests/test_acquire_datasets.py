@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.acquire_datasets import AcquisitionError, approved_sources, auth_headers, download_atomic, parse_hf_dataset_uri, resolve_url, verify_manifest
+from scripts.acquire_datasets import AcquisitionError, approved_sources, auth_headers, download_atomic, license_matches, parse_hf_dataset_uri, resolve_url, verify_manifest
 
 
 class AcquireDatasetsTests(unittest.TestCase):
@@ -81,6 +81,16 @@ class GatedSourceTests(unittest.TestCase):
     def test_named_gated_source_is_selectable_with_the_flag(self):
         selected = approved_sources(self.REGISTRY, {"gated_example"}, allow_gated=True)
         self.assertEqual([item["id"] for item in selected], ["gated_example"])
+
+    def test_hf_license_tags_map_onto_spdx_identifiers(self):
+        # HF's card vocabulary is not SPDX; odc-by is the same license as ODC-By-1.0.
+        self.assertTrue(license_matches("odc-by", "ODC-By-1.0"))
+        self.assertTrue(license_matches("mit", "MIT"))
+        self.assertTrue(license_matches("apache-2.0", "Apache-2.0"))
+
+    def test_genuinely_different_licenses_still_conflict(self):
+        self.assertFalse(license_matches("cc-by-nc-4.0", "CC-BY-4.0"))
+        self.assertFalse(license_matches("odc-by", "MIT"))
 
     def test_auth_header_present_only_when_a_token_is_exported(self):
         with patch.dict(os.environ, {}, clear=True):

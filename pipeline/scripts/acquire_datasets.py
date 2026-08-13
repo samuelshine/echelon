@@ -79,6 +79,22 @@ def resolve_github_url(repo_id: str, revision: str, artifact: str) -> str:
     return f"https://raw.githubusercontent.com/{quoted_repo}/{revision}/{quote_path(artifact)}"
 
 
+# Hugging Face card `license:` values come from HF's own controlled vocabulary,
+# not from the SPDX list, and the two mostly coincide only by luck of casing
+# ("mit"/"MIT", "apache-2.0"/"Apache-2.0"). Where they genuinely differ, the
+# mapping is spelled out here rather than by relaxing the equality check --
+# a loose comparison would stop catching the kind of license conflict that got
+# deepset_prompt_injections rejected.
+HF_LICENSE_ALIASES = {
+    "odc-by": "odc-by-1.0",
+}
+
+
+def license_matches(api_license: str, registry_spdx: str) -> bool:
+    api = api_license.casefold()
+    return HF_LICENSE_ALIASES.get(api, api) == registry_spdx.casefold()
+
+
 def auth_headers() -> dict[str, str]:
     """Bearer header from HF_TOKEN, if the environment supplies one.
 
@@ -213,7 +229,7 @@ def acquire_github_source(source: dict[str, Any], output_root: Path, force: bool
     api_license = (metadata.get("license") or {}).get("spdx_id")
     license_path = source.get("license_path")
     if not license_path:
-        if api_license and api_license.casefold() != source["license_spdx"].casefold():
+        if api_license and not license_matches(api_license, source["license_spdx"]):
             raise AcquisitionError(
                 f"{source['id']}: registry license {source['license_spdx']} disagrees with API license {api_license}"
             )
@@ -272,7 +288,7 @@ def acquire_source(
             )
         print(f"{source['id']}: acquiring gated source with supplied token", file=sys.stderr)
     api_license = (metadata.get("cardData") or {}).get("license")
-    if api_license and api_license.casefold() != source["license_spdx"].casefold():
+    if api_license and not license_matches(api_license, source["license_spdx"]):
         raise AcquisitionError(
             f"{source['id']}: registry license {source['license_spdx']} disagrees with API license {api_license}"
         )

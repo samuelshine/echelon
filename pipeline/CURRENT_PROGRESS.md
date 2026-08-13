@@ -1333,3 +1333,63 @@ need it — it already transfers. The open decision is blended (risking the
 just-promoted ingress model) versus a separate response model (no ingress risk,
 more serving wiring); unlike the original spec Decision 5, it can now be settled
 by measuring both holdouts instead of by argument.
+
+## Track B complete: dedicated response model trained and promoted (2026-08-13)
+
+The egress measurement showed `malicious_code` transfers from prompts to
+responses but `toxicity_harm` does not. A separate response-side model was
+trained to fix that head without putting the just-promoted v0.6 ingress model at
+risk. Promoted to `models/layer2-response-distilbert/best/`.
+
+**Two heads only** — `toxicity_harm` and `malicious_code`. Training the full five
+on response data would have recreated the exact zero-support defect that made
+`malicious_code`'s temperature meaningless in v0.3. 30,041 training rows on
+leakage-safe splits (35,427 groups, largest 187) after the `template_family` fix.
+
+### Three-way comparison, 1,707 human-labelled held-out responses
+
+| slice | config | pass | judge | BLOCK |
+|---|---|---|---|---|
+| benign (n=1424) | A today | 0.354 | 0.548 | 0.098 |
+| | B ingress + egress thresholds | 0.834 | 0.152 | 0.014 |
+| | **C response model** | **0.896** | **0.091** | **0.013** |
+| `malicious_code` (n=25) | A today | 0.000 | 1.000 | 0.000 |
+| | B ingress + egress thresholds | 0.120 | 0.480 | 0.400 |
+| | **C response model** | 0.120 | 0.120 | **0.760** |
+| `toxicity_harm` (n=258) | A today | 0.244 | 0.589 | 0.167 |
+| | B ingress + egress thresholds | 0.775 | 0.209 | 0.016 |
+| | **C response model** | 0.326 | 0.415 | **0.260** |
+
+C wins on every axis. It nearly doubles malicious-code blocking over B and
+recovers the `toxicity_harm` coverage that thresholds alone gave up — 67.4%
+handled against today's 75.6% and B's 22.5% — while holding the best benign pass
+rate. On held-out benign code the response model scores `toxicity_harm` **0.113**
+where the ingress model scored 0.599.
+
+Benign code-bearing responses, the slice the retired code-shape floor punished
+hardest: **0.000 pass today → 0.876** under the response model.
+
+### Limits, stated plainly
+
+- **12% of malicious responses still pass**, unchanged from configuration B. The
+  model simply does not score them; no threshold recovers it.
+- **Short bare code snippets are out of distribution.** Hand-probing a
+  three-line `def add(a, b)` scores `toxicity_harm` 0.753 and escalates, because
+  every training response is a full assistant message with prose around the code.
+  The 153-row held-out benign-code slice says this is an edge case (mean 0.113,
+  87.6% pass), not systemic — but a bare-snippet response would be treated
+  poorly.
+- The `malicious_code` head has only 354 training and 25 held-out positives.
+  Every figure in its column carries wide error bars.
+- Neither the response corpus nor its labels have had human review; the
+  manifest's drift check names `wildguardmix_response` explicitly rather than
+  letting it inherit `human_review_complete`.
+
+### Serving
+
+`/classify_response` and `/judge_response` score through the response model when
+it exists, falling back to the ingress model unchanged when it does not (two
+tests cover the fallback). Loading it swaps in its own egress thresholds, since
+an operating point only means something paired with the model it was fitted for.
+`judge_response` keeps its shape from the ingress classifier but replaces the
+scores, so the LLM judge sees egress evidence. Takes effect on the next restart.

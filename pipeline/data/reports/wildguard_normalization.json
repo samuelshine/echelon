@@ -39,7 +39,10 @@
   "labelling_policy": "publisher-declared subcategory and prompt_harm_label only; no text-derived labels",
   "output": "data/normalized_v2/wildguard_sources.jsonl",
   "report_version": "0.1.0",
+  "role": "training",
   "rows": 3733,
   "source_rows_available": 86759,
-  "status": "normalized_pending_contamination_scan"
+  "source_split": "train",
+  "status": "normalized_pending_contamination_scan",
+  "training_eligible": true
 }

@@ -87,11 +87,22 @@ class ResponseSecurityApiContractTest(unittest.TestCase):
     def setUp(self):
         self._orig_services = api._services
         self._orig_response_judge = api._response_judge
+        self._orig_egress = api._EGRESS_THRESHOLDS
+        # These assert the wire contract against a stubbed ingress classifier, so
+        # they must exercise the no-response-model fallback. A real response model
+        # on disk would otherwise score the text itself and ignore the stub.
+        api._response_classifier.cache_clear()
+        self._patch = patch.object(api, "_response_classifier", return_value=None)
+        self._patch.start()
+        api._EGRESS_THRESHOLDS = {}
         self.client = api.app.test_client()
 
     def tearDown(self):
+        self._patch.stop()
+        api._response_classifier.cache_clear()
         api._services = self._orig_services
         api._response_judge = self._orig_response_judge
+        api._EGRESS_THRESHOLDS = self._orig_egress
 
     def test_classify_response_returns_exact_classification_contract(self):
         api._services = fake_services({"toxicity_harm": 0.62})

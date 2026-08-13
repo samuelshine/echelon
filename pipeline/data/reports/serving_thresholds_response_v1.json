@@ -1,0 +1,37 @@
+{
+  "caveat": "Thresholds are fitted on in-distribution validation data and verified once on the holdout. The holdout was not used to choose them. The benign control slice is 100 rows, so benign false-positive figures carry wide error bars.",
+  "holdout_benign_rows": 1424,
+  "holdout_rows": 1707,
+  "holdout_verification": {
+    "per_category_thresholds": {
+      "benign_fpr_at_block": 0.0133,
+      "benign_fpr_at_judge": 0.1039,
+      "malicious_code_blocked": 0.76,
+      "malicious_code_escalated": 0.88,
+      "toxicity_harm_blocked": 0.2597,
+      "toxicity_harm_escalated": 0.6744
+    },
+    "plain_max_aggregate": {
+      "benign_fpr_at_block": 0.0084,
+      "benign_fpr_at_judge": 0.0611,
+      "malicious_code_blocked": 0.64,
+      "malicious_code_escalated": 0.76,
+      "toxicity_harm_blocked": 0.2171,
+      "toxicity_harm_escalated": 0.5543
+    }
+  },
+  "model": "models/layer2-response-distilbert/v1-candidate",
+  "report_version": "0.1.0",
+  "thresholds": {
+    "malicious_code": {
+      "block": 0.3,
+      "judge": 0.25
+    },
+    "toxicity_harm": {
+      "block": 0.8896,
+      "judge": 0.3458
+    }
+  },
+  "validation_benign_rows": 2923,
+  "validation_rows": 3757
+}

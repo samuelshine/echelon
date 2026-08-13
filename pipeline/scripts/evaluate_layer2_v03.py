@@ -66,9 +66,14 @@ def calibrated_scores(model_dir: Path, texts: list[str], batch_size: int) -> np.
             scaled = np.clip(logits / temps, -60.0, 60.0)
             out.append(1.0 / (1.0 + np.exp(-scaled)))
     probs = np.concatenate(out)
-    # Reorder columns to CATEGORIES order for downstream indexing.
-    col = {c: order.index(c) for c in CATEGORIES}
-    return np.stack([probs[:, col[c]] for c in CATEGORIES], axis=1)
+    # Reorder columns to CATEGORIES order for downstream indexing. A response-side
+    # model carries only the heads meaningful on assistant output, so categories it
+    # does not have are returned as zeros rather than raising -- callers that care
+    # about a missing head (the egress aggregate) filter to their own category set.
+    zeros = np.zeros(len(probs), dtype=probs.dtype)
+    return np.stack(
+        [probs[:, order.index(c)] if c in order else zeros for c in CATEGORIES], axis=1,
+    )
 
 
 def bm_dict(m) -> dict:

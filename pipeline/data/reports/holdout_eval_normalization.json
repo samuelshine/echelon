@@ -1,0 +1,27 @@
+{
+  "acquisition_manifest": "data/manifests/acquisition_manifest_holdout.json",
+  "exact_duplicate_rows_collapsed": 0,
+  "label_occurrences": {
+    "adversarial_obfuscation": 28,
+    "benign": 100,
+    "malicious_code": 1077,
+    "prompt_injection": 251,
+    "toxicity_harm": 636
+  },
+  "labelling_policy": "publisher-declared category fields only; no text-derived labels",
+  "output": "data/holdout_v1/holdout_eval.jsonl",
+  "report_version": "0.1.0",
+  "rows": 2064,
+  "rows_by_source": {
+    "cyberseceval_injection": 251,
+    "cyberseceval_mitre": 1000,
+    "harmbench": 300,
+    "jailbreakbench": 200,
+    "strongreject": 313
+  },
+  "rows_dropped": {
+    "harmbench:unmapped_category:copyright": 100
+  },
+  "status": "normalized_pending_contamination_scan",
+  "training_eligible": false
+}

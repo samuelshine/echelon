@@ -1,9 +1,12 @@
 {
-  "registry_version": "0.2.0",
+  "registry_version": "0.3.0",
   "policy": {
     "gold_language": "en",
     "allowed_roles": ["train_candidate", "evaluation_only", "benign_control"],
-    "required_review_states": ["pending", "approved", "rejected"],
+    "required_review_states": ["pending", "approved", "rejected", "blocked_gated"],
+    "review_state_meanings": {
+      "blocked_gated": "License and provenance vetted and acceptable, but the source is gated. Acquisition requires a human to accept the publisher's terms and supply a token; never bypass gating."
+    },
     "production_ingestion_requires": [
       "immutable_revision",
       "license_approved",
@@ -102,11 +105,43 @@
       "role": "train_candidate",
       "threat_coverage": ["prompt_injection", "malicious_code", "toxicity_harm"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "d29c47f41c8b51348b5c8e8c81c039b3132b66d1",
+      "license_spdx": "ODC-By-1.0",
+      "review_state": "blocked_gated",
       "holdout": false,
-      "notes": "Map harmful-prompt and jailbreak labels without using response leakage."
+      "notes": "Vetted 2026-08-13 and BLOCKED, not rejected: license (ODC-By-1.0) and provenance are acceptable and this is the largest quality-labelled candidate for the malicious_code gap, but the repository is gated (`gated: auto`). Policy is to never bypass gated terms, and the acquirer refuses gated sources by design. Unblocking requires a human to accept the terms on Hugging Face and supply a token -- that is the sanctioned path, not a workaround. Revision pinned now so acquisition is a one-step operation once terms are accepted.",
+      "artifacts": ["train/wildguard_train.parquet", "test/wildguard_test.parquet"]
+    },
+    {
+      "id": "catqa_english",
+      "uri": "hf://datasets/declare-lab/CategoricalHarmfulQA",
+      "role": "train_candidate",
+      "threat_coverage": ["malicious_code", "toxicity_harm"],
+      "languages": ["en"],
+      "revision": "321e068b391b7d1aeeb882ac468356a9513c9167",
+      "license_spdx": "Apache-2.0",
+      "review_state": "approved",
+      "holdout": false,
+      "notes": "Approved 2026-08-13. Apache-2.0, ungated, purpose-built for its paper rather than aggregated from other corpora, so it carries no laundered-license or held-out-contamination risk. 550 English rows across 11 categories x 5 subcategories; the `Malware Viruses` category supplies 50 real malicious_code prompts. English file only -- Chinese and Vietnamese are outside the Tier 1 scope. Small, but these are the first real malicious_code training rows this corpus has ever had.",
+      "artifacts": ["README.md", "data/catqa_english.json"]
+    },
+    {
+      "id": "jailbreakv_redteam_2k",
+      "uri": "hf://datasets/JailbreakV-28K/JailBreakV-28k",
+      "role": "train_candidate",
+      "threat_coverage": ["malicious_code", "toxicity_harm"],
+      "languages": ["en"],
+      "revision": "f949ca582fff13d396ac8fce59596afafb2b78d3",
+      "license_spdx": "MIT",
+      "review_state": "approved",
+      "holdout": false,
+      "ingestion_filter": {
+        "field": "from",
+        "allow": ["GPT Generate", "Question Set", "Handcraft", "GPT Rewrite"],
+        "reason": "excludes rows the publisher attributes to BeaverTails (CC-BY-NC, rejected by this registry), AdvBench (overlaps the frozen holdout), and hh-rlhf"
+      },
+      "notes": "Approved 2026-08-13 for the RedTeam_2K question set ONLY, and only under the mandatory ingestion_filter above. The repository is MIT and ungated, but RedTeam_2K is an aggregate: its own `from` column attributes 558 of 2000 rows to BeaverTails (which this registry rejected as CC-BY-NC) and 67 to AdvBench (which overlaps the frozen JailbreakBench/HarmBench holdout). Ingesting it wholesale would launder a license this project deliberately excluded and contaminate the evaluation set. Normalization must therefore keep only rows whose publisher-declared `from` is GPT Generate, Question Set, Handcraft, or GPT Rewrite, and the result must still pass a contamination scan against the holdout set. Multimodal figstep images and the 28K attack-template file are excluded.",
+      "artifacts": ["JailBreakV_28K/RedTeam_2K.csv"]
     },
     {
       "id": "aegis_safety_2",
@@ -172,15 +207,16 @@
     },
     {
       "id": "jailbreakbench",
-      "uri": "github://JailbreakBench/jailbreakbench",
+      "uri": "hf://datasets/JailbreakBench/JBB-Behaviors",
       "role": "evaluation_only",
       "threat_coverage": ["prompt_injection", "adversarial_obfuscation"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "886acc352a31533ffbcf4ef22c744658688086fc",
+      "license_spdx": "MIT",
+      "review_state": "approved",
       "holdout": true,
-      "notes": "Frozen benchmark; exclude behaviors, artifacts, and close paraphrases from training."
+      "notes": "Approved 2026-08-12 for held-out evaluation only, never training. URI corrected from github://JailbreakBench/jailbreakbench (the harness repo) to the dataset repository that actually publishes the behaviours. Ships matched harmful and benign behaviour sets, so it supplies real benign controls as well as attacks. Contamination scan against the training corpus is mandatory before any number is reported.",
+      "artifacts": ["README.md", "data/harmful-behaviors.csv", "data/benign-behaviors.csv"]
     },
     {
       "id": "harmbench",
@@ -188,35 +224,47 @@
       "role": "evaluation_only",
       "threat_coverage": ["prompt_injection", "malicious_code", "toxicity_harm"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "8e1604d1171fe8a48d8febecd22f600e462bdcdd",
+      "license_spdx": "MIT",
+      "review_state": "approved",
       "holdout": true,
-      "notes": "Frozen behaviors and adversarial variants; contamination scan required."
+      "notes": "Approved 2026-08-12 for held-out evaluation only. Text behaviours only; multimodal set deliberately excluded. Behaviours carry a semantic category (including cybercrime_intrusion) that maps to malicious_code, the category with zero real training support.",
+      "artifacts": [
+        "README.md",
+        "data/behavior_datasets/harmbench_behaviors_text_all.csv",
+        "data/behavior_datasets/harmbench_behaviors_text_val.csv"
+      ]
     },
     {
       "id": "strongreject",
-      "uri": "github://dsbowen/strong_reject",
+      "uri": "github://alexandrasouly/strongreject",
       "role": "evaluation_only",
       "threat_coverage": ["malicious_code", "toxicity_harm"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "f7cad6c17e624e21d8df2278e918ae1dddb4cb56",
+      "license_spdx": "MIT",
+      "review_state": "approved",
       "holdout": true,
-      "notes": "Evaluation-only harmful-request coverage."
+      "notes": "Approved 2026-08-12 for held-out evaluation only. URI corrected from github://dsbowen/strong_reject, which publishes the evaluation code and loads its data from this repository at runtime; pinning the code repo would not have pinned the data. Carries a per-item category field usable for slicing.",
+      "artifacts": ["README.md", "strongreject_dataset/strongreject_dataset.csv"]
     },
     {
       "id": "cyberseceval",
-      "uri": "github://meta-llama/PurpleLlama/CybersecurityBenchmarks",
+      "uri": "github://meta-llama/PurpleLlama",
       "role": "evaluation_only",
-      "threat_coverage": ["malicious_code", "benign"],
+      "threat_coverage": ["malicious_code", "prompt_injection", "benign"],
       "languages": ["en"],
-      "revision": null,
-      "license_spdx": null,
-      "review_state": "pending",
+      "revision": "e36f132f4c4b952515a03b8bdb1275738a1fa28b",
+      "license_spdx": "MIT",
+      "license_path": "CybersecurityBenchmarks/LICENSE",
+      "review_state": "approved",
       "holdout": true,
-      "notes": "Use malicious and legitimate dual-use slices to measure safety recall and cyber false positives."
+      "notes": "Approved 2026-08-12 for held-out evaluation only, with an explicit licensing caveat: the repository root LICENSE is the Llama 3.2 Community License and the GitHub API reports NOASSERTION, but the CybersecurityBenchmarks/ subtree carries its own MIT LICENSE which governs the acquired artifacts. license_path pins that file so the acquirer hashes it as evidence instead of trusting the repository-level label. MITRE and prompt-injection slices only; multilingual machine-translated variants excluded as out of the English Tier 1 scope.",
+      "artifacts": [
+        "CybersecurityBenchmarks/README.md",
+        "CybersecurityBenchmarks/datasets/mitre/mitre_benchmark_100_per_category_with_augmentation.json",
+        "CybersecurityBenchmarks/datasets/prompt_injection/prompt_injection.json"
+      ]
     }
   ]
 }

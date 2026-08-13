@@ -33,7 +33,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from echelon.evaluation import (
     binary_metrics, expected_calibration_error, select_threshold, slice_metrics,
 )
-from scripts.build_semantic_splits import load_jsonl
+from scripts.build_semantic_splits import load_jsonl, project_relative
 
 CATEGORIES = [
     "prompt_injection", "system_prompt_leakage", "malicious_code",
@@ -130,8 +130,8 @@ def main() -> int:
     agg = probs.max(axis=1)
     benign_mask = label_mat.sum(axis=1) == 0
     report = {
-        "model": str(args.model.relative_to(PROJECT_ROOT)),
-        "split": str(args.split.relative_to(PROJECT_ROOT)),
+        "model": project_relative(args.model),
+        "split": project_relative(args.split),
         "rows": len(rows),
         "macro_f1_at_0.5": round(float(np.mean(macro_f1)), 4),
         "benign_rows": int(benign_mask.sum()),

@@ -1,0 +1,110 @@
+{
+  "acquired_at": "2026-08-12T07:09:50.026767+00:00",
+  "manifest_version": "0.1.0",
+  "registry_version": "0.3.0",
+  "sources": [
+    {
+      "artifacts": [
+        {
+          "bytes": 6549,
+          "path": "README.md",
+          "sha256": "fc84ea5865e60ba15f3776ff43ace47cbbf3470775f389afbb6bdb4d6333618a"
+        },
+        {
+          "bytes": 23116,
+          "path": "data/harmful-behaviors.csv",
+          "sha256": "4a8ec6832056b631eb092dccc60d37a61c3d441268268888b3d006288afeffa1"
+        },
+        {
+          "bytes": 20570,
+          "path": "data/benign-behaviors.csv",
+          "sha256": "3cda234d21a991fa309bbfea4b6d9dae31ccdf8e9d452424b6a983e4fdc33468"
+        }
+      ],
+      "host": "huggingface",
+      "id": "jailbreakbench",
+      "license_spdx": "MIT",
+      "repo_id": "JailbreakBench/JBB-Behaviors",
+      "revision": "886acc352a31533ffbcf4ef22c744658688086fc",
+      "role": "evaluation_only"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 10480,
+          "path": "README.md",
+          "sha256": "baae4a0b64b61812e61a162eafb2ed344edbc151f57dd99c4af063e3d0efec5d"
+        },
+        {
+          "bytes": 198850,
+          "path": "data/behavior_datasets/harmbench_behaviors_text_all.csv",
+          "sha256": "8d81accedd38eaaf8b760618622bb888417d1fd0c86eba65c427a16f1cbb4afc"
+        },
+        {
+          "bytes": 38024,
+          "path": "data/behavior_datasets/harmbench_behaviors_text_val.csv",
+          "sha256": "7bfaaa5e2b9b95002c89e2d33c019f58e9e8496e2fc65d368f1eeb8179e69534"
+        }
+      ],
+      "host": "github",
+      "id": "harmbench",
+      "license_spdx": "MIT",
+      "repo_id": "centerforaisafety/HarmBench",
+      "repository_api_license": "MIT",
+      "revision": "8e1604d1171fe8a48d8febecd22f600e462bdcdd",
+      "role": "evaluation_only"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 5218,
+          "path": "README.md",
+          "sha256": "04bf2ef5edb6455fe39e5c4c7dcc6848c62c4b2b88e434db3dd613d7872fbf11"
+        },
+        {
+          "bytes": 56359,
+          "path": "strongreject_dataset/strongreject_dataset.csv",
+          "sha256": "4dd70357e4ff8b5d0ba5ebafecab5d6dd5633ce8046e3dd1c8bd93e64de44381"
+        }
+      ],
+      "host": "github",
+      "id": "strongreject",
+      "license_spdx": "MIT",
+      "repo_id": "alexandrasouly/strongreject",
+      "repository_api_license": "MIT",
+      "revision": "f7cad6c17e624e21d8df2278e918ae1dddb4cb56",
+      "role": "evaluation_only"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 49676,
+          "path": "CybersecurityBenchmarks/README.md",
+          "sha256": "f148967d1b4dd581b518bebe4d00359cc693eadc1d0d2efb7b709b110ce7fdc4"
+        },
+        {
+          "bytes": 4488580,
+          "path": "CybersecurityBenchmarks/datasets/mitre/mitre_benchmark_100_per_category_with_augmentation.json",
+          "sha256": "0dc5ef0e4dc0f6937c1090473d85ee0d2800c83c5e9ccca568a3da7176b97d6a"
+        },
+        {
+          "bytes": 199176,
+          "path": "CybersecurityBenchmarks/datasets/prompt_injection/prompt_injection.json",
+          "sha256": "069e4d5d36f6d19f972a3bbc65df840cc729354f89358a9031aeb44d95b18a9a"
+        }
+      ],
+      "host": "github",
+      "id": "cyberseceval",
+      "license_evidence": {
+        "bytes": 1088,
+        "path": "CybersecurityBenchmarks/LICENSE",
+        "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+      },
+      "license_spdx": "MIT",
+      "repo_id": "meta-llama/PurpleLlama",
+      "repository_api_license": "NOASSERTION",
+      "revision": "e36f132f4c4b952515a03b8bdb1275738a1fa28b",
+      "role": "evaluation_only"
+    }
+  ]
+}

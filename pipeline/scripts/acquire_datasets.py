@@ -34,22 +34,49 @@ class AcquisitionError(RuntimeError):
     pass
 
 
-def parse_hf_dataset_uri(uri: str) -> str:
-    prefix = "hf://datasets/"
+HF_PREFIX = "hf://datasets/"
+GITHUB_PREFIX = "github://"
+
+
+def source_kind(uri: str) -> str:
+    if uri.startswith(HF_PREFIX):
+        return "hf"
+    if uri.startswith(GITHUB_PREFIX):
+        return "github"
+    raise AcquisitionError(f"unsupported dataset URI: {uri}")
+
+
+def parse_repo_uri(uri: str, prefix: str, label: str) -> str:
     if not uri.startswith(prefix):
         raise AcquisitionError(f"unsupported dataset URI: {uri}")
     repo_id = uri[len(prefix):]
     if repo_id.count("/") != 1 or any(part in {"", ".", ".."} for part in repo_id.split("/")):
-        raise AcquisitionError(f"invalid Hugging Face dataset ID: {repo_id}")
+        raise AcquisitionError(f"invalid {label}: {repo_id}")
     return repo_id
 
 
-def resolve_url(repo_id: str, revision: str, artifact: str) -> str:
+def parse_hf_dataset_uri(uri: str) -> str:
+    return parse_repo_uri(uri, HF_PREFIX, "Hugging Face dataset ID")
+
+
+def parse_github_repo_uri(uri: str) -> str:
+    return parse_repo_uri(uri, GITHUB_PREFIX, "GitHub repository")
+
+
+def quote_path(artifact: str) -> str:
     if artifact.startswith("/") or ".." in Path(artifact).parts:
         raise AcquisitionError(f"unsafe artifact path: {artifact}")
+    return "/".join(urllib.parse.quote(part, safe="") for part in artifact.split("/"))
+
+
+def resolve_url(repo_id: str, revision: str, artifact: str) -> str:
     quoted_repo = "/".join(urllib.parse.quote(part, safe="") for part in repo_id.split("/"))
-    quoted_path = "/".join(urllib.parse.quote(part, safe="") for part in artifact.split("/"))
-    return f"https://huggingface.co/datasets/{quoted_repo}/resolve/{revision}/{quoted_path}?download=true"
+    return f"https://huggingface.co/datasets/{quoted_repo}/resolve/{revision}/{quote_path(artifact)}?download=true"
+
+
+def resolve_github_url(repo_id: str, revision: str, artifact: str) -> str:
+    quoted_repo = "/".join(urllib.parse.quote(part, safe="") for part in repo_id.split("/"))
+    return f"https://raw.githubusercontent.com/{quoted_repo}/{revision}/{quote_path(artifact)}"
 
 
 def read_json_url(url: str) -> dict[str, Any]:
@@ -115,7 +142,10 @@ def approved_sources(registry: dict[str, Any], requested: set[str] | None) -> li
             continue
         if not item.get("artifacts"):
             continue
-        parse_hf_dataset_uri(item["uri"])
+        if source_kind(item["uri"]) == "hf":
+            parse_hf_dataset_uri(item["uri"])
+        else:
+            parse_github_repo_uri(item["uri"])
         if not COMMIT_RE.fullmatch(item.get("revision") or ""):
             raise AcquisitionError(f"dataset lacks immutable 40-character revision: {item['id']}")
         if not item.get("license_spdx"):
@@ -124,7 +154,74 @@ def approved_sources(registry: dict[str, Any], requested: set[str] | None) -> li
     return selected
 
 
+def download_artifacts(
+    source: dict[str, Any], repo_id: str, output_root: Path,
+    url_for, force: bool,
+) -> list[dict[str, Any]]:
+    destination_root = output_root / source["id"] / source["revision"]
+    artifacts = []
+    for artifact in source["artifacts"]:
+        sha256, size = download_atomic(url_for(artifact), destination_root / artifact, force=force)
+        artifacts.append({"path": artifact, "bytes": size, "sha256": sha256})
+        print(f"acquired {source['id']}:{artifact} ({size:,} bytes)", file=sys.stderr)
+    return artifacts
+
+
+def acquire_github_source(source: dict[str, Any], output_root: Path, force: bool = False) -> dict[str, Any]:
+    """Acquire files from a GitHub repository pinned to an immutable commit SHA.
+
+    Licensing is checked against the repository API unless the registry declares a
+    `license_path`. Some repositories carry a restrictive root license with a
+    differently-licensed subtree (PurpleLlama's root is the Llama Community
+    License while `CybersecurityBenchmarks/` carries its own MIT LICENSE), so in
+    that case the governing license file is downloaded and hashed as evidence
+    rather than trusting a repository-level label that does not apply.
+    """
+    repo_id = parse_github_repo_uri(source["uri"])
+    metadata = read_json_url(f"https://api.github.com/repos/{repo_id}")
+    if metadata.get("private") or metadata.get("archived"):
+        raise AcquisitionError(f"{source['id']}: repository is private or archived")
+    commit = read_json_url(f"https://api.github.com/repos/{repo_id}/commits/{source['revision']}")
+    if commit.get("sha") != source["revision"]:
+        raise AcquisitionError(
+            f"{source['id']}: pinned revision {source['revision']} does not resolve to itself ({commit.get('sha')})"
+        )
+    api_license = (metadata.get("license") or {}).get("spdx_id")
+    license_path = source.get("license_path")
+    if not license_path:
+        if api_license and api_license.casefold() != source["license_spdx"].casefold():
+            raise AcquisitionError(
+                f"{source['id']}: registry license {source['license_spdx']} disagrees with API license {api_license}"
+            )
+
+    def url_for(artifact: str) -> str:
+        return resolve_github_url(repo_id, source["revision"], artifact)
+
+    artifacts = download_artifacts(source, repo_id, output_root, url_for, force)
+    record = {
+        "id": source["id"],
+        "repo_id": repo_id,
+        "host": "github",
+        "revision": source["revision"],
+        "license_spdx": source["license_spdx"],
+        "repository_api_license": api_license,
+        "role": source["role"],
+        "artifacts": artifacts,
+    }
+    if license_path:
+        sha256, size = download_atomic(
+            url_for(license_path),
+            output_root / source["id"] / source["revision"] / license_path,
+            force=force,
+        )
+        record["license_evidence"] = {"path": license_path, "bytes": size, "sha256": sha256}
+        print(f"acquired {source['id']}:{license_path} (license evidence)", file=sys.stderr)
+    return record
+
+
 def acquire_source(source: dict[str, Any], output_root: Path, force: bool = False) -> dict[str, Any]:
+    if source_kind(source["uri"]) == "github":
+        return acquire_github_source(source, output_root, force=force)
     repo_id = parse_hf_dataset_uri(source["uri"])
     metadata_url = f"https://huggingface.co/api/datasets/{repo_id}"
     metadata = read_json_url(metadata_url)
@@ -140,17 +237,14 @@ def acquire_source(source: dict[str, Any], output_root: Path, force: bool = Fals
             f"{source['id']}: registry license {source['license_spdx']} disagrees with API license {api_license}"
         )
 
-    destination_root = output_root / source["id"] / source["revision"]
-    artifacts = []
-    for artifact in source["artifacts"]:
-        destination = destination_root / artifact
-        url = resolve_url(repo_id, source["revision"], artifact)
-        sha256, size = download_atomic(url, destination, force=force)
-        artifacts.append({"path": artifact, "bytes": size, "sha256": sha256})
-        print(f"acquired {source['id']}:{artifact} ({size:,} bytes)", file=sys.stderr)
+    artifacts = download_artifacts(
+        source, repo_id, output_root,
+        lambda artifact: resolve_url(repo_id, source["revision"], artifact), force,
+    )
     return {
         "id": source["id"],
         "repo_id": repo_id,
+        "host": "huggingface",
         "revision": source["revision"],
         "license_spdx": source["license_spdx"],
         "role": source["role"],

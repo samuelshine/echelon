@@ -1,0 +1,39 @@
+{
+  "clean_label_occurrences": {
+    "adversarial_obfuscation": 28,
+    "benign": 100,
+    "malicious_code": 1077,
+    "prompt_injection": 251,
+    "toxicity_harm": 635
+  },
+  "clean_rows": 2063,
+  "clean_rows_by_source": {
+    "cyberseceval_injection": 251,
+    "cyberseceval_mitre": 1000,
+    "harmbench": 300,
+    "jailbreakbench": 200,
+    "strongreject": 312
+  },
+  "contaminated_label_occurrences": {
+    "toxicity_harm": 1
+  },
+  "contaminated_rows": 1,
+  "contamination_reasons": {
+    "strongreject:semantic_near_duplicate": 1
+  },
+  "corpus": "data/normalized_v2/eligible_reviewed_v03.jsonl",
+  "corpus_rows": 36392,
+  "cosine_threshold": 0.94,
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "holdout": "data/holdout_v1/holdout_eval.jsonl",
+  "holdout_rows": 2064,
+  "report_version": "0.1.0",
+  "similarity_percentiles": {
+    "100": 0.9827,
+    "50": 0.7805,
+    "90": 0.8252,
+    "99": 0.8935
+  },
+  "status": "scanned"
+}

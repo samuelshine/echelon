@@ -1477,3 +1477,29 @@ code. This is a mitigation, not a fix — the head genuinely cannot separate
 "explain how ransomware encrypts files so I can write a recovery playbook" from
 a request to write ransomware, and no threshold repairs that. The fix is the
 defensive-cyber gold set, in training data as well as evaluation.
+
+### Mitigation applied (2026-08-13)
+
+Raised `malicious_code`'s block threshold 0.30 → 0.80 on the served model,
+recorded as an explicit `manual_overrides` block in `thresholds.json` (fitted
+value, applied value, measured trade, reason) so a future re-derivation cannot
+silently revert it.
+
+| | thr 0.30 | thr 0.80 |
+|---|---|---|
+| defensive-cyber probes BLOCKED | 0.47 | **0.20** |
+| holdout `malicious_code` BLOCKED | 0.864 | 0.662 |
+| holdout `malicious_code` **judge+** | 0.885 | **0.885** |
+| holdout benign BLOCKED | 0.080 | **0.050** |
+| 931 controls BLOCKED | 0.031 | **0.026** |
+
+**Total `malicious_code` coverage is identical at 0.885.** The 20pp that stop
+hard-blocking still escalate to the LLM judge — exactly what the judge exists to
+adjudicate. So this is a 2.4x cut in defensive-security false positives and a
+lower benign block rate for **no loss of detection**, only a shift from "blocked
+outright" to "judged".
+
+Still a mitigation, not a fix. Three defensive probes still block, one of them
+through `prompt_injection` (0.983) rather than `malicious_code`, so it is
+untouched by this change. The real fix remains the defensive-cyber gold set, in
+training data as well as evaluation.

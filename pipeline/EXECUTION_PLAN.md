@@ -350,3 +350,33 @@ Next, in priority order: real `malicious_code` *training* data (still zero real
 rows), real `system_prompt_leakage` data, then the modeling levers — a cased
 encoder and a longer context window, both directly implicated by the slice
 analysis. A retrain on re-stratified splits is a prerequisite for any of it.
+
+## Layer 2 v0.6 promoted — real malicious-code detection, measured out of distribution (2026-08-13)
+
+The held-out set built on 2026-08-13 showed the served v0.3 model catching **18
+of 1,077** real malicious-code prompts. v0.6 catches **728, at 95.7% precision**,
+and is now promoted to `best/` with per-category serving thresholds.
+
+What actually moved the number was data, in a specific shape. Three rounds
+isolated it: fixing the split/calibration defects (v0.4) changed nothing
+real; 153 real attack rows without matched controls (v0.5) doubled recall but
+tripled benign false positives; WildGuardMix's `cyberattack` plus 3,200 matched
+benign controls (v0.6) took held-out macro-F1 from 0.233 to 0.464 and brought
+false positives back down. `TARGETED_CURATION_SPEC.md`'s matched-control rule
+was the load-bearing constraint all along, and the holdout priced violating it.
+
+Per-category thresholds replaced the plain-max aggregate, which had let the
+noisiest head (`toxicity_harm`, firing on 53% of benign controls) set the
+false-positive rate for all five. `malicious_code` left the sparse-mitigation
+band on the evidence of its 0.957 held-out precision, so real malware now
+hard-blocks on the model rather than depending on the LLM judge being reachable.
+Thresholds are fitted on validation and verified once on the holdout, never
+fitted on it.
+
+Next, in priority order: `system_prompt_leakage` still has **zero** held-out
+coverage and one measured false escalation, so Tensor Trust / HackAPrompt
+(already `pending` in the registry) are the next acquisition; the egress path
+remains unevaluated for lack of response-shaped held-out data, which is what
+Track B needs before `_apply_code_shape_floor` can be retired; and the 100-row
+benign control slice is too small to settle whether the residual false-positive
+gap is model error or a label-definition disagreement.

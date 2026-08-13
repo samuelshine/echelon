@@ -380,3 +380,30 @@ remains unevaluated for lack of response-shaped held-out data, which is what
 Track B needs before `_apply_code_shape_floor` can be retired; and the 100-row
 benign control slice is too small to settle whether the residual false-positive
 gap is model error or a label-definition disagreement.
+
+## Track B closed out — egress measured, code-shape floor retired (2026-08-13)
+
+The egress path shipped 2026-07-25 and was never measured. It is now, on 1,707
+human-labelled held-out assistant responses, with operating points fitted on a
+disjoint 37,622-response set. Full numbers in `CURRENT_PROGRESS.md` → "Track B:
+egress measured for the first time".
+
+The headline is that **the prompt-trained model already transfers to response
+text** for malicious code — 0.819 on malicious responses against 0.083 on benign
+ones — which nobody had checked. That killed the premise behind
+`_apply_code_shape_floor`: written when the model genuinely was blind to
+generated code, it had since become a near-pure false-positive generator, firing
+on 86.3% of benign code-bearing responses and 13.3% of malicious ones. It is now
+a no-op when egress thresholds are configured, retained otherwise.
+
+Benign responses passing cleanly go 0.354 → 0.834, benign blocks 0.098 → 0.014,
+and malicious code output can hard-block for the first time (0.400 overall,
+0.600 on code-shaped output) — the sparse cap had held it below the gateway's
+block point since the path was built. The honest cost is 12% of malicious
+responses now passing where all previously reached the judge.
+
+Remaining Track B work is one well-posed round: `toxicity_harm` does not
+transfer to response text at all (62% benign FPR at 0.5, 2.7% recall at 0.95),
+and 7,915 real harmful-response rows are now available to train it. Blended
+versus separate response model is the open decision, and is now settleable by
+measuring both holdouts rather than by argument.

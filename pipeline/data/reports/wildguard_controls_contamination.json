@@ -1,0 +1,32 @@
+{
+  "clean_label_occurrences": {
+    "benign": 931
+  },
+  "clean_rows": 931,
+  "clean_rows_by_source": {
+    "wildguardmix": 931
+  },
+  "contaminated_label_occurrences": {
+    "benign": 14
+  },
+  "contaminated_rows": 14,
+  "contamination_reasons": {
+    "wildguardmix:exact_normalized_match": 1,
+    "wildguardmix:semantic_near_duplicate": 13
+  },
+  "corpus": "data/normalized_v2/eligible_reviewed_v06.jsonl",
+  "corpus_rows": 41712,
+  "cosine_threshold": 0.94,
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "holdout": "data/holdout_v1/wildguard_benign_controls.jsonl",
+  "holdout_rows": 945,
+  "report_version": "0.1.0",
+  "similarity_percentiles": {
+    "100": 1.0,
+    "50": 0.785,
+    "90": 0.8462,
+    "99": 0.9474
+  },
+  "status": "scanned"
+}

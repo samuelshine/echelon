@@ -77,7 +77,8 @@ def record_id(item_id: str, text: str) -> str:
 
 def make_record(
     *, revision: str, item_id: str, text: str, labels: list[str], license_spdx: str,
-    notes: str, template_family: str,
+    notes: str, template_family: str, training_eligible: bool = True,
+    split: str = "train",
 ) -> dict[str, Any]:
     text = text.strip()
     if not text:
@@ -89,7 +90,7 @@ def make_record(
         "source_id": SOURCE_ID,
         "source_item_id": item_id,
         "source_revision": revision,
-        "split": "train",
+        "split": split,
         "language": "en",
         "labels": sorted(set(labels)),
         "severity": "none" if benign else "high",
@@ -102,7 +103,7 @@ def make_record(
         "context": "benign" if benign else "malicious",
         "license_spdx": license_spdx,
         "annotation_notes": notes,
-        "training_eligible": True,
+        "training_eligible": training_eligible,
     }
 
 
@@ -119,6 +120,14 @@ def main() -> int:
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--benign-sample", type=int, default=3200,
                         help="benign controls to keep, split evenly across the adversarial flag")
+    parser.add_argument("--source-split", choices=("train", "test"), default="train")
+    parser.add_argument(
+        "--benign-control-set", action="store_true",
+        help="emit every unharmful row as a NEAR-DISTRIBUTION benign control set "
+             "(training_eligible false). The OOD holdout's benign slice is 100 rows, too few to "
+             "tell whether a false-positive gap is real; this trades distributional distance for "
+             "sample size and must never be reported as an out-of-distribution number.",
+    )
     args = parser.parse_args()
 
     import pyarrow.parquet as pq
@@ -129,8 +138,11 @@ def main() -> int:
         raise NormalizationError(f"{SOURCE_ID} not present in {args.manifest}")
     revision, license_spdx = source["revision"], source["license_spdx"]
 
-    path = args.raw_root / SOURCE_ID / revision / "train" / "wildguard_train.parquet"
+    split = args.source_split
+    path = args.raw_root / SOURCE_ID / revision / split / f"wildguard_{split}.parquet"
     columns = ["prompt", "adversarial", "prompt_harm_label", "subcategory"]
+    if args.benign_control_set:
+        columns.append("prompt_harm_agreement")
     if FORBIDDEN_COLUMNS & set(columns):
         raise NormalizationError("refusing to read assistant-response columns as prompt features")
     table = pq.read_table(path, columns=columns).to_pydict()
@@ -166,15 +178,20 @@ def main() -> int:
     def content_key(index: int) -> str:
         return hashlib.sha256(table["prompt"][index].encode("utf-8")).hexdigest()
 
-    selected: list[int] = list(kept.get("cyberattack", []))
-    benign = kept.get("benign", [])
-    half = args.benign_sample // 2
-    for adversarial in (True, False):
-        pool = [i for i in benign if bool(table["adversarial"][i]) is adversarial]
-        chosen = deterministic_sample(pool, half, content_key)
-        counters[f"benign_sampled_adversarial_{adversarial}"] = len(chosen)
-        counters[f"benign_available_adversarial_{adversarial}"] = len(pool)
-        selected.extend(chosen)
+    if args.benign_control_set:
+        # Every unharmful row: this is a measurement set, so sampling it would only
+        # widen the error bars it exists to narrow.
+        selected = list(kept.get("benign", []))
+    else:
+        selected = list(kept.get("cyberattack", []))
+        benign = kept.get("benign", [])
+        half = args.benign_sample // 2
+        for adversarial in (True, False):
+            pool = [i for i in benign if bool(table["adversarial"][i]) is adversarial]
+            chosen = deterministic_sample(pool, half, content_key)
+            counters[f"benign_sampled_adversarial_{adversarial}"] = len(chosen)
+            counters[f"benign_available_adversarial_{adversarial}"] = len(pool)
+            selected.extend(chosen)
 
     records, seen = [], set()
     duplicates = 0
@@ -182,15 +199,20 @@ def main() -> int:
         subcategory = table["subcategory"][index]
         labels = INGESTED_SUBCATEGORIES[subcategory]
         adversarial = bool(table["adversarial"][index])
+        agreement = table.get("prompt_harm_agreement", {})
         record = make_record(
-            revision=revision, item_id=f"train-{index}", text=table["prompt"][index],
+            revision=revision, item_id=f"{split}-{index}", text=table["prompt"][index],
             labels=labels, license_spdx=license_spdx,
             notes=(
                 f"publisher_subcategory={subcategory};"
                 f"publisher_prompt_harm_label={table['prompt_harm_label'][index]};"
                 f"adversarial={adversarial};response_columns_unused=true"
+                + (f";annotator_agreement={agreement[index]}" if args.benign_control_set and agreement else "")
+                + (";role=benign_control;distribution=near" if args.benign_control_set else "")
             ),
             template_family=f"wildguard_{subcategory}_{'adversarial' if adversarial else 'plain'}",
+            training_eligible=not args.benign_control_set,
+            split="private_test" if args.benign_control_set else "train",
         )
         if record["record_id"] in seen:
             duplicates += 1
@@ -215,6 +237,9 @@ def main() -> int:
         "counters": dict(sorted(counters.items())),
         "ingested_subcategories": {k: v for k, v in sorted(INGESTED_SUBCATEGORIES.items())},
         "labelling_policy": "publisher-declared subcategory and prompt_harm_label only; no text-derived labels",
+        "source_split": args.source_split,
+        "role": "benign_control_near_distribution" if args.benign_control_set else "training",
+        "training_eligible": not args.benign_control_set,
         "assistant_response_columns_used": False,
         "adversarial_flag_mapped_to_label": False,
         "status": "normalized_pending_contamination_scan",

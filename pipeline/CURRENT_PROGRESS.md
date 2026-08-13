@@ -1146,3 +1146,101 @@ restart.
   and JailbreakBench's deliberately-borderline benign behaviours.
 - Thresholds were fitted on in-distribution validation. They verified well once,
   but they are not guaranteed to hold as traffic drifts.
+
+## Remaining-task sweep: leakage coverage + a real benign control set (2026-08-13)
+
+Two of the four items left open by the v0.6 promotion are now closed as far as
+available data allows. Both closed with worse news than hoped, which is the
+useful kind.
+
+### 1. `system_prompt_leakage` is measured for the first time — and it is weak
+
+That head was the only category with **zero** evidence of any kind, while
+simultaneously causing a measured false escalation on entirely benign traffic.
+It now has 53 held-out rows: **F1 0.188, recall 0.113, precision 0.545** — the
+promoted model catches 6 of 53 real system-prompt extraction attempts. ECE is
+0.030, i.e. it is well-calibrated about being confidently unable to detect these.
+
+So the head is not merely unmeasured, it is genuinely weak. That vindicates
+keeping it in the escalate-only band (nothing here justifies letting it block)
+and makes its benign false escalation doubly costly: it taxes benign traffic
+while missing real attacks.
+
+**Both registry sources that would close this properly are unavailable:**
+
+- `tensor_trust` **rejected** — no license is declared anywhere. The HF mirror
+  carries no `license:` field; the upstream GitHub repo has no LICENSE/COPYING
+  and no README license statement. Identical condition to the
+  `LLM-LAT/harmful-dataset` rejection. Worth revisiting if the authors publish
+  terms, since real human adversarial extraction is exactly what this gap needs.
+- `hackaprompt` **blocked_gated** — MIT, real human competition data, revision
+  pinned at `25b87fbe…`, URI corrected from `web://paper.hackaprompt.com` to the
+  dataset repo. Needs terms accepted plus `HF_TOKEN`, same path as wildguardmix.
+  **This is now the only viable source for the gap and it needs a person.**
+
+Coverage instead came from CyberSecEval, which already held leakage attacks
+identifiable without reading the attack text: a row's `judge_question` states
+the success criterion, and where the string it targets appears **verbatim** in
+that same row's system prompt, the attack is by construction system-prompt
+extraction. 53 rows across 12 injection variants; correctly excludes the
+data-exfil and behaviour-hijack injections sharing those variants.
+
+This is the holdout's **one derived label**, marked as such rather than passed
+off as publisher-declared: `annotation_confidence` 0.8, an explicit
+`system_prompt_leakage=derived` note on every affected row, and the normalizer's
+"publisher labels only" rule amended in place to state the exception.
+
+Held-out macro-F1 now reads 0.5013 against the 0.4638 reported at promotion.
+**That is arithmetic, not improvement** — identical weights; the metric
+previously averaged in a zero-support category scoring 0.
+
+### 2. The benign false-positive gap is real, and is a model limit
+
+The 100-row control slice could not distinguish a real gap from sampling noise.
+WildGuardMix's *test* split (never trained on) supplies 945 human-annotated
+unharmful prompts, 620 at full 3/3 annotator agreement, half adversarially
+phrased. Kept in a separate file and labelled **near-distribution, not OOD** —
+and the data confirms that caveat, with p99 similarity to the training corpus of
+0.947 against the OOD holdout's 0.87. 14 rows overlapped outright and were cut.
+
+| benign BLOCK rate | OOD (n=100) | near-dist (n=931) | 3/3 agreement (n=610) |
+|---|---|---|---|
+| plain max (pre-promotion) | 0.120 | 0.189 | — |
+| per-category (promoted) | 0.110 | **0.131** | 0.118 |
+
+Consistent at 9x the sample: **the gap is real**, roughly 11-13% of benign
+prompts blocked against the old model's 0.060. Per-category thresholds do cut it
+materially on the larger set (0.189 → 0.131).
+
+**Correction to the promotion entry above**, which said "essentially all of it is
+one head". True at threshold 0.5 — `toxicity_harm` fires on 65% of controls and
+every other head is ≤7.7% — but **not at the block point**, where it is spread
+across three: `toxicity_harm` 6.2%, `prompt_injection` 4.8%, `malicious_code`
+2.1%.
+
+Raising `toxicity_harm`'s threshold does not fix it. Derived on a deterministic
+half of the controls and measured on the other half:
+
+| `toxicity_harm` block | benign firing (held-back half) | OOD toxicity recall |
+|---|---|---|
+| 0.9436 (current) | 0.056 | 0.455 |
+| 0.96 | 0.024 | 0.301 |
+| 0.97 | 0.002 | 0.101 |
+| 0.98 | 0.000 | 0.000 |
+
+Its benign and harmful score distributions overlap at the very top, so the
+residual false-positive rate is a **discrimination limit of the model**, not a
+tuning miss. Buying back false positives here costs real detection roughly
+one-for-one. Fixing it needs better `toxicity_harm` data or a stronger encoder,
+not another threshold pass.
+
+### Still open
+
+- **`hackaprompt` needs terms accepted** — the only path to real
+  `system_prompt_leakage` training data and honest (non-derived) held-out
+  coverage.
+- **Egress is still unevaluated.** No response-shaped held-out data exists, so
+  `_apply_code_shape_floor` stays and the egress aggregate keeps the old
+  mitigated-max path. This is Track B and is the largest remaining piece.
+- **`toxicity_harm` discrimination**, per the curve above — a data or
+  architecture problem now, not a threshold one.

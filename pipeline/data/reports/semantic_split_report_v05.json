@@ -1,0 +1,96 @@
+{
+  "cosine_threshold": 0.94,
+  "declared_group_edges": 7726,
+  "embedding_license": "MIT",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "embedding_views_truncated_head_tail": 734,
+  "input_records": 38113,
+  "label_stratified_allocation": true,
+  "largest_group": 641,
+  "leakage_check": {
+    "publisher_splits": "repartitioned_by_complete_semantic_group",
+    "semantic_cluster_ids_crossing_splits": 0
+  },
+  "mixed_safety_groups_quarantined": 158,
+  "mixed_safety_rows_quarantined": 787,
+  "multi_record_groups": 2948,
+  "report_version": "0.2.0",
+  "semantic_calibration_queue_pairs": 450,
+  "semantic_edges": 13770,
+  "split_label_balance": {
+    "categories_absent_from_split": {},
+    "label_occurrences": {
+      "test": {
+        "adversarial_obfuscation": 69,
+        "benign": 1751,
+        "malicious_code": 108,
+        "prompt_injection": 409,
+        "system_prompt_leakage": 123,
+        "toxicity_harm": 1522
+      },
+      "train": {
+        "adversarial_obfuscation": 502,
+        "benign": 13933,
+        "malicious_code": 911,
+        "prompt_injection": 3210,
+        "system_prompt_leakage": 1059,
+        "toxicity_harm": 12096
+      },
+      "validation": {
+        "adversarial_obfuscation": 80,
+        "benign": 1747,
+        "malicious_code": 134,
+        "prompt_injection": 411,
+        "system_prompt_leakage": 131,
+        "toxicity_harm": 1517
+      }
+    }
+  },
+  "split_stats": {
+    "test": {
+      "benign": 1751,
+      "groups": 2778,
+      "label_occurrences": {
+        "adversarial_obfuscation": 69,
+        "benign": 1751,
+        "malicious_code": 108,
+        "prompt_injection": 409,
+        "system_prompt_leakage": 123,
+        "toxicity_harm": 1522
+      },
+      "malicious": 1947,
+      "rows": 3698
+    },
+    "train": {
+      "benign": 13933,
+      "groups": 22430,
+      "label_occurrences": {
+        "adversarial_obfuscation": 502,
+        "benign": 13933,
+        "malicious_code": 911,
+        "prompt_injection": 3210,
+        "system_prompt_leakage": 1059,
+        "toxicity_harm": 12096
+      },
+      "malicious": 15976,
+      "rows": 29909
+    },
+    "validation": {
+      "benign": 1747,
+      "groups": 2779,
+      "label_occurrences": {
+        "adversarial_obfuscation": 80,
+        "benign": 1747,
+        "malicious_code": 134,
+        "prompt_injection": 411,
+        "system_prompt_leakage": 131,
+        "toxicity_harm": 1517
+      },
+      "malicious": 1972,
+      "rows": 3719
+    }
+  },
+  "status": "materialized_pending_human_review",
+  "total_groups": 28145
+}

@@ -109,8 +109,13 @@
       "license_spdx": "ODC-By-1.0",
       "review_state": "blocked_gated",
       "holdout": false,
-      "notes": "Vetted 2026-08-13 and BLOCKED, not rejected: license (ODC-By-1.0) and provenance are acceptable and this is the largest quality-labelled candidate for the malicious_code gap, but the repository is gated (`gated: auto`). Policy is to never bypass gated terms, and the acquirer refuses gated sources by design. Unblocking requires a human to accept the terms on Hugging Face and supply a token -- that is the sanctioned path, not a workaround. Revision pinned now so acquisition is a one-step operation once terms are accepted.",
-      "artifacts": ["train/wildguard_train.parquet", "test/wildguard_test.parquet"]
+      "notes": "Vetted 2026-08-13; gated (`gated: auto`), so acquisition needs a human to accept the publisher's terms and supply HF_TOKEN, then --allow-gated. Terms were accepted and the source acquired 2026-08-13. review_state stays blocked_gated because the gate is a property of the source, not of our review: a fresh checkout still needs a token. Ingestion is deliberately narrow (see scripts/normalize_wildguard.py) -- `cyberattack` -> malicious_code and `benign` -> benign only; response columns are never read; the `adversarial` flag is recorded but not mapped to a label, since 20,567 such rows would swamp a prompt_injection category holding 2,866 real ones; copyright_violations excluded as HarmBench's copyright slice was. Note the prompt/response fan-out: 86,759 rows carry only ~47,852 distinct prompts, so any ingestion must deduplicate on prompt text before sampling or quotas silently fill with repeats.",
+      "artifacts": ["train/wildguard_train.parquet", "test/wildguard_test.parquet"],
+      "ingestion_filter": {
+        "field": "subcategory",
+        "allow": ["cyberattack", "benign"],
+        "reason": "targets the malicious_code gap and the matched-benign-control requirement; the other harmful subcategories would land in toxicity_harm, which already has 15,520 real rows and is not the failing category"
+      }
     },
     {
       "id": "catqa_english",

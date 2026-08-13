@@ -13,66 +13,66 @@
   "epochs": 3,
   "lr": 3e-05,
   "seed": 42,
-  "dataset_sha256": "30b45064debc8ed252f618528e267a7f06ff15e08c56c682924a0a80e443d54b",
+  "dataset_sha256": "ae05398eef89c70a5a9d8f6fccfb8b64ebd69af8cd8c421a305dd485bf28752a",
   "rows": {
-    "train": 31477,
-    "validation": 3978,
-    "test": 3964
+    "train": 32823,
+    "validation": 4107,
+    "test": 4112
   },
-  "best_val_macro_f1": 0.8631,
+  "best_val_macro_f1": 0.8749,
   "calibration_temperatures": {
-    "prompt_injection": 1.15,
-    "system_prompt_leakage": 1.2,
-    "malicious_code": 1.7,
-    "toxicity_harm": 1.7,
-    "adversarial_obfuscation": 0.45
+    "prompt_injection": 1.0,
+    "system_prompt_leakage": 1.5,
+    "malicious_code": 0.95,
+    "toxicity_harm": 1.2,
+    "adversarial_obfuscation": 0.95
   },
   "test": {
     "per_category": {
       "prompt_injection": {
-        "support": 387,
-        "precision": 0.5674,
-        "recall": 0.9793,
-        "f1": 0.7185,
-        "brier": 0.0587
+        "support": 409,
+        "precision": 0.9568,
+        "recall": 0.9756,
+        "f1": 0.9661,
+        "brier": 0.0056
       },
       "system_prompt_leakage": {
-        "support": 126,
-        "precision": 0.7622,
-        "recall": 0.8651,
-        "f1": 0.8104,
-        "brier": 0.0094
+        "support": 130,
+        "precision": 0.6632,
+        "recall": 0.9846,
+        "f1": 0.7926,
+        "brier": 0.0119
       },
       "malicious_code": {
-        "support": 182,
-        "precision": 0.7143,
-        "recall": 0.8791,
-        "f1": 0.7882,
-        "brier": 0.0184
+        "support": 172,
+        "precision": 0.9438,
+        "recall": 0.9767,
+        "f1": 0.96,
+        "brier": 0.0029
       },
       "toxicity_harm": {
-        "support": 1510,
-        "precision": 0.6366,
-        "recall": 0.9258,
-        "f1": 0.7545,
-        "brier": 0.1486
+        "support": 1524,
+        "precision": 0.8107,
+        "recall": 0.9022,
+        "f1": 0.854,
+        "brier": 0.0827
       },
       "adversarial_obfuscation": {
         "support": 79,
-        "precision": 0.7196,
+        "precision": 0.9277,
         "recall": 0.9747,
-        "f1": 0.828,
-        "brier": 0.0062
+        "f1": 0.9506,
+        "brier": 0.0014
       }
     },
-    "macro_f1": 0.7799,
-    "benign_rows": 1885,
-    "benign_fpr_at_0.5": 0.4462,
-    "benign_fpr_at_0.9": 0.0684,
-    "defensive_cyber_slice_rows": 60,
+    "macro_f1": 0.9047,
+    "benign_rows": 2049,
+    "benign_fpr_at_0.5": 0.1552,
+    "benign_fpr_at_0.9": 0.0264,
+    "defensive_cyber_slice_rows": 75,
     "defensive_cyber_fpr_at_0.5": 0.0,
-    "malicious_code_matched_control_rows": 58,
-    "malicious_code_matched_control_fpr_at_0.5": 0.0345
+    "malicious_code_matched_control_rows": 0,
+    "malicious_code_matched_control_fpr_at_0.5": null
   },
   "provenance_note": "labels include AI-assisted provisional review: v0.2's 152-conflict expert adjudication, and v0.3's full-coverage AI dual review (scripts/ai_reviewers_v03.py)"
 }

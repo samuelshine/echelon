@@ -1,0 +1,78 @@
+{
+  "base_model": "distilbert-base-uncased",
+  "categories": [
+    "prompt_injection",
+    "system_prompt_leakage",
+    "malicious_code",
+    "toxicity_harm",
+    "adversarial_obfuscation"
+  ],
+  "device": "mps",
+  "max_length": 256,
+  "batch_size": 16,
+  "epochs": 3,
+  "lr": 3e-05,
+  "seed": 42,
+  "dataset_sha256": "30b45064debc8ed252f618528e267a7f06ff15e08c56c682924a0a80e443d54b",
+  "rows": {
+    "train": 31477,
+    "validation": 3978,
+    "test": 3964
+  },
+  "best_val_macro_f1": 0.8631,
+  "calibration_temperatures": {
+    "prompt_injection": 1.15,
+    "system_prompt_leakage": 1.2,
+    "malicious_code": 1.7,
+    "toxicity_harm": 1.7,
+    "adversarial_obfuscation": 0.45
+  },
+  "test": {
+    "per_category": {
+      "prompt_injection": {
+        "support": 387,
+        "precision": 0.5674,
+        "recall": 0.9793,
+        "f1": 0.7185,
+        "brier": 0.0587
+      },
+      "system_prompt_leakage": {
+        "support": 126,
+        "precision": 0.7622,
+        "recall": 0.8651,
+        "f1": 0.8104,
+        "brier": 0.0094
+      },
+      "malicious_code": {
+        "support": 182,
+        "precision": 0.7143,
+        "recall": 0.8791,
+        "f1": 0.7882,
+        "brier": 0.0184
+      },
+      "toxicity_harm": {
+        "support": 1510,
+        "precision": 0.6366,
+        "recall": 0.9258,
+        "f1": 0.7545,
+        "brier": 0.1486
+      },
+      "adversarial_obfuscation": {
+        "support": 79,
+        "precision": 0.7196,
+        "recall": 0.9747,
+        "f1": 0.828,
+        "brier": 0.0062
+      }
+    },
+    "macro_f1": 0.7799,
+    "benign_rows": 1885,
+    "benign_fpr_at_0.5": 0.4462,
+    "benign_fpr_at_0.9": 0.0684,
+    "defensive_cyber_slice_rows": 60,
+    "defensive_cyber_fpr_at_0.5": 0.0,
+    "malicious_code_matched_control_rows": 58,
+    "malicious_code_matched_control_fpr_at_0.5": 0.0345
+  },
+  "provenance_note": "labels include AI-assisted provisional review: v0.2's 152-conflict expert adjudication, and v0.3's full-coverage AI dual review (scripts/ai_reviewers_v03.py)"
+}

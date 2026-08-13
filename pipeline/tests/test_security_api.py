@@ -6,9 +6,11 @@ DisallowUnknownFields, so a green test here means the Go gateway will accept the
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from echelon.contracts import ThreatCategory
 from echelon.layer1 import HeuristicAnalyzer
@@ -334,6 +336,38 @@ class EgressThresholdTests(unittest.TestCase):
         api._EGRESS_THRESHOLDS = self.EGRESS
         # prompt_injection is input-framed and must not move an egress verdict.
         self.assertLess(api._aggregate_response(self.scores(prompt_injection=1.0)), api.GATEWAY_JUDGE)
+
+
+class ResponseModelFallbackTests(unittest.TestCase):
+    """Egress must degrade to the ingress model when no response artifact exists."""
+
+    def setUp(self):
+        api._response_classifier.cache_clear()
+        self.addCleanup(api._response_classifier.cache_clear)
+
+    def test_missing_response_model_falls_back_to_none(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.dict(os.environ, {"ECHELON_RESPONSE_MODEL_DIR": directory}, clear=False):
+                self.assertIsNone(api._response_classifier())
+
+    def test_score_response_uses_the_ingress_model_when_absent(self):
+        scores = {"toxicity_harm": 0.4, "malicious_code": 0.2}
+
+        class _Result:
+            category_scores = scores
+
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.dict(os.environ, {"ECHELON_RESPONSE_MODEL_DIR": directory}, clear=False):
+                with patch.object(api, "_services", return_value=(None, _StubClassifier(_Result()), None)):
+                    self.assertEqual(api._score_response("some assistant text"), scores)
+
+
+class _StubClassifier:
+    def __init__(self, result):
+        self._result = result
+
+    def analyze(self, _text):
+        return self._result
 
 
 if __name__ == "__main__":

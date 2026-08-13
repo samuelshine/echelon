@@ -58,6 +58,14 @@ from echelon.layer3 import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL_DIR = PROJECT_ROOT / "models" / "layer2-threat-distilbert" / "best"
+# Optional dedicated response-side model. Egress and ingress turned out to be
+# measurably different problems: malicious_code transfers from prompts to
+# responses (0.819 vs 0.083 on held-out responses) but toxicity_harm does not
+# (62% benign false-positive rate at 0.5, 2.7% recall at 0.95). Training one
+# blended model would put the just-promoted ingress model at risk to fix a head
+# that only misbehaves on egress, so the response model is a separate artifact.
+# Absent, the egress routes fall back to the ingress model exactly as before.
+DEFAULT_RESPONSE_MODEL_DIR = PROJECT_ROOT / "models" / "layer2-response-distilbert" / "best"
 MAX_TEXT_BYTES = 200_000
 
 # The trained model is low-precision on these two sparse categories AND scores them
@@ -292,6 +300,35 @@ def _services():
 
 
 @lru_cache(maxsize=1)
+def _response_classifier():
+    """Dedicated response-side classifier, or None to reuse the ingress model.
+
+    Loading it also swaps in its own egress thresholds, since an operating point
+    only means anything paired with the model it was fitted for.
+    """
+    global _EGRESS_THRESHOLDS
+    model_dir = Path(os.environ.get("ECHELON_RESPONSE_MODEL_DIR", str(DEFAULT_RESPONSE_MODEL_DIR)))
+    if not (model_dir / "config.json").is_file():
+        print("no response-side model; egress reuses the ingress model", file=sys.stderr)
+        return None
+    classifier = Layer2Classifier(MultiLabelTransformersAdapter(model_dir))
+    egress = _load_thresholds(model_dir, "egress_thresholds")
+    if egress:
+        _EGRESS_THRESHOLDS = egress
+    print(f"response-side model: {model_dir}; egress thresholds: {egress or 'none'}", file=sys.stderr)
+    return classifier
+
+
+def _score_response(text):
+    """Per-category scores for response text, from the response model if present."""
+    classifier = _response_classifier()
+    if classifier is None:
+        _, ingress, _ = _services()
+        return ingress.analyze(text).category_scores
+    return classifier.analyze(text).category_scores
+
+
+@lru_cache(maxsize=1)
 def _response_judge() -> Layer3Judge:
     """A second Layer3Judge, output-framed, sharing ingress's judge backend config."""
     ollama_model = os.environ.get("ECHELON_OLLAMA_MODEL")
@@ -394,17 +431,15 @@ def classify_response():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     try:
-        _, classifier, _ = _services()
-        result = classifier.analyze(text)
+        category_scores = _score_response(text)
     except Exception:
         app.logger.error("classify_response failed", exc_info=False)
         return jsonify({"error": "classifier unavailable"}), 503
-    # Code-shaped output floors malicious_code so the sparse mitigation engages
-    # and the aggregate reaches the judge-escalation band (egress path only).
-    scored = _apply_code_shape_floor(text, result.category_scores)
+    # A no-op once egress thresholds are configured; see _apply_code_shape_floor.
+    scored = _apply_code_shape_floor(text, category_scores)
     return jsonify({
         "malicious_probability": round(float(_aggregate_response(scored)), 6),
-        "labels": {k: round(float(v), 6) for k, v in result.category_scores.items()},
+        "labels": {k: round(float(v), 6) for k, v in category_scores.items()},
     })
 
 
@@ -419,9 +454,11 @@ def judge_response():
         analyzer, classifier, _ = _services()
         judge_layer = _response_judge()
         layer1 = analyzer.analyze(text)
+        # Shape comes from the ingress classifier; the SCORES come from the
+        # response model when one is loaded, so the judge sees egress evidence.
         layer2 = classifier.analyze(text)
-        # Floor malicious_code on code-shaped output (egress path only) so the
-        # sparse mitigation and aggregate escalate to the judge.
+        layer2 = dataclasses.replace(layer2, category_scores=_score_response(text))
+        # A no-op once egress thresholds are configured; see _apply_code_shape_floor.
         scored = _apply_code_shape_floor(text, layer2.category_scores)
         weighted = _mitigated_scores(scored)
         aggregate = _aggregate_response(scored)

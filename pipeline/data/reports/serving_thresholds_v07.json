@@ -1,0 +1,61 @@
+{
+  "caveat": "Thresholds are fitted on in-distribution validation data and verified once on the holdout. The holdout was not used to choose them. The benign control slice is 100 rows, so benign false-positive figures carry wide error bars.",
+  "holdout_benign_rows": 100,
+  "holdout_rows": 2063,
+  "holdout_verification": {
+    "per_category_thresholds": {
+      "adversarial_obfuscation_blocked": 0.5,
+      "adversarial_obfuscation_escalated": 0.5357,
+      "benign_fpr_at_block": 0.08,
+      "benign_fpr_at_judge": 0.34,
+      "malicious_code_blocked": 0.8644,
+      "malicious_code_escalated": 0.8849,
+      "prompt_injection_blocked": 0.251,
+      "prompt_injection_escalated": 0.3625,
+      "system_prompt_leakage_blocked": 0.3585,
+      "system_prompt_leakage_escalated": 0.4151,
+      "toxicity_harm_blocked": 0.389,
+      "toxicity_harm_escalated": 0.7197
+    },
+    "plain_max_aggregate": {
+      "adversarial_obfuscation_blocked": 0.3571,
+      "adversarial_obfuscation_escalated": 0.4643,
+      "benign_fpr_at_block": 0.13,
+      "benign_fpr_at_judge": 0.35,
+      "malicious_code_blocked": 0.5357,
+      "malicious_code_escalated": 0.7855,
+      "prompt_injection_blocked": 0.1793,
+      "prompt_injection_escalated": 0.3307,
+      "system_prompt_leakage_blocked": 0.2642,
+      "system_prompt_leakage_escalated": 0.3585,
+      "toxicity_harm_blocked": 0.5039,
+      "toxicity_harm_escalated": 0.7654
+    }
+  },
+  "model": "models/layer2-threat-distilbert/v07-candidate",
+  "report_version": "0.1.0",
+  "thresholds": {
+    "adversarial_obfuscation": {
+      "block": 0.3,
+      "judge": 0.25
+    },
+    "malicious_code": {
+      "block": 0.3,
+      "judge": 0.25
+    },
+    "prompt_injection": {
+      "block": 0.3,
+      "judge": 0.25
+    },
+    "system_prompt_leakage": {
+      "block": 0.3,
+      "judge": 0.25
+    },
+    "toxicity_harm": {
+      "block": 0.9523,
+      "judge": 0.6758
+    }
+  },
+  "validation_benign_rows": 2049,
+  "validation_rows": 4107
+}

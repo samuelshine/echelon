@@ -79,8 +79,20 @@ def resolve_github_url(repo_id: str, revision: str, artifact: str) -> str:
     return f"https://raw.githubusercontent.com/{quoted_repo}/{revision}/{quote_path(artifact)}"
 
 
+def auth_headers() -> dict[str, str]:
+    """Bearer header from HF_TOKEN, if the environment supplies one.
+
+    A token is how a gated source is acquired legitimately: a human accepts the
+    publisher's terms on their own account and exports the resulting token. It
+    is never a way around the terms, so acquisition of a gated source still
+    requires --allow-gated as well.
+    """
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
 def read_json_url(url: str) -> dict[str, Any]:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **auth_headers()})
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.load(response)
 
@@ -103,7 +115,7 @@ def download_atomic(url: str, destination: Path, force: bool = False) -> tuple[s
         with temporary.open("rb") as existing:
             for chunk in iter(lambda: existing.read(1024 * 1024), b""):
                 digest.update(chunk)
-    headers = {"User-Agent": USER_AGENT}
+    headers = {"User-Agent": USER_AGENT, **auth_headers()}
     if size:
         headers["Range"] = f"bytes={size}-"
     request = urllib.request.Request(url, headers=headers)
@@ -126,19 +138,31 @@ def download_atomic(url: str, destination: Path, force: bool = False) -> tuple[s
     return digest.hexdigest(), size
 
 
-def approved_sources(registry: dict[str, Any], requested: set[str] | None) -> list[dict[str, Any]]:
+def approved_sources(
+    registry: dict[str, Any], requested: set[str] | None, allow_gated: bool = False,
+) -> list[dict[str, Any]]:
     selected = []
     known_ids = {item.get("id") for item in registry.get("datasets", [])}
     if requested:
         unknown = requested - known_ids
         if unknown:
             raise AcquisitionError("unknown dataset IDs: " + ", ".join(sorted(unknown)))
+    acceptable = {"approved"} | ({"blocked_gated"} if allow_gated else set())
     for item in registry.get("datasets", []):
         if requested and item.get("id") not in requested:
             continue
-        if item.get("review_state") != "approved":
+        if item.get("review_state") not in acceptable:
             if requested:
-                raise AcquisitionError(f"dataset is not approved: {item.get('id')}")
+                hint = (
+                    " (vetted but gated: accept the publisher's terms, export HF_TOKEN, "
+                    "and pass --allow-gated)"
+                    if item.get("review_state") == "blocked_gated" else ""
+                )
+                raise AcquisitionError(f"dataset is not approved: {item.get('id')}{hint}")
+            continue
+        # blocked_gated sources are never swept up by a bulk run; they must be
+        # named explicitly, so that acquiring one is always a deliberate act.
+        if item.get("review_state") == "blocked_gated" and not requested:
             continue
         if not item.get("artifacts"):
             continue
@@ -219,7 +243,9 @@ def acquire_github_source(source: dict[str, Any], output_root: Path, force: bool
     return record
 
 
-def acquire_source(source: dict[str, Any], output_root: Path, force: bool = False) -> dict[str, Any]:
+def acquire_source(
+    source: dict[str, Any], output_root: Path, force: bool = False, allow_gated: bool = False,
+) -> dict[str, Any]:
     if source_kind(source["uri"]) == "github":
         return acquire_github_source(source, output_root, force=force)
     repo_id = parse_hf_dataset_uri(source["uri"])
@@ -230,7 +256,21 @@ def acquire_source(source: dict[str, Any], output_root: Path, force: bool = Fals
             f"{source['id']}: registry revision {source['revision']} is not current API revision {metadata.get('sha')}"
         )
     if metadata.get("gated"):
-        raise AcquisitionError(f"{source['id']}: gated datasets require manual terms acceptance")
+        # Gating is a publisher's terms, not a technical obstacle. The only
+        # sanctioned route is a human accepting those terms on their own account
+        # and exporting the resulting token; both the explicit flag and the token
+        # are required, and neither alone is enough.
+        if not allow_gated:
+            raise AcquisitionError(
+                f"{source['id']}: gated datasets require manual terms acceptance "
+                "(accept the publisher's terms, export HF_TOKEN, then pass --allow-gated)"
+            )
+        if not auth_headers():
+            raise AcquisitionError(
+                f"{source['id']}: --allow-gated requires HF_TOKEN (or HUGGING_FACE_HUB_TOKEN) "
+                "from an account that has accepted the publisher's terms"
+            )
+        print(f"{source['id']}: acquiring gated source with supplied token", file=sys.stderr)
     api_license = (metadata.get("cardData") or {}).get("license")
     if api_license and api_license.casefold() != source["license_spdx"].casefold():
         raise AcquisitionError(
@@ -245,6 +285,7 @@ def acquire_source(source: dict[str, Any], output_root: Path, force: bool = Fals
         "id": source["id"],
         "repo_id": repo_id,
         "host": "huggingface",
+        "gated": bool(metadata.get("gated")),
         "revision": source["revision"],
         "license_spdx": source["license_spdx"],
         "role": source["role"],
@@ -282,6 +323,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dataset", action="append", dest="datasets", help="approved registry ID; repeatable")
     parser.add_argument("--force", action="store_true", help="redownload and atomically replace existing artifacts")
     parser.add_argument("--verify-only", action="store_true", help="verify the local manifest and artifacts without network access")
+    parser.add_argument(
+        "--allow-gated", action="store_true",
+        help="acquire an explicitly named blocked_gated source; requires HF_TOKEN from an "
+             "account that has accepted the publisher's terms",
+    )
     args = parser.parse_args(argv)
 
     if args.verify_only:
@@ -299,8 +345,13 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         registry = json.loads(args.registry.read_text(encoding="utf-8"))
-        sources = approved_sources(registry, set(args.datasets) if args.datasets else None)
-        acquired = [acquire_source(source, args.output, force=args.force) for source in sources]
+        sources = approved_sources(
+            registry, set(args.datasets) if args.datasets else None, allow_gated=args.allow_gated,
+        )
+        acquired = [
+            acquire_source(source, args.output, force=args.force, allow_gated=args.allow_gated)
+            for source in sources
+        ]
     except (OSError, json.JSONDecodeError, urllib.error.URLError, AcquisitionError) as exc:
         print(f"acquisition failed: {exc}", file=sys.stderr)
         return 1

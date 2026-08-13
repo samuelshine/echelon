@@ -1,9 +1,10 @@
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.acquire_datasets import AcquisitionError, approved_sources, download_atomic, parse_hf_dataset_uri, resolve_url, verify_manifest
+from scripts.acquire_datasets import AcquisitionError, approved_sources, auth_headers, download_atomic, parse_hf_dataset_uri, resolve_url, verify_manifest
 
 
 class AcquireDatasetsTests(unittest.TestCase):
@@ -57,6 +58,35 @@ class AcquireDatasetsTests(unittest.TestCase):
             self.assertEqual(verify_manifest(manifest, root), [])
             artifact.write_bytes(b"tampered")
             self.assertTrue(verify_manifest(manifest, root))
+
+
+
+class GatedSourceTests(unittest.TestCase):
+    """Gating is the publisher's terms, so the only route through is a human accepting them."""
+
+    REGISTRY = {"datasets": [{
+        "id": "gated_example", "uri": "hf://datasets/example/gated",
+        "role": "train_candidate", "revision": "a" * 40, "license_spdx": "MIT",
+        "review_state": "blocked_gated", "artifacts": ["data.parquet"],
+    }]}
+
+    def test_gated_source_is_refused_without_the_flag(self):
+        with self.assertRaises(AcquisitionError) as caught:
+            approved_sources(self.REGISTRY, {"gated_example"})
+        self.assertIn("--allow-gated", str(caught.exception))
+
+    def test_gated_source_is_never_swept_up_by_a_bulk_run(self):
+        self.assertEqual(approved_sources(self.REGISTRY, None, allow_gated=True), [])
+
+    def test_named_gated_source_is_selectable_with_the_flag(self):
+        selected = approved_sources(self.REGISTRY, {"gated_example"}, allow_gated=True)
+        self.assertEqual([item["id"] for item in selected], ["gated_example"])
+
+    def test_auth_header_present_only_when_a_token_is_exported(self):
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(auth_headers(), {})
+        with patch.dict(os.environ, {"HF_TOKEN": "secret"}, clear=True):
+            self.assertEqual(auth_headers(), {"Authorization": "Bearer secret"})
 
 
 if __name__ == "__main__":

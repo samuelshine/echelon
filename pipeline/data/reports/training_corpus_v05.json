@@ -1,0 +1,51 @@
+{
+  "addition_rows_merged": 1721,
+  "addition_rows_offered": 1730,
+  "addition_rows_skipped": {
+    "duplicate_normalized_text": 9
+  },
+  "additions": "data/normalized_v2/real_code_sources_clean.jsonl",
+  "base": "data/normalized_v2/eligible_reviewed_v03.jsonl",
+  "base_rows": 36392,
+  "holdout_scan": {
+    "contaminated_rows_excluded": 19,
+    "contamination_reasons": {
+      "catqa_english:semantic_near_duplicate": 1,
+      "jailbreakv_redteam_2k:exact_normalized_match": 17,
+      "jailbreakv_redteam_2k:semantic_near_duplicate": 1
+    },
+    "report": "data/reports/real_code_vs_holdout_scan.json"
+  },
+  "label_occurrences_by_source_kind": {
+    "real": {
+      "adversarial_obfuscation": 432,
+      "benign": 16116,
+      "malicious_code": 153,
+      "prompt_injection": 2866,
+      "system_prompt_leakage": 213,
+      "toxicity_harm": 15520
+    },
+    "synthetic": {
+      "adversarial_obfuscation": 221,
+      "benign": 1714,
+      "malicious_code": 1000,
+      "prompt_injection": 1221,
+      "system_prompt_leakage": 1100
+    }
+  },
+  "output": "data/normalized_v2/eligible_reviewed_v05.jsonl",
+  "output_rows": 38113,
+  "output_sha256": "fa8158dbf5fcd4647b0767d483f6772fa32d2a2faa60166c1426c75327623d68",
+  "report_version": "0.1.0",
+  "rows_by_source": {
+    "aegis_safety_2": 25415,
+    "catqa_english": 542,
+    "do_not_answer": 937,
+    "echelon_targeted_v0_2": 598,
+    "echelon_targeted_v0_3": 3329,
+    "jackhhao_jailbreak_classification": 638,
+    "jailbreakv_redteam_2k": 1179,
+    "neuralchemy_prompt_injection": 5475
+  },
+  "status": "merged_pending_split"
+}

@@ -1,0 +1,42 @@
+{
+  "acquired_at": "2026-08-13T03:33:38.511446+00:00",
+  "manifest_version": "0.1.0",
+  "registry_version": "0.3.0",
+  "sources": [
+    {
+      "artifacts": [
+        {
+          "bytes": 2613,
+          "path": "README.md",
+          "sha256": "9627bb07e30b8a64e7f6162d7160d0d8571a45e8a1e8c2dbcba6ca5104e4bfc4"
+        },
+        {
+          "bytes": 106279,
+          "path": "data/catqa_english.json",
+          "sha256": "af67afd82ac31d4ef59e863a3f7a08d4469395078b1bc830310b4a01204daefc"
+        }
+      ],
+      "host": "huggingface",
+      "id": "catqa_english",
+      "license_spdx": "Apache-2.0",
+      "repo_id": "declare-lab/CategoricalHarmfulQA",
+      "revision": "321e068b391b7d1aeeb882ac468356a9513c9167",
+      "role": "train_candidate"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 215644,
+          "path": "JailBreakV_28K/RedTeam_2K.csv",
+          "sha256": "e15c65d423db8719f9c21521dc8531b52bc6b4906e79eadbe367c9f4b10e8858"
+        }
+      ],
+      "host": "huggingface",
+      "id": "jailbreakv_redteam_2k",
+      "license_spdx": "MIT",
+      "repo_id": "JailbreakV-28K/JailBreakV-28k",
+      "revision": "f949ca582fff13d396ac8fce59596afafb2b78d3",
+      "role": "train_candidate"
+    }
+  ]
+}

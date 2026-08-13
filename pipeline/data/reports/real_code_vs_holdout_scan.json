@@ -1,0 +1,36 @@
+{
+  "clean_label_occurrences": {
+    "malicious_code": 153,
+    "toxicity_harm": 1577
+  },
+  "clean_rows": 1730,
+  "clean_rows_by_source": {
+    "catqa_english": 549,
+    "jailbreakv_redteam_2k": 1181
+  },
+  "contaminated_label_occurrences": {
+    "malicious_code": 4,
+    "toxicity_harm": 15
+  },
+  "contaminated_rows": 19,
+  "contamination_reasons": {
+    "catqa_english:semantic_near_duplicate": 1,
+    "jailbreakv_redteam_2k:exact_normalized_match": 17,
+    "jailbreakv_redteam_2k:semantic_near_duplicate": 1
+  },
+  "corpus": "data/holdout_v1/holdout_eval_clean.jsonl",
+  "corpus_rows": 2063,
+  "cosine_threshold": 0.94,
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "holdout": "data/normalized_v2/real_code_sources.jsonl",
+  "holdout_rows": 1749,
+  "report_version": "0.1.0",
+  "similarity_percentiles": {
+    "100": 1.0,
+    "50": 0.7396,
+    "90": 0.8203,
+    "99": 0.9445
+  },
+  "status": "scanned"
+}

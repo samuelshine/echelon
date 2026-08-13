@@ -1,0 +1,27 @@
+{
+  "acquisition_manifest": "data/manifests/acquisition_manifest_realcode.json",
+  "counters": {
+    "catqa_english:malicious_code": 50,
+    "catqa_english:toxicity_harm": 500,
+    "jailbreakv_redteam_2k:filtered_out:AdvBench": 67,
+    "jailbreakv_redteam_2k:filtered_out:BeaverTails": 558,
+    "jailbreakv_redteam_2k:filtered_out:LLM Jailbreak Study": 8,
+    "jailbreakv_redteam_2k:filtered_out:hh-rlhf": 168,
+    "jailbreakv_redteam_2k:malicious_code": 107,
+    "jailbreakv_redteam_2k:toxicity_harm": 1092
+  },
+  "exact_duplicate_rows_collapsed": 0,
+  "label_occurrences": {
+    "malicious_code": 157,
+    "toxicity_harm": 1592
+  },
+  "labelling_policy": "publisher-declared category fields only; no text-derived labels",
+  "output": "data/normalized_v2/real_code_sources.jsonl",
+  "report_version": "0.1.0",
+  "rows": 1749,
+  "rows_by_source": {
+    "catqa_english": 550,
+    "jailbreakv_redteam_2k": 1199
+  },
+  "status": "normalized_pending_contamination_scan"
+}

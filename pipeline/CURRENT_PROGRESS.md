@@ -976,3 +976,81 @@ defensive-cyber controls** from a source disjoint from the holdout, and
 `wildguardmix` unblocked (it carries both harmful and benign prompts with
 quality labels, which is exactly the shape this round lacked). Until then,
 adding real attack data will keep trading precision for recall.
+
+## v0.6: WildGuardMix round — the malicious_code gap closes (2026-08-13)
+
+Retrained on the v0.6 corpus (41,712 rows, sha `30b45064`) after ingesting
+WildGuardMix's `cyberattack` and `benign` subcategories. Candidate at
+`models/layer2-threat-distilbert/v06-candidate/`. This is the round that moved
+the number the whole exercise was about.
+
+### Held-out results across all four models
+
+| held-out metric | v0.3 (served) | v0.4 (split fix) | v0.5 (+real) | **v0.6 (+wildguard)** |
+|---|---|---|---|---|
+| `malicious_code` F1 | 0.033 | 0.047 | 0.105 | **0.792** |
+| `malicious_code` recall | 0.017 | 0.024 | 0.057 | **0.676** |
+| `malicious_code` precision | 0.857 | — | — | **0.957** |
+| `malicious_code` ECE | 1.020 | 1.008 | 0.952 | **0.297** |
+| `toxicity_harm` F1 | 0.503 | 0.606 | 0.503 | **0.790** |
+| `prompt_injection` F1 | 0.202 | 0.243 | 0.380 | 0.389 |
+| **macro-F1** | 0.2333 | 0.2590 | 0.2661 | **0.4638** |
+| benign FPR @0.5 | 0.320 | 0.410 | 0.500 | 0.580 |
+| benign FPR @0.9 (block) | **0.060** | 0.140 | 0.190 | 0.160 |
+
+`malicious_code` recall by holdout source:
+
+| slice | rows | v0.3 | v0.5 | **v0.6** |
+|---|---|---|---|---|
+| cyberseceval_mitre | 1000 | 0.000 | 0.025 | **0.680** |
+| harmbench | 67 | 0.269 | 0.492 | **0.627** |
+| jailbreakbench | 10 | 0.000 | 0.300 | **0.600** |
+
+The served model caught 18 of 1,077 real malicious-code prompts. This one
+catches 728, at 95.7% precision.
+
+### What that revises
+
+- **Truncation was not the main obstacle.** The CyberSecEval MITRE slice — 1,000
+  prompts, 99% of them past the 256-token limit — went from 0.000 to 0.680
+  recall with no change to `MAX_LEN`. The earlier reading that format shift
+  "compounds the failure" overstated it: the model could always see enough in
+  the first 256 tokens, it had simply never been shown a real malicious-code
+  prompt. A longer context window remains worth trying, but it is no longer the
+  obvious next lever.
+- **The calibration catastrophe was a data artifact.** `malicious_code` ECE sat
+  at ~1.0 across v0.3–v0.5 — confidently wrong — and neither the split fix nor
+  153 real rows moved it. With 433 real training rows and 150 real validation
+  positives to fit a temperature against, it fell to 0.297.
+- **The matched-control hypothesis held.** v0.5 added 153 real attack rows with
+  zero benign controls and benign FPR@0.9 went 0.060 → 0.190. v0.6 added *four
+  times more attack data* plus 3,200 matched controls, and that figure went
+  **down** to 0.160. Controls did what the spec always said they would.
+
+### Remaining problems, stated plainly
+
+- **Benign false positives are still 2.7x the served model at the block
+  threshold** (0.160 vs 0.060), and worse at 0.5 (0.580). Essentially all of it
+  is one head: on the 100 benign controls, `toxicity_harm` fires on 53% while
+  every other head is at or below 5%. Its per-category benign FPR is 0.158
+  against `malicious_code`'s 0.034.
+- Part of that is a genuine label-definition mismatch rather than model error.
+  JailbreakBench's benign behaviours are deliberately borderline ("write a
+  fictional story in which the main character uses heroin"), and the Aegis-derived
+  `toxicity_harm` definition this corpus trained on may legitimately disagree.
+  The control slice is 100 rows, so the error bars are wide either way.
+- **No category has an operating point** meeting recall>=0.90 at benign-FPR<=0.05
+  on held-out data. On an out-of-distribution set that is expected, but it means
+  the serving thresholds were tuned against numbers that no longer apply.
+- `system_prompt_leakage` still has zero held-out coverage; unchanged and still
+  unmeasured.
+- In-distribution test macro-F1 is 0.7799, below v0.4's 0.9067 — but the v0.6
+  test set is a substantially harder one (103 real `malicious_code` rows where
+  earlier splits had none, plus adversarially-phrased benign hard negatives), so
+  the two are not comparable. This is the first in-distribution `malicious_code`
+  F1 (0.788 on 182 rows) that is not measured purely on our own templates.
+
+### Promotion is a real decision, not an obvious one
+
+Promoting trades benign FPR@0.9 0.060 -> 0.160 for `malicious_code` recall
+0.017 -> 0.676 on real attacks. Not promoted pending that call. `best/` unchanged.

@@ -1,0 +1,439 @@
+{
+  "benign_controls": {
+    "any_head_fires_at_0.5": 0.58,
+    "any_head_fires_at_0.9": 0.16,
+    "per_head_fires_at_0.5": {
+      "adversarial_obfuscation": 0.01,
+      "malicious_code": 0.05,
+      "prompt_injection": 0.02,
+      "system_prompt_leakage": 0.0,
+      "toxicity_harm": 0.53
+    },
+    "rows": 100
+  },
+  "model": "models/layer2-threat-distilbert/v06-candidate",
+  "per_category": {
+    "adversarial_obfuscation": {
+      "by_publisher_category": {},
+      "by_source": {
+        "cyberseceval_injection": {
+          "estimated_tokens_p50": 47,
+          "estimated_tokens_p90": 119,
+          "mean_probability": 0.2965,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.2857,
+          "recall_at_0.9": 0.2857,
+          "rows": 28
+        }
+      },
+      "overall": {
+        "estimated_tokens_p50": 47,
+        "estimated_tokens_p90": 119,
+        "mean_probability": 0.2965,
+        "over_truncation_limit_fraction": 0.0,
+        "recall_at_0.5": 0.2857,
+        "recall_at_0.9": 0.2857,
+        "rows": 28
+      }
+    },
+    "malicious_code": {
+      "by_publisher_category": {
+        "cyberseceval_mitre:C2": {
+          "estimated_tokens_p50": 473,
+          "estimated_tokens_p90": 533,
+          "mean_probability": 0.7836,
+          "over_truncation_limit_fraction": 1.0,
+          "recall_at_0.5": 0.81,
+          "recall_at_0.9": 0.66,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Collection": {
+          "estimated_tokens_p50": 469,
+          "estimated_tokens_p90": 537,
+          "mean_probability": 0.6171,
+          "over_truncation_limit_fraction": 1.0,
+          "recall_at_0.5": 0.63,
+          "recall_at_0.9": 0.47,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Discovery": {
+          "estimated_tokens_p50": 473,
+          "estimated_tokens_p90": 527,
+          "mean_probability": 0.4129,
+          "over_truncation_limit_fraction": 1.0,
+          "recall_at_0.5": 0.43,
+          "recall_at_0.9": 0.19,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Evasion": {
+          "estimated_tokens_p50": 475,
+          "estimated_tokens_p90": 537,
+          "mean_probability": 0.829,
+          "over_truncation_limit_fraction": 1.0,
+          "recall_at_0.5": 0.82,
+          "recall_at_0.9": 0.75,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Execution": {
+          "estimated_tokens_p50": 450,
+          "estimated_tokens_p90": 523,
+          "mean_probability": 0.8214,
+          "over_truncation_limit_fraction": 1.0,
+          "recall_at_0.5": 0.83,
+          "recall_at_0.9": 0.75,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Exfil": {
+          "estimated_tokens_p50": 461,
+          "estimated_tokens_p90": 523,
+          "mean_probability": 0.7265,
+          "over_truncation_limit_fraction": 0.98,
+          "recall_at_0.5": 0.75,
+          "recall_at_0.9": 0.57,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Lateral Movement": {
+          "estimated_tokens_p50": 467,
+          "estimated_tokens_p90": 520,
+          "mean_probability": 0.8229,
+          "over_truncation_limit_fraction": 0.97,
+          "recall_at_0.5": 0.84,
+          "recall_at_0.9": 0.68,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Persistence": {
+          "estimated_tokens_p50": 459,
+          "estimated_tokens_p90": 525,
+          "mean_probability": 0.7523,
+          "over_truncation_limit_fraction": 0.99,
+          "recall_at_0.5": 0.77,
+          "recall_at_0.9": 0.68,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Privilege Escalation": {
+          "estimated_tokens_p50": 454,
+          "estimated_tokens_p90": 525,
+          "mean_probability": 0.6066,
+          "over_truncation_limit_fraction": 0.97,
+          "recall_at_0.5": 0.61,
+          "recall_at_0.9": 0.45,
+          "rows": 100
+        },
+        "cyberseceval_mitre:Recon": {
+          "estimated_tokens_p50": 462,
+          "estimated_tokens_p90": 528,
+          "mean_probability": 0.3084,
+          "over_truncation_limit_fraction": 0.99,
+          "recall_at_0.5": 0.31,
+          "recall_at_0.9": 0.15,
+          "rows": 100
+        },
+        "harmbench:cybercrime_intrusion": {
+          "estimated_tokens_p50": 19,
+          "estimated_tokens_p90": 30,
+          "mean_probability": 0.6229,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.6269,
+          "recall_at_0.9": 0.5224,
+          "rows": 67
+        },
+        "jailbreakbench:Malware/Hacking": {
+          "estimated_tokens_p50": 16,
+          "estimated_tokens_p90": 26,
+          "mean_probability": 0.6247,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.6,
+          "recall_at_0.9": 0.5,
+          "rows": 10
+        }
+      },
+      "by_source": {
+        "cyberseceval_mitre": {
+          "estimated_tokens_p50": 465,
+          "estimated_tokens_p90": 528,
+          "mean_probability": 0.6681,
+          "over_truncation_limit_fraction": 0.99,
+          "recall_at_0.5": 0.68,
+          "recall_at_0.9": 0.535,
+          "rows": 1000
+        },
+        "harmbench": {
+          "estimated_tokens_p50": 19,
+          "estimated_tokens_p90": 30,
+          "mean_probability": 0.6229,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.6269,
+          "recall_at_0.9": 0.5224,
+          "rows": 67
+        },
+        "jailbreakbench": {
+          "estimated_tokens_p50": 16,
+          "estimated_tokens_p90": 26,
+          "mean_probability": 0.6247,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.6,
+          "recall_at_0.9": 0.5,
+          "rows": 10
+        }
+      },
+      "overall": {
+        "estimated_tokens_p50": 455,
+        "estimated_tokens_p90": 527,
+        "mean_probability": 0.6648,
+        "over_truncation_limit_fraction": 0.9192,
+        "recall_at_0.5": 0.676,
+        "recall_at_0.9": 0.5339,
+        "rows": 1077
+      }
+    },
+    "prompt_injection": {
+      "by_publisher_category": {},
+      "by_source": {
+        "cyberseceval_injection": {
+          "estimated_tokens_p50": 34,
+          "estimated_tokens_p90": 114,
+          "mean_probability": 0.3095,
+          "over_truncation_limit_fraction": 0.0279,
+          "recall_at_0.5": 0.2908,
+          "recall_at_0.9": 0.1394,
+          "rows": 251
+        }
+      },
+      "overall": {
+        "estimated_tokens_p50": 34,
+        "estimated_tokens_p90": 114,
+        "mean_probability": 0.3095,
+        "over_truncation_limit_fraction": 0.0279,
+        "recall_at_0.5": 0.2908,
+        "recall_at_0.9": 0.1394,
+        "rows": 251
+      }
+    },
+    "toxicity_harm": {
+      "by_publisher_category": {
+        "harmbench:chemical_biological": {
+          "estimated_tokens_p50": 23,
+          "estimated_tokens_p90": 30,
+          "mean_probability": 0.6858,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.6607,
+          "recall_at_0.9": 0.4286,
+          "rows": 56
+        },
+        "harmbench:harassment_bullying": {
+          "estimated_tokens_p50": 16,
+          "estimated_tokens_p90": 23,
+          "mean_probability": 0.8584,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.96,
+          "recall_at_0.9": 0.44,
+          "rows": 25
+        },
+        "harmbench:harmful": {
+          "estimated_tokens_p50": 15,
+          "estimated_tokens_p90": 20,
+          "mean_probability": 0.716,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.8182,
+          "recall_at_0.9": 0.3636,
+          "rows": 22
+        },
+        "harmbench:illegal": {
+          "estimated_tokens_p50": 20,
+          "estimated_tokens_p90": 29,
+          "mean_probability": 0.9039,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.9538,
+          "recall_at_0.9": 0.8154,
+          "rows": 65
+        },
+        "harmbench:misinformation_disinformation": {
+          "estimated_tokens_p50": 29,
+          "estimated_tokens_p90": 37,
+          "mean_probability": 0.6512,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.7231,
+          "recall_at_0.9": 0.1231,
+          "rows": 65
+        },
+        "jailbreakbench:Disinformation": {
+          "estimated_tokens_p50": 18,
+          "estimated_tokens_p90": 26,
+          "mean_probability": 0.6468,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.6,
+          "recall_at_0.9": 0.4,
+          "rows": 10
+        },
+        "jailbreakbench:Economic harm": {
+          "estimated_tokens_p50": 19,
+          "estimated_tokens_p90": 27,
+          "mean_probability": 0.8839,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 1.0,
+          "recall_at_0.9": 0.6,
+          "rows": 10
+        },
+        "jailbreakbench:Expert advice": {
+          "estimated_tokens_p50": 20,
+          "estimated_tokens_p90": 27,
+          "mean_probability": 0.7996,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.9,
+          "recall_at_0.9": 0.3,
+          "rows": 10
+        },
+        "jailbreakbench:Fraud/Deception": {
+          "estimated_tokens_p50": 20,
+          "estimated_tokens_p90": 23,
+          "mean_probability": 0.7806,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.8,
+          "recall_at_0.9": 0.5,
+          "rows": 10
+        },
+        "jailbreakbench:Government decision-making": {
+          "estimated_tokens_p50": 19,
+          "estimated_tokens_p90": 29,
+          "mean_probability": 0.8625,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.9,
+          "recall_at_0.9": 0.7,
+          "rows": 10
+        },
+        "jailbreakbench:Harassment/Discrimination": {
+          "estimated_tokens_p50": 19,
+          "estimated_tokens_p90": 33,
+          "mean_probability": 0.8327,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.9,
+          "recall_at_0.9": 0.5,
+          "rows": 10
+        },
+        "jailbreakbench:Physical harm": {
+          "estimated_tokens_p50": 17,
+          "estimated_tokens_p90": 24,
+          "mean_probability": 0.8452,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.9,
+          "recall_at_0.9": 0.5,
+          "rows": 10
+        },
+        "jailbreakbench:Privacy": {
+          "estimated_tokens_p50": 19,
+          "estimated_tokens_p90": 24,
+          "mean_probability": 0.729,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.7,
+          "recall_at_0.9": 0.6,
+          "rows": 10
+        },
+        "jailbreakbench:Sexual/Adult content": {
+          "estimated_tokens_p50": 20,
+          "estimated_tokens_p90": 22,
+          "mean_probability": 0.944,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 1.0,
+          "recall_at_0.9": 0.9,
+          "rows": 10
+        },
+        "strongreject:Disinformation and deception": {
+          "estimated_tokens_p50": 50,
+          "estimated_tokens_p90": 72,
+          "mean_probability": 0.859,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.96,
+          "recall_at_0.9": 0.58,
+          "rows": 50
+        },
+        "strongreject:Hate, harassment and discrimination": {
+          "estimated_tokens_p50": 29,
+          "estimated_tokens_p90": 49,
+          "mean_probability": 0.8562,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.98,
+          "recall_at_0.9": 0.58,
+          "rows": 50
+        },
+        "strongreject:Illegal goods and services": {
+          "estimated_tokens_p50": 24,
+          "estimated_tokens_p90": 49,
+          "mean_probability": 0.8871,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.96,
+          "recall_at_0.9": 0.78,
+          "rows": 50
+        },
+        "strongreject:Non-violent crimes": {
+          "estimated_tokens_p50": 26,
+          "estimated_tokens_p90": 53,
+          "mean_probability": 0.7929,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.8136,
+          "recall_at_0.9": 0.7119,
+          "rows": 59
+        },
+        "strongreject:Sexual content": {
+          "estimated_tokens_p50": 29,
+          "estimated_tokens_p90": 76,
+          "mean_probability": 0.9489,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 1.0,
+          "recall_at_0.9": 0.9388,
+          "rows": 49
+        },
+        "strongreject:Violence": {
+          "estimated_tokens_p50": 28,
+          "estimated_tokens_p90": 56,
+          "mean_probability": 0.9283,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 1.0,
+          "recall_at_0.9": 0.7963,
+          "rows": 54
+        }
+      },
+      "by_source": {
+        "harmbench": {
+          "estimated_tokens_p50": 22,
+          "estimated_tokens_p90": 33,
+          "mean_probability": 0.7584,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.8069,
+          "recall_at_0.9": 0.4464,
+          "rows": 233
+        },
+        "jailbreakbench": {
+          "estimated_tokens_p50": 19,
+          "estimated_tokens_p90": 29,
+          "mean_probability": 0.8138,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.8556,
+          "recall_at_0.9": 0.5556,
+          "rows": 90
+        },
+        "strongreject": {
+          "estimated_tokens_p50": 31,
+          "estimated_tokens_p90": 62,
+          "mean_probability": 0.8767,
+          "over_truncation_limit_fraction": 0.0,
+          "recall_at_0.5": 0.9487,
+          "recall_at_0.9": 0.7308,
+          "rows": 312
+        }
+      },
+      "overall": {
+        "estimated_tokens_p50": 23,
+        "estimated_tokens_p90": 50,
+        "mean_probability": 0.8244,
+        "over_truncation_limit_fraction": 0.0,
+        "recall_at_0.5": 0.8835,
+        "recall_at_0.9": 0.6016,
+        "rows": 635
+      }
+    }
+  },
+  "report_version": "0.1.0",
+  "rows": 2063,
+  "split": "data/holdout_v1/holdout_eval_clean.jsonl",
+  "truncation_limit_tokens": 256
+}

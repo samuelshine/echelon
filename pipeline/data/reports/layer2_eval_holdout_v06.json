@@ -1,0 +1,171 @@
+{
+  "model": "models/layer2-threat-distilbert/v06-candidate",
+  "split": "data/holdout_v1/holdout_eval_clean.jsonl",
+  "rows": 2063,
+  "macro_f1_at_0.5": 0.4638,
+  "benign_rows": 100,
+  "benign_fpr_at_0.5": 0.58,
+  "benign_fpr_at_0.9": 0.16,
+  "ece_bins": 10,
+  "recall_constraint": {
+    "min_recall": 0.9,
+    "max_benign_fpr": 0.05
+  },
+  "per_category": {
+    "prompt_injection": {
+      "support": 251,
+      "at_0.5": {
+        "threshold": 0.5,
+        "tp": 73,
+        "tn": 1761,
+        "fp": 51,
+        "fn": 178,
+        "precision": 0.5887,
+        "recall": 0.2908,
+        "f1": 0.3893,
+        "benign_fpr": 0.0281,
+        "brier": 0.094868
+      },
+      "expected_calibration_error": 0.0846,
+      "recall_constrained_operating_point": {
+        "error": "no threshold satisfies recall and benign false-positive constraints"
+      },
+      "by_source": {
+        "real": {
+          "threshold": 0.5,
+          "tp": 73,
+          "tn": 1761,
+          "fp": 51,
+          "fn": 178,
+          "precision": 0.5887,
+          "recall": 0.2908,
+          "f1": 0.3893,
+          "benign_fpr": 0.0281,
+          "brier": 0.094868,
+          "support": 251
+        }
+      }
+    },
+    "system_prompt_leakage": {
+      "support": 0,
+      "at_0.5": {
+        "threshold": 0.5,
+        "tp": 0,
+        "tn": 2052,
+        "fp": 11,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "benign_fpr": 0.0053,
+        "brier": 0.005171
+      },
+      "expected_calibration_error": 0.0233,
+      "recall_constrained_operating_point": {
+        "error": "no threshold satisfies recall and benign false-positive constraints"
+      }
+    },
+    "malicious_code": {
+      "support": 1077,
+      "at_0.5": {
+        "threshold": 0.5,
+        "tp": 728,
+        "tn": 953,
+        "fp": 33,
+        "fn": 349,
+        "precision": 0.9566,
+        "recall": 0.676,
+        "f1": 0.7922,
+        "benign_fpr": 0.0335,
+        "brier": 0.15492
+      },
+      "expected_calibration_error": 0.297,
+      "recall_constrained_operating_point": {
+        "error": "no threshold satisfies recall and benign false-positive constraints"
+      },
+      "by_source": {
+        "real": {
+          "threshold": 0.5,
+          "tp": 728,
+          "tn": 953,
+          "fp": 33,
+          "fn": 349,
+          "precision": 0.9566,
+          "recall": 0.676,
+          "f1": 0.7922,
+          "benign_fpr": 0.0335,
+          "brier": 0.15492,
+          "support": 1077
+        }
+      }
+    },
+    "toxicity_harm": {
+      "support": 635,
+      "at_0.5": {
+        "threshold": 0.5,
+        "tp": 561,
+        "tn": 1203,
+        "fp": 225,
+        "fn": 74,
+        "precision": 0.7137,
+        "recall": 0.8835,
+        "f1": 0.7896,
+        "benign_fpr": 0.1576,
+        "brier": 0.111139
+      },
+      "expected_calibration_error": 0.2438,
+      "recall_constrained_operating_point": {
+        "error": "no threshold satisfies recall and benign false-positive constraints"
+      },
+      "by_source": {
+        "real": {
+          "threshold": 0.5,
+          "tp": 561,
+          "tn": 1203,
+          "fp": 225,
+          "fn": 74,
+          "precision": 0.7137,
+          "recall": 0.8835,
+          "f1": 0.7896,
+          "benign_fpr": 0.1576,
+          "brier": 0.111139,
+          "support": 635
+        }
+      }
+    },
+    "adversarial_obfuscation": {
+      "support": 28,
+      "at_0.5": {
+        "threshold": 0.5,
+        "tp": 8,
+        "tn": 2025,
+        "fp": 10,
+        "fn": 20,
+        "precision": 0.4444,
+        "recall": 0.2857,
+        "f1": 0.3478,
+        "benign_fpr": 0.0049,
+        "brier": 0.012583
+      },
+      "expected_calibration_error": 0.0126,
+      "recall_constrained_operating_point": {
+        "error": "no threshold satisfies recall and benign false-positive constraints"
+      },
+      "by_source": {
+        "real": {
+          "threshold": 0.5,
+          "tp": 8,
+          "tn": 2025,
+          "fp": 10,
+          "fn": 20,
+          "precision": 0.4444,
+          "recall": 0.2857,
+          "f1": 0.3478,
+          "benign_fpr": 0.0049,
+          "brier": 0.012583,
+          "support": 28
+        }
+      }
+    }
+  }
+}

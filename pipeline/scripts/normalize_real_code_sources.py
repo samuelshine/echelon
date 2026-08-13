@@ -59,6 +59,17 @@ CATQA_MALICIOUS_CODE = {"Malware Viruses"}
 REDTEAM_MALICIOUS_CODE = {"Malware"}
 
 
+# Real, independently-authored rows have NO template lineage, so template_family
+# must stay None. build_semantic_splits treats a shared (source_id,
+# template_family) as a declared group that may not cross splits -- correct for
+# generated rows sharing a frame, badly wrong here: setting it to a publisher
+# CATEGORY name fuses every row of that category into one block that lands
+# wholly in a single split. In v0.6 that put all 1,600 wildguard benign controls
+# in test and zero in train, so the matched controls the round existed to add
+# never reached the model. The publisher category is already preserved in
+# annotation_notes, which is where it belongs: metadata, not lineage.
+
+
 class NormalizationError(RuntimeError):
     pass
 
@@ -109,7 +120,7 @@ def normalize_catqa(root: Path, revision: str, license_spdx: str, source: dict, 
             source_id="catqa_english", revision=revision, item_id=f"row-{index}",
             text=row["Question"], labels=labels, license_spdx=license_spdx,
             notes=f"publisher_category={category};publisher_subcategory={row.get('Subcategory')}",
-            template_family=f"catqa_{category}",
+            template_family=None,
         )
 
 
@@ -135,7 +146,7 @@ def normalize_redteam_2k(root: Path, revision: str, license_spdx: str, source: d
                 source_id="jailbreakv_redteam_2k", revision=revision, item_id=f"row-{row['id']}",
                 text=row["question"], labels=labels, license_spdx=license_spdx,
                 notes=f"publisher_category={policy};publisher_provenance={provenance}",
-                template_family=f"redteam2k_{policy}",
+                template_family=None,
             )
 
 

@@ -24,3 +24,5 @@ __pycache__/
 /models/layer2-threat-distilbert/v06-candidate/
 /.review-venv/
 /.venv313/
+/data/splits_response_v1/
+/models/layer2-response-distilbert/

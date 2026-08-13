@@ -28,10 +28,15 @@ from echelon.training_data import validate_split_rows
 from echelon.training_gate import validate_training_manifest
 from scripts.build_semantic_splits import load_jsonl
 
-CATEGORIES = [
-    "prompt_injection", "system_prompt_leakage", "malicious_code",
-    "toxicity_harm", "adversarial_obfuscation",
-]
+# The five prompt-side heads by default. A response-side round overrides this
+# with the two categories that are meaningful on assistant output; training the
+# full five on response data would recreate the zero-support defect that made
+# malicious_code's temperature meaningless in v0.3 (a head with no positives
+# contributes a constant 0 to model selection and is calibrated on negatives).
+CATEGORIES = [c for c in os.environ.get(
+    "CATEGORIES",
+    "prompt_injection,system_prompt_leakage,malicious_code,toxicity_harm,adversarial_obfuscation",
+).split(",") if c]
 CAT_INDEX = {c: i for i, c in enumerate(CATEGORIES)}
 
 

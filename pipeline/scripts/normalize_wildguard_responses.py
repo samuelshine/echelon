@@ -57,6 +57,17 @@ CODE_SUBCATEGORY = "cyberattack"
 MAX_RESPONSE_CHARS = 20_000
 
 
+# Real, independently-authored rows have NO template lineage, so template_family
+# must stay None. build_semantic_splits treats a shared (source_id,
+# template_family) as a declared group that may not cross splits -- correct for
+# generated rows sharing a frame, badly wrong here: setting it to a publisher
+# CATEGORY name fuses every row of that category into one block that lands
+# wholly in a single split. In v0.6 that put all 1,600 wildguard benign controls
+# in test and zero in train, so the matched controls the round existed to add
+# never reached the model. The publisher category is already preserved in
+# annotation_notes, which is where it belongs: metadata, not lineage.
+
+
 class NormalizationError(RuntimeError):
     pass
 
@@ -153,7 +164,7 @@ def main() -> int:
             "labels": labels,
             "severity": "none" if labels == ["benign"] else "high",
             "annotation_confidence": 1.0,
-            "template_family": f"wildguard_response_{subcategory}",
+            "template_family": None,
             "semantic_cluster_id": None,
             "conversation_id": None,
             "transformation_parent_id": None,

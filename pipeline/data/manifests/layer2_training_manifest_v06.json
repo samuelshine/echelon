@@ -1,0 +1,14 @@
+{
+  "dataset_sha256": "30b45064debc8ed252f618528e267a7f06ff15e08c56c682924a0a80e443d54b",
+  "eligible_for_training": true,
+  "human_review_complete": true,
+  "privacy_review_complete": true,
+  "rows": 39419,
+  "schema_version": "1.0.0",
+  "semantic_split_verified": true,
+  "splits": {
+    "test": 3964,
+    "train": 31477,
+    "validation": 3978
+  }
+}

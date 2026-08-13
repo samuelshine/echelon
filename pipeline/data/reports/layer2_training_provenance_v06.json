@@ -1,0 +1,44 @@
+{
+  "caveat": "The v0.3 dual review (100% coverage) and the v0.2 152-conflict adjudication are both AI-assisted and provisional; a human expert should confirm or override before production use, per this project's standing human-review-gate rule.",
+  "dataset_sha256": "30b45064debc8ed252f618528e267a7f06ff15e08c56c682924a0a80e443d54b",
+  "human_review_complete": {
+    "expert_provenance_v0_2": "AI-assisted (Claude), provisional, human-overridable",
+    "reviewed_synthetic_v0_2": 598,
+    "reviewed_synthetic_v0_3": 3329,
+    "source_corpus": "governed published datasets (Aegis/neuralchemy/jackhhao/Do-Not-Answer): license/provenance/dedup/quarantine controls; assistant responses excluded",
+    "v0_3_expert_adjudicated": 0,
+    "v0_3_generated": 3400,
+    "v0_3_primary_agreement": 3400,
+    "v0_3_rejected_quality_gate": 71,
+    "v0_3_reviewer_provenance": "AI-assisted dual review at 100% coverage (scripts/ai_reviewers_v03.py), provisional, human-overridable -- NOT native-human independent review. See docs/LAYER2_RETRAIN_PLAN.md and CURRENT_PROGRESS.md's v0.3 entry."
+  },
+  "privacy_review_complete": "prompt-only records; no assistant responses; no PII fields beyond prompt text; raw data git-ignored",
+  "rows": 39419,
+  "rows_by_source": {
+    "aegis_safety_2": 24718,
+    "catqa_english": 542,
+    "do_not_answer": 936,
+    "echelon_targeted_v0_2": 598,
+    "echelon_targeted_v0_3": 3329,
+    "jackhhao_jailbreak_classification": 638,
+    "jailbreakv_redteam_2k": 1053,
+    "neuralchemy_prompt_injection": 5472,
+    "wildguardmix": 2133
+  },
+  "semantic_split_verified": "no semantic cluster crosses a split (validate_split_rows)",
+  "sources_without_documented_review": {
+    "catqa_english": 542,
+    "jailbreakv_redteam_2k": 1053,
+    "wildguardmix": 2133
+  },
+  "splits": {
+    "test": 3964,
+    "train": 31477,
+    "validation": 3978
+  },
+  "validated_split_counts": {
+    "test": 3964,
+    "train": 31477,
+    "validation": 3978
+  }
+}

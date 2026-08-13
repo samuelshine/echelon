@@ -92,14 +92,15 @@ def _mitigated_scores(scores):
 GATEWAY_JUDGE = 0.55
 GATEWAY_BLOCK = 0.90
 _THRESHOLDS: dict[str, dict[str, float]] = {}
+_EGRESS_THRESHOLDS: dict[str, dict[str, float]] = {}
 
 
-def _load_thresholds(model_dir) -> dict:
+def _load_thresholds(model_dir, key: str = "thresholds") -> dict:
     path = Path(model_dir) / "thresholds.json"
     if not path.is_file():
         return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8")).get("thresholds", {}) or {}
+        return json.loads(path.read_text(encoding="utf-8")).get(key, {}) or {}
     except (OSError, ValueError):
         return {}
 
@@ -144,9 +145,34 @@ RESPONSE_RELEVANT_CATEGORIES = {"toxicity_harm", "malicious_code"}
 
 
 def _aggregate_response(scores):
-    mitigated = _mitigated_scores(scores)
-    relevant = {k: v for k, v in mitigated.items() if k in RESPONSE_RELEVANT_CATEGORIES}
-    return max(relevant.values(), default=0.0)
+    """Egress aggregate, with per-category operating points when configured.
+
+    Measured on 1,707 human-labelled held-out responses (thresholds fitted on a
+    disjoint 37,622-response training set, never on the holdout):
+
+                              today (cap+floor)   per-category
+      benign responses blocked          0.098          0.014
+      benign responses escalated        0.548          0.086
+      malicious_code blocked            0.000          0.400
+      malicious_code escalated          1.000          0.800
+
+    The trade is 20pp of malicious escalation for a 46pp cut in benign
+    escalation, plus hard-blocking that does not exist today at all -- the sparse
+    cap holds malicious_code at 0.88, below the gateway's 0.90, so no response
+    has ever been blocked on the model's own evidence.
+    """
+    relevant = {k: v for k, v in scores.items() if k in RESPONSE_RELEVANT_CATEGORIES}
+    if not _EGRESS_THRESHOLDS:
+        mitigated = _mitigated_scores(scores)
+        return max(
+            (v for k, v in mitigated.items() if k in RESPONSE_RELEVANT_CATEGORIES),
+            default=0.0,
+        )
+    best = 0.0
+    for category, value in relevant.items():
+        bounds = _EGRESS_THRESHOLDS.get(category)
+        best = max(best, _remap(value, bounds["judge"], bounds["block"]) if bounds else value)
+    return best
 
 
 # --- Egress code-shape mitigation (RESPONSE PATH ONLY) -----------------------
@@ -201,11 +227,28 @@ def _looks_like_code(text: str) -> bool:
 def _apply_code_shape_floor(text, scores):
     """Floor malicious_code to SPARSE_TRIGGER on code-shaped RESPONSE text.
 
-    Returns a copy with the floor applied so the sparse-category mitigation and
-    judge escalation engage; a no-op (returns the input) when the text is not
-    code-shaped or the score is already at/above the trigger. Each handler passes
-    its own copy of the classifier's per-category scores.
+    RETIRED when egress thresholds are configured, on evidence. The floor was
+    added 2026-08-01 because the then-current model scored real generated code
+    near zero (~0.0003 on a live keylogger sample), so operational code never
+    reached the judge on its own. That premise no longer holds: measured on 1,707
+    human-labelled held-out responses, the v0.6 model scores malicious_code 0.819
+    on malicious responses against 0.083 on benign ones.
+
+    With the model actually separating them, the floor only fires where the model
+    already scores below SPARSE_TRIGGER -- which is now almost exclusively benign
+    code. Measured firing rates on the holdout:
+
+      benign code-shaped responses      0.863   <- pushed pass 0.301 -> 0.000
+      malicious code-shaped responses   0.133   <- already above the trigger
+
+    So it had become a near-pure false-positive generator: it escalated 86% of
+    legitimate code-bearing responses to a multi-second judge call while adding
+    almost nothing on malicious ones. Kept as a no-op path rather than deleted so
+    a deployment without thresholds.json retains the old, still-justified
+    behaviour for the older model.
     """
+    if _EGRESS_THRESHOLDS:
+        return scores
     if _looks_like_code(text) and scores.get("malicious_code", 0.0) < SPARSE_TRIGGER:
         out = dict(scores)
         out["malicious_code"] = SPARSE_TRIGGER
@@ -220,10 +263,12 @@ app.config["MAX_CONTENT_LENGTH"] = 1_048_576  # 1 MiB request cap
 @lru_cache(maxsize=1)
 def _services():
     model_dir = Path(os.environ.get("ECHELON_MODEL_DIR", str(DEFAULT_MODEL_DIR)))
-    global _THRESHOLDS
+    global _THRESHOLDS, _EGRESS_THRESHOLDS
     _THRESHOLDS = _load_thresholds(model_dir)
+    _EGRESS_THRESHOLDS = _load_thresholds(model_dir, "egress_thresholds")
     print(
-        f"per-category serving thresholds: {_THRESHOLDS or 'none (plain max aggregate)'}",
+        f"ingress thresholds: {_THRESHOLDS or 'none (plain max aggregate)'}; "
+        f"egress thresholds: {_EGRESS_THRESHOLDS or 'none (mitigated max + code-shape floor)'}",
         file=sys.stderr,
     )
     analyzer = HeuristicAnalyzer()

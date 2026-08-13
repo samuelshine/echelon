@@ -1,0 +1,29 @@
+{
+  "counters": {
+    "benign:code_shaped=False": 25924,
+    "benign:code_shaped=True": 3337,
+    "malicious_code:code_shaped=False": 164,
+    "malicious_code:code_shaped=True": 282,
+    "skipped_duplicate_response": 310,
+    "skipped_missing_response_or_label": 48825,
+    "skipped_oversized": 2,
+    "toxicity_harm:code_shaped=False": 6265,
+    "toxicity_harm:code_shaped=True": 1650
+  },
+  "label_occurrences": {
+    "benign": 29261,
+    "malicious_code": 446,
+    "toxicity_harm": 7915
+  },
+  "labelling_policy": "publisher response_harm_label plus prompt subcategory; code-shape recorded as a slice, never as a label",
+  "output": "data/normalized_v2/response_train.jsonl",
+  "reads_prompt_columns": false,
+  "reads_response_columns": true,
+  "report_version": "0.1.0",
+  "role": "training",
+  "rows": 37622,
+  "source": "wildguardmix",
+  "source_split": "train",
+  "status": "normalized_pending_contamination_scan",
+  "training_eligible": true
+}

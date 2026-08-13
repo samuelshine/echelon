@@ -43,6 +43,10 @@ from scripts.evaluate_layer2_v03 import CATEGORIES, calibrated_scores
 GATEWAY_JUDGE = 0.55
 GATEWAY_BLOCK = 0.90
 
+# Only these two heads are conceptually meaningful on response text; the other
+# three are input-framed. Mirrors RESPONSE_RELEVANT_CATEGORIES in the service.
+EGRESS_CATEGORIES = ("toxicity_harm", "malicious_code")
+
 
 def benign_mask(rows: list[dict]) -> np.ndarray:
     return np.array([not (set(r["labels"]) - {"benign"}) for r in rows])
@@ -93,7 +97,8 @@ def remap(score: float, judge: float, block: float) -> float:
 
 def aggregate(probs: np.ndarray, thresholds: dict[str, dict[str, float]]) -> np.ndarray:
     out = np.zeros(len(probs))
-    for index, category in enumerate(CATEGORIES):
+    for category in thresholds:
+        index = CATEGORIES.index(category)
         t = thresholds[category]
         mapped = np.array([remap(float(s), t["judge"], t["block"]) for s in probs[:, index]])
         out = np.maximum(out, mapped)
@@ -113,8 +118,14 @@ def main() -> int:
                         help="per-category benign false-positive budget at the judge point; "
                              "escalation costs a judge call, not a block, so it is deliberately looser")
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument(
+        "--mode", choices=("ingress", "egress"), default="ingress",
+        help="ingress fits prompt heads on the validation split; egress fits the two "
+             "response-relevant heads on response text and writes a separate block",
+    )
     args = parser.parse_args()
     output = args.output or (args.model / "thresholds.json")
+    categories = list(EGRESS_CATEGORIES) if args.mode == "egress" else CATEGORIES
 
     validation = load_jsonl(args.validation)
     print(f"scoring {len(validation)} validation rows ...", flush=True)
@@ -122,16 +133,18 @@ def main() -> int:
     val_benign = benign_mask(validation)
 
     thresholds = {}
-    for index, category in enumerate(CATEGORIES):
-        scores = val_probs[:, index]
+    for category in categories:
+        scores = val_probs[:, CATEGORIES.index(category)]
         block = pick_threshold(scores, val_benign, args.block_budget, MIN_BLOCK_THRESHOLD)
         judge = pick_threshold(scores, val_benign, args.judge_budget, MIN_JUDGE_THRESHOLD)
         judge = min(judge, block - 1e-3)
         thresholds[category] = {"judge": round(max(judge, 0.01), 4), "block": round(block, 4)}
 
-    payload = {
+    key = "egress_thresholds" if args.mode == "egress" else "thresholds"
+    payload = json.loads(output.read_text(encoding="utf-8")) if output.is_file() else {}
+    payload.update({
         "categories": CATEGORIES,
-        "thresholds": thresholds,
+        key: thresholds,
         "gateway_band": {"judge": GATEWAY_JUDGE, "block": GATEWAY_BLOCK},
         "method": "per_category_piecewise_linear_remap",
         "derived_on": project_relative(args.validation),
@@ -140,8 +153,8 @@ def main() -> int:
         "judge_budget": args.judge_budget,
         "min_block_threshold": MIN_BLOCK_THRESHOLD,
         "min_judge_threshold": MIN_JUDGE_THRESHOLD,
-    }
-    output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    })
+    output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     # Verification on the untouched holdout.
     holdout = load_jsonl(args.holdout)
@@ -149,15 +162,17 @@ def main() -> int:
     hold_probs = calibrated_scores(args.model, [r["text"] for r in holdout], args.batch_size)
     hold_benign = benign_mask(holdout)
 
-    plain = hold_probs.max(axis=1)
+    # Baseline must be the aggregate the service actually computes today: a max
+    # over the categories in scope for this mode, not over all five.
+    plain = hold_probs[:, [CATEGORIES.index(c) for c in categories]].max(axis=1)
     tuned = aggregate(hold_probs, thresholds)
 
-    def summarize(agg: np.ndarray) -> dict:
+    def summarize(agg: np.ndarray) -> dict:  # noqa: C901
         summary = {
             "benign_fpr_at_judge": round(float((agg[hold_benign] >= GATEWAY_JUDGE).mean()), 4),
             "benign_fpr_at_block": round(float((agg[hold_benign] >= GATEWAY_BLOCK).mean()), 4),
         }
-        for index, category in enumerate(CATEGORIES):
+        for category in categories:
             positives = np.array([category in r["labels"] for r in holdout])
             if positives.sum():
                 summary[f"{category}_escalated"] = round(float((agg[positives] >= GATEWAY_JUDGE).mean()), 4)

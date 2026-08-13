@@ -1,0 +1,135 @@
+{
+  "egress_thresholds": {
+    "malicious_code": {
+      "block": 0.9859,
+      "judge": 0.25
+    },
+    "toxicity_harm": {
+      "block": 0.9646,
+      "judge": 0.9076
+    }
+  },
+  "gateway_band": {
+    "block": 0.9,
+    "judge": 0.55
+  },
+  "model": "models/layer2-threat-distilbert/best",
+  "note": "The egress aggregate covers only toxicity_harm and malicious_code; the other three heads are input-framed and excluded by RESPONSE_RELEVANT_CATEGORIES.",
+  "report_version": "0.1.0",
+  "rows": 1707,
+  "slices": {
+    "all": {
+      "code_shape_floor_fired_today": 0.1142,
+      "mean_malicious_code": 0.0945,
+      "mean_toxicity_harm": 0.5845,
+      "per_category_egress_thresholds": {
+        "block": 0.0199,
+        "judge": 0.1658,
+        "pass": 0.8143
+      },
+      "rows": 1707,
+      "today_sparse_cap_plus_floor": {
+        "block": 0.1072,
+        "judge": 0.5606,
+        "pass": 0.3322
+      }
+    },
+    "benign_responses": {
+      "code_shape_floor_fired_today": 0.0927,
+      "mean_malicious_code": 0.0833,
+      "mean_toxicity_harm": 0.5759,
+      "per_category_egress_thresholds": {
+        "block": 0.014,
+        "judge": 0.1524,
+        "pass": 0.8336
+      },
+      "rows": 1424,
+      "today_sparse_cap_plus_floor": {
+        "block": 0.0983,
+        "judge": 0.5478,
+        "pass": 0.3539
+      }
+    },
+    "benign_responses_code_shaped": {
+      "code_shape_floor_fired_today": 0.8627,
+      "mean_malicious_code": 0.1296,
+      "mean_toxicity_harm": 0.599,
+      "per_category_egress_thresholds": {
+        "block": 0.0065,
+        "judge": 0.2092,
+        "pass": 0.7843
+      },
+      "rows": 153,
+      "today_sparse_cap_plus_floor": {
+        "block": 0.085,
+        "judge": 0.915,
+        "pass": 0.0
+      }
+    },
+    "malicious_code_responses": {
+      "code_shape_floor_fired_today": 0.08,
+      "mean_malicious_code": 0.819,
+      "mean_toxicity_harm": 0.2955,
+      "per_category_egress_thresholds": {
+        "block": 0.4,
+        "judge": 0.48,
+        "pass": 0.12
+      },
+      "rows": 25,
+      "today_sparse_cap_plus_floor": {
+        "block": 0.0,
+        "judge": 1.0,
+        "pass": 0.0
+      }
+    },
+    "malicious_code_responses_code_shaped": {
+      "code_shape_floor_fired_today": 0.1333,
+      "mean_malicious_code": 0.8543,
+      "mean_toxicity_harm": 0.1989,
+      "per_category_egress_thresholds": {
+        "block": 0.6,
+        "judge": 0.2667,
+        "pass": 0.1333
+      },
+      "rows": 15,
+      "today_sparse_cap_plus_floor": {
+        "block": 0.0,
+        "judge": 1.0,
+        "pass": 0.0
+      }
+    },
+    "malicious_code_responses_prose_shaped": {
+      "code_shape_floor_fired_today": 0.0,
+      "mean_malicious_code": 0.766,
+      "mean_toxicity_harm": 0.4404,
+      "per_category_egress_thresholds": {
+        "block": 0.1,
+        "judge": 0.8,
+        "pass": 0.1
+      },
+      "rows": 10,
+      "today_sparse_cap_plus_floor": {
+        "block": 0.0,
+        "judge": 1.0,
+        "pass": 0.0
+      }
+    },
+    "toxicity_harm_responses": {
+      "code_shape_floor_fired_today": 0.2364,
+      "mean_malicious_code": 0.0865,
+      "mean_toxicity_harm": 0.6601,
+      "per_category_egress_thresholds": {
+        "block": 0.0155,
+        "judge": 0.2093,
+        "pass": 0.7752
+      },
+      "rows": 258,
+      "today_sparse_cap_plus_floor": {
+        "block": 0.1667,
+        "judge": 0.5891,
+        "pass": 0.2442
+      }
+    }
+  },
+  "split": "data/holdout_v1/response_holdout.jsonl"
+}

@@ -5,15 +5,15 @@
   "holdout_verification": {
     "per_category_thresholds": {
       "adversarial_obfuscation_blocked": 0.4643,
-      "adversarial_obfuscation_escalated": 0.75,
+      "adversarial_obfuscation_escalated": 0.7143,
       "benign_fpr_at_block": 0.11,
       "benign_fpr_at_judge": 0.44,
       "malicious_code_blocked": 0.7484,
-      "malicious_code_escalated": 0.8487,
+      "malicious_code_escalated": 0.779,
       "prompt_injection_blocked": 0.2669,
-      "prompt_injection_escalated": 0.5976,
+      "prompt_injection_escalated": 0.5139,
       "toxicity_harm_blocked": 0.5055,
-      "toxicity_harm_escalated": 0.8535
+      "toxicity_harm_escalated": 0.8425
     },
     "plain_max_aggregate": {
       "adversarial_obfuscation_blocked": 0.3929,
@@ -33,19 +33,19 @@
   "thresholds": {
     "adversarial_obfuscation": {
       "block": 0.3,
-      "judge": 0.1
+      "judge": 0.25
     },
     "malicious_code": {
       "block": 0.3,
-      "judge": 0.1
+      "judge": 0.25
     },
     "prompt_injection": {
       "block": 0.7498,
-      "judge": 0.1
+      "judge": 0.25
     },
     "system_prompt_leakage": {
       "block": 0.3,
-      "judge": 0.1
+      "judge": 0.25
     },
     "toxicity_harm": {
       "block": 0.9436,

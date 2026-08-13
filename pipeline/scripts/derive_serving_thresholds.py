@@ -54,9 +54,14 @@ def benign_mask(rows: list[dict]) -> np.ndarray:
 # own calibration puts below 5%. A block is not defensible at that confidence
 # whatever the quantile says, and a floor chosen a priori cannot be accused of
 # being shopped against the holdout. Escalation is a judge call rather than a
-# refusal, so its floor is looser.
+# refusal, so its floor is looser -- but not arbitrarily so: escalation costs a
+# multi-second LLM judge call, and a functional check showed a 0.10 judge floor
+# sending a defensive "explain how a YARA rule detects keyloggers" prompt to the
+# judge on a prompt_injection score of 0.112. Low-false-positive handling of
+# legitimate defensive security work is this project's stated primary goal, so
+# escalating at ~10% confidence is not a trade worth making.
 MIN_BLOCK_THRESHOLD = 0.30
-MIN_JUDGE_THRESHOLD = 0.10
+MIN_JUDGE_THRESHOLD = 0.25
 
 
 def pick_threshold(scores: np.ndarray, negatives: np.ndarray, budget: float, floor: float) -> float:

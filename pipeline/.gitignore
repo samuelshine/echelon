@@ -16,6 +16,7 @@ __pycache__/
 /models/research-embeddings/
 /models/layer2-threat-distilbert/best/
 /models/layer2-threat-distilbert/legacy-pre-v03/
+/models/layer2-threat-distilbert/legacy-pre-v06/
 /models/layer2-threat-distilbert/v03-candidate/
 /models/layer2-threat-distilbert/v03-full-candidate/
 /models/layer2-threat-distilbert/v04-candidate/

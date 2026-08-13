@@ -315,3 +315,38 @@ retrained a candidate that scores `response_shaped_malicious_code` at F1 1.0 —
 evaluated but **not promoted** (kept at `v03-full-candidate/`), since blending
 shifted the semantic-split boundaries enough to move other categories'
 test-set composition and that tradeoff wants a real decision first.
+
+## Held-out evaluation checkpoint — the first out-of-distribution numbers (2026-08-13)
+
+Every Layer 2 number reported before this date was measured on a test split
+carved from the same corpus the model trained on, reviewed by the same
+AI-assisted reviewers that accepted the training rows. This checkpoint breaks
+that circularity: the four frozen benchmarks the registry has listed as
+`evaluation_only, holdout: true` since day one (JailbreakBench, HarmBench,
+StrongREJECT, CyberSecEval) are now acquired at pinned revisions, normalized
+using publisher-declared labels only, contamination-scanned against the
+training corpus, and scored. See `CURRENT_PROGRESS.md` → "Held-out evaluation
+built and run" for the full numbers and caveats.
+
+**The served model's macro-F1 goes from 0.899 in-distribution to 0.233 on
+2,063 held-out rows.** `malicious_code` — the category whose headline was
+F1 0.99 — has recall **0.017** against 1,077 real positives. The v0.3 gains in
+the sparse categories were almost entirely synthetic self-agreement. This does
+not invalidate the pipeline work; it invalidates the *numbers*, which is what a
+held-out set is for. `data/reports/layer2_eval_holdout_v1.json` and
+`layer2_holdout_slices_v1.json` are the reusable artifacts, and
+`scripts/evaluate_layer2_v03.py` runs against any candidate.
+
+Two defects found and fixed alongside it, both in `build_semantic_splits.py`:
+split allocation balanced only row and benign counts, so whole categories
+drifted (v0.3: `malicious_code` at 77.6/3.6/18.8 against a target 80/10/10,
+and **zero** validation rows in the promoted model's own split). That silently
+degraded temperature calibration and per-epoch model selection for that head.
+Allocation is now label-stratified by default (manifest v0.2.0), every category
+lands within 0.1% of target on the real corpus, and a missing category is
+reported rather than passing unnoticed.
+
+Next, in priority order: real `malicious_code` *training* data (still zero real
+rows), real `system_prompt_leakage` data, then the modeling levers — a cased
+encoder and a longer context window, both directly implicated by the slice
+analysis. A retrain on re-stratified splits is a prerequisite for any of it.

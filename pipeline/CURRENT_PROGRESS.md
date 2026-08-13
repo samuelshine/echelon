@@ -643,3 +643,336 @@ breakdown that qualifies the headline F1s honestly.
   F1). Both the review *and* the eval are in-distribution, so a real held-out
   set is the highest-leverage next fix. Report at
   `data/reports/layer2_eval_v03_best.json`.
+
+## Held-out evaluation built and run — the circularity is broken (2026-08-13)
+
+The previous entry ended by naming a real held-out set as the highest-leverage
+next fix, because both review and eval were in-distribution. That set now
+exists, and the numbers it produced are much worse than the in-distribution
+ones. That is the point of building it.
+
+### What was acquired
+
+The registry has listed four frozen benchmarks as `role: evaluation_only,
+holdout: true` since the original 15-source draft, all still `review_state:
+pending` and never acquired. All four are now vetted, pinned, and downloaded
+(`data/manifests/acquisition_manifest_holdout.json`, SHA-256 per artifact,
+verified by `--verify-only`):
+
+| id | source (pinned) | license |
+|---|---|---|
+| `jailbreakbench` | `hf://datasets/JailbreakBench/JBB-Behaviors` @ `886acc35…` | MIT |
+| `harmbench` | `github://centerforaisafety/HarmBench` @ `8e1604d1…` | MIT |
+| `strongreject` | `github://alexandrasouly/strongreject` @ `f7cad6c1…` | MIT |
+| `cyberseceval` | `github://meta-llama/PurpleLlama` @ `e36f132f…` | MIT (subtree) |
+
+Three provenance corrections were needed, and each would have produced a wrong
+or unpinnable artifact if taken at face value:
+
+- **JailbreakBench** was registered as `github://JailbreakBench/jailbreakbench`,
+  which is the *harness* repo. The behaviours live in the HF dataset repo. As a
+  bonus the dataset ships 100 matched **benign** behaviours alongside the 100
+  harmful ones — a real, externally-authored hard-negative control set, which
+  this project has never had.
+- **StrongREJECT** was registered as `github://dsbowen/strong_reject`, which
+  publishes the evaluation *code* and downloads its data from
+  `alexandrasouly/strongreject` at runtime. Pinning the code repo would not
+  have pinned the data.
+- **CyberSecEval**'s repository root is the Llama 3.2 Community License and the
+  GitHub API reports `NOASSERTION`, but `CybersecurityBenchmarks/` carries its
+  own MIT LICENSE governing the acquired files. Rather than paper over the
+  conflict (the exact condition that got `deepset_prompt_injections` rejected),
+  the registry gained a `license_path` field and the acquirer now downloads and
+  hashes the governing license file as evidence.
+
+`scripts/acquire_datasets.py` gained `github://` support at pinned 40-hex commit
+SHAs, with the same discipline the HF path already had: the pinned revision must
+resolve to itself, private/archived repos are refused, downloads are atomic and
+hashed, and the repo-level API license must match the registry unless a
+`license_path` overrides it.
+
+### What was built
+
+`scripts/normalize_holdout_eval.py` → 2,064 rows, and two rules do the real work:
+
+- **Publisher labels only.** Categories come from a declared source field —
+  JailbreakBench's `Category`, HarmBench's `SemanticCategory`, CyberSecEval's
+  `mitre_category` and `injection_variant`. Nothing is inferred from prompt
+  text. Applying our own keyword rules would rebuild the exact circularity the
+  set exists to break.
+- **Unmappable rows are dropped, counted, and named.** HarmBench's 100
+  `copyright` behaviours have no honest home among the five categories, so
+  they are excluded rather than filed under `toxicity_harm` to pad the count.
+
+`scripts/scan_holdout_contamination.py` then checked every row against the full
+36,392-row v0.3 corpus using the project's own near-duplicate settings
+(BGE-small at the pinned revision, cosine 0.94) plus an exact normalized-text
+check. **1 of 2,064 rows was contaminated** (a StrongREJECT near-duplicate);
+p99 similarity is 0.8935, comfortably under threshold. The held-out set is
+genuinely disjoint. 2,063 clean rows remain: `malicious_code` 1,077,
+`toxicity_harm` 635, `prompt_injection` 251, `benign` 100,
+`adversarial_obfuscation` 28.
+
+### What it found
+
+Scoring the **served** `best/` model (`data/reports/layer2_eval_holdout_v1.json`):
+
+| category | in-dist F1 | held-out F1 | held-out recall | held-out ECE |
+|---|---|---|---|---|
+| `prompt_injection` | 0.956 | **0.202** | 0.119 | 0.180 |
+| `malicious_code` | 0.990 | **0.033** | 0.017 | **1.020** |
+| `toxicity_harm` | 0.853 | **0.503** | 0.791 | 0.512 |
+| `adversarial_obfuscation` | 0.760 | **0.429** | 0.321 | 0.016 |
+| `system_prompt_leakage` | 0.936 | — | no held-out support | — |
+| **macro-F1** | **0.899** | **0.233** | | |
+
+`malicious_code` catches **18 of 1,077** real malicious-code prompts. Its ECE of
+1.02 means it is not merely wrong but confidently wrong — the temperature was
+fitted on a validation split containing zero positives of that category (see
+the split defect below), so it was calibrated purely to suppress negatives.
+The earlier finding that this category had "0 real test positives" understated
+the problem: given 1,077 real positives, the model is blind to them.
+
+**Correction to the previous entry.** It concluded `prompt_injection` was "the
+one category that clearly generalizes." That held for real data drawn from the
+sources it trained on; against CyberSecEval's injections it scores recall 0.119.
+It generalizes across *rows* of its training sources, not across *sources*.
+
+`scripts/analyze_holdout_slices.py` separates two causes the aggregate conflates:
+
+- **Format shift.** CyberSecEval MITRE prompts are ~500 estimated tokens of
+  LLM-generated, JSON-wrapped text — 99% exceed the model's 256-token
+  truncation limit. Recall is **0.000** across all ten ATT&CK categories, mean
+  probability 0.002.
+- **Genuine blindness.** HarmBench's `cybercrime_intrusion` behaviours are 30
+  tokens at p90, the same length and register as the synthetic training rows,
+  and recall is still only **0.269**. JailbreakBench's `Malware/Hacking` slice
+  is 0/10. So the truncation limit compounds the failure but does not cause it.
+- **`toxicity_harm` is the opposite failure**: recall is fine (StrongREJECT
+  0.936, JailbreakBench 0.756, HarmBench 0.609) but precision is 0.369, because
+  it fires on **32% of the 100 benign controls** — and it is the *only* head
+  that fires on them at all (every other head: 0.00). At the production block
+  threshold of 0.90 the benign firing rate drops to 6%, so the operational
+  picture is less alarming than F1 at 0.5 suggests, but the head is
+  over-triggering on hard negatives that mention harm without requesting it.
+
+**A caveat that was tested rather than assumed:** CyberSecEval injections were
+scored as `user_input` alone, stripped of the system prompt they attack, which
+could plausibly have suppressed recall. Re-scoring with the system prompt
+concatenated gives recall **0.068** — worse than 0.119. The reported number is
+the generous one.
+
+**Limits of this evaluation, stated plainly:** the benign control slice is only
+100 rows, so 0.32 carries wide error bars. `system_prompt_leakage` gets *no*
+held-out coverage — none of these four benchmarks declares a leakage label, and
+deriving one from text would violate the publisher-labels-only rule. That
+category's real-world performance remains unmeasured, and Tensor Trust /
+HackAPrompt (both already in the registry as `pending`) are the sources that
+would close it.
+
+### Split allocation defect found and fixed
+
+`assign_splits` in `build_semantic_splits.py` balanced only two dimensions, rows
+and benign rows, so sparse categories were invisible to the objective and
+drifted badly. In the promoted model's own splits: `malicious_code` 852 train /
+**0 validation** / 148 test. Two consequences, both real:
+
+- `fit_temperatures` fitted the `malicious_code` temperature on negatives only —
+  directly implicated in that head's held-out ECE of 1.02.
+- `metrics_at` returns F1 0.0 for a zero-support category, so `best_val_macro_f1`
+  (0.688 against a test macro-F1 of 0.899) carried a constant zero in 20% of the
+  epoch-selection criterion, and that head was entirely unmonitored during
+  training.
+
+Allocation is now label-stratified by default: it balances rows, benign, *and*
+per-category positives, scoring each group only on the dimensions it actually
+contributes to so a sparse group is steered by its own category's deficit.
+Re-run on the real v0.3 groups, every category lands within 0.1% of 80/10/10
+(was: `malicious_code` 77.6/3.6/18.8, `adversarial_obfuscation` 85.9/9.5/4.6,
+`prompt_injection` 80.3/12.0/7.7). `--no-label-stratification` preserves the old
+behaviour for reproducing historical runs; the mode is recorded in the manifest
+(now v0.2.0) and report, and any category missing from a split is now reported
+and warned about instead of passing silently. Four new tests cover it.
+
+**Not yet done:** the splits on disk are still the old ones. Re-splitting changes
+the corpus digest and requires a retrain, which is the next decision, not
+something to slip in silently.
+
+### Honest status of the headline numbers
+
+The macro-F1 0.899 in `models/.../metrics.json`, `README.md`, `DEMO.md`, and the
+entries above is a real measurement of in-distribution performance and remains
+reproducible. It is **not** an estimate of production behaviour. The best
+current estimate of that, on independently-sourced data, is macro-F1 0.233 with
+`malicious_code` effectively non-functional. Nothing was promoted, demoted, or
+re-thresholded on the basis of this run — the served model is unchanged, and
+`_apply_code_shape_floor` in `service/security_api.py` is now understood to be
+carrying considerably more weight in production than previously credited.
+
+## Re-split + retrain on stratified splits — fix confirmed, performance unmoved (2026-08-13)
+
+Ran the label-stratified splitter on the same v0.3 corpus (`dataset_sha256`
+unchanged at `52f550ff…` — byte-identical data, only the allocation differs),
+rebuilt the manifest, and retrained with identical architecture and
+hyperparameters. Splits at `data/splits_v2_v04`, candidate at
+`models/layer2-threat-distilbert/v04-candidate/`, metrics at `metrics_v04.json`.
+
+**The split defect is fixed, and the diagnostics prove it.**
+
+- `best_val_macro_f1` **0.688 → 0.9005**, now agreeing with test macro-F1
+  (0.9067) instead of trailing it by 21 points. The gap was the constant zero
+  contributed by the zero-support `malicious_code` head.
+- That head's temperature is now 0.9, fitted on 101 real validation positives.
+  Previously 1.3, fitted on none.
+- Validation supports are sane for the first time: `malicious_code` 101 (was
+  **0**), `system_prompt_leakage` 132 (was 41), `adversarial_obfuscation` 65
+  (was 41).
+- In-distribution `adversarial_obfuscation` F1 0.760 → 0.884, largely because
+  the category finally got a properly sized test slice (65 rows vs 52).
+
+**It did not move real-world performance, and made the operating point worse.**
+
+Held-out macro-F1 0.2333 → 0.2590, but the slice breakdown
+(`layer2_holdout_slices_v04.json`) shows the aggregate is misleading:
+
+| slice | rows | v03 recall | v04 recall |
+|---|---|---|---|
+| `malicious_code` / harmbench (length-matched, real) | 67 | 0.269 | **0.209** |
+| `malicious_code` / cyberseceval_mitre | 1000 | 0.000 | 0.010 |
+| `malicious_code` / jailbreakbench | 10 | 0.000 | 0.200 |
+| `toxicity_harm` / strongreject | 312 | 0.936 | 0.942 |
+| `toxicity_harm` / jailbreakbench | 90 | 0.756 | 0.844 |
+| `toxicity_harm` / harmbench | 233 | 0.609 | 0.691 |
+
+On the one real, length-matched `malicious_code` slice recall went **down**.
+Its held-out ECE is still 1.008 (was 1.020): fitting a temperature on 101
+*synthetic* positives does not calibrate the head against real ones. The
+apparent aggregate `malicious_code` gain (F1 0.033 → 0.047) is noise across
+slices of 10 and 67 rows.
+
+The `toxicity_harm` recall gains were bought by firing more, not discriminating
+better. Benign false positives on the 100-row control set went **0.320 → 0.410**
+at threshold 0.5 and **0.060 → 0.140 at 0.90 — the production block threshold**.
+
+**Decision: keep the fix, do not promote the candidate.** The stratification fix
+is a correctness fix — degenerate calibration and an unmonitored head are bugs
+whether or not repairing them raises a score, and every future round needs it.
+But v04 is worse where it operationally counts, so `best/` is unchanged and
+v04-candidate stays evaluated-but-unserved alongside `v03-full-candidate/`.
+
+**What this isolates.** Calibration and split hygiene were genuinely broken and
+are now genuinely fixed, and real-world performance barely moved. The remaining
+failure is therefore a data problem, not a training-mechanics problem: zero real
+`malicious_code` training rows against 1,077 real held-out positives. No further
+tuning of the existing corpus is worth running before that gap is closed.
+
+`train_layer2_multilabel_v03.py` and `build_training_manifest_v03.py` gained
+`SPLIT_ROOT`/`MANIFEST`/`OUTPUT_DIR`/`METRICS_PATH` env overrides (same
+convention as the existing `SMOKE` var) so alternate splits can be trained
+without forking the scripts. Defaults are unchanged and still reproduce the
+promoted run exactly.
+
+## v0.5: first real malicious_code training data — recall works, precision regresses (2026-08-13)
+
+Acquired, vetted, contamination-scanned, merged, re-split, and retrained with the
+first real `malicious_code` rows this corpus has ever contained. Candidate at
+`models/layer2-threat-distilbert/v05-candidate/`. **Not promoted.**
+
+### Sourcing, and three things metadata alone would have got wrong
+
+- **`wildguardmix` is BLOCKED, not rejected.** The registry's own listed candidate
+  for this gap. License (ODC-By-1.0) and provenance are acceptable and it is by
+  far the largest quality-labelled option, but the repo is gated (`gated: auto`)
+  and policy is never to bypass gated terms. Marked `review_state:
+  blocked_gated` with its revision pinned, so acquisition is one step once a
+  human accepts the terms on Hugging Face and supplies a token. **This is the
+  single biggest available lever and it needs a person, not a script.**
+- **`jailbreakv_redteam_2k` is an aggregate that re-publishes excluded sources.**
+  MIT and ungated, but its own `from` column attributes 558/2000 rows to
+  BeaverTails — which this registry rejected as CC-BY-NC — and 67 to AdvBench,
+  which overlaps the frozen holdout. Wholesale ingestion would have laundered a
+  license this project deliberately excluded. The registry gained an
+  `ingestion_filter` field (publisher provenance allow-list) and
+  `normalize_real_code_sources.py` refuses to run without it.
+- **The provenance filter was not sufficient.** After dropping every
+  AdvBench-attributed row by metadata, the content scan *still* found **17 exact
+  normalized matches** against holdout prompts, plus 2 semantic near-duplicates.
+  Trusting the publisher's own provenance field would have put copies of
+  evaluation prompts into training. Only the content scan caught it.
+- `catqa_english` (Apache-2.0, ungated, purpose-built rather than aggregated)
+  contributed 50 malicious_code rows with no such complications.
+
+Net: 1,749 rows normalized → 19 quarantined by the holdout scan → 1,730 clean →
+1,595 merged after corpus dedup. **153 real `malicious_code` rows** (vs 1,000
+synthetic) and 1,442 real `toxicity_harm`. Corpus v0.5: 38,113 rows,
+`dataset_sha256` `fa8158db…`.
+
+### Two more splitter defects, both caught by checking rather than assuming
+
+- **Category-only stratification put all 153 real rows in validation and test,
+  none in train.** The allocator balanced `malicious_code` as one dimension and
+  satisfied train's 80% entirely from synthetic rows. Training would have stayed
+  exactly as blind to real malicious code as before, against a test set made
+  artificially hard — the experiment would have silently measured nothing.
+  Categories are now stratified by **source kind** (real vs synthetic) as
+  separate dimensions, using the same prefix convention `evaluate_layer2_v03.py`
+  already slices on.
+- **Largest-first ordering spent train's budget before rare categories were
+  reached.** Flexible groups are now ordered by the scarcity of the rarest
+  dimension they carry, and ties break toward the split with the largest
+  absolute target rather than alphabetically.
+
+**A hard structural limit, worth recording:** all 153 real rows collapse into
+just **2 semantic clusters** (103 + 50). They are topically homogeneous, so
+whole-cluster assignment — the property that makes the splits leakage-safe —
+can place them in at most 2 of 3 splits. Final allocation: train 103,
+validation 50, test **0**. Train gets the learning signal and validation gets
+real positives for calibration; the in-distribution test set still cannot
+measure real malicious_code performance, which is precisely what the holdout
+set is now for. In information terms 153 near-duplicate rows are nowhere near
+153 independent examples.
+
+`build_training_manifest_v03.py` now recomputes `rows_by_source` from the actual
+split rows and emits `sources_without_documented_review` plus a stderr warning.
+The v0.5 manifest asserts `human_review_complete: true` while containing 1,595
+rows that received no review of any kind; that is now stated in the provenance
+sidecar (`catqa_english: 542, jailbreakv_redteam_2k: 1053`) instead of riding
+silently on a flag written for the v0.3 sources.
+
+### Results
+
+| metric | v03 (served) | v04 (split fix) | v05 (+real data) |
+|---|---|---|---|
+| `malicious_code` / harmbench (real, length-matched) | 0.269 | 0.209 | **0.492** |
+| `malicious_code` / jailbreakbench | 0.000 | 0.200 | 0.300 |
+| `malicious_code` / cyberseceval_mitre | 0.000 | 0.010 | 0.025 |
+| held-out `prompt_injection` F1 | 0.202 | 0.243 | **0.380** |
+| held-out macro-F1 | 0.2333 | 0.2590 | 0.2661 |
+| `malicious_code` held-out ECE | 1.020 | 1.008 | 0.952 |
+| **benign FPR @0.9 (block threshold)** | **0.060** | 0.140 | **0.190** |
+
+**103 real training rows nearly doubled real malicious-code recall** and nearly
+doubled held-out `prompt_injection` F1. Per row, real data is worth roughly an
+order of magnitude more than the synthetic rows: 852 synthetic rows produced an
+in-distribution F1 of 0.99 and a real-world recall of 0.27; 103 real rows in one
+semantic cluster took that to 0.49.
+
+**But benign false positives tripled at the production block threshold**
+(0.060 → 0.190), and half the benign controls fire at 0.5. The cause is
+structural: 1,595 real *harmful* rows were added and **zero real benign
+controls**, because neither source ships any and JailbreakBench's benign
+behaviours are frozen for evaluation. `TARGETED_CURATION_SPEC.md` has always
+mandated matched benign controls; this round violated that constraint and the
+holdout measured the exact cost. The model learned that a distribution is
+dangerous, not a sharper boundary.
+
+**Decision: not promoted.** A 3x increase in benign blocking is worse for users
+than the recall gain is good. `best/` is unchanged.
+
+### What is now the binding constraint
+
+Not more attack data. The next round needs **matched real benign and
+defensive-cyber controls** from a source disjoint from the holdout, and
+`wildguardmix` unblocked (it carries both harmful and benign prompts with
+quality labels, which is exactly the shape this round lacked). Until then,
+adding real attack data will keep trading precision for recall.

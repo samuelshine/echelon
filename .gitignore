@@ -7,6 +7,9 @@ __pycache__/
 *.safetensors
 .env
 .env.local
+.review-venv/
+/Echelon_Chapters_4_to_6.docx
+/Echelon_Project_Report_Formatted(1).docx
 tsconfig.tsbuildinfo
 next-env.d.ts
 

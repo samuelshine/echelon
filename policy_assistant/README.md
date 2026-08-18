@@ -30,7 +30,7 @@ To enable synthesized LLM answers:
 
 ```bash
 export LLM_API_KEY="your-key"
-export LLM_MODEL="gpt-4.1-mini"
+export LLM_MODEL="gpt-4.1-mini"  # or a current gemini-* id, see note below
 python -m policy_assistant.app
 ```
 
@@ -50,13 +50,28 @@ recognizes (`sk-demo`), not the provider key — the provider key
 ```bash
 export LLM_BASE_URL="http://localhost:8080/v1"
 export LLM_API_KEY="sk-demo"          # a tenant key the gateway's ECHELON_API_KEYS recognizes
-export LLM_MODEL="gemini-1.5-flash-latest"
+export LLM_MODEL="gemini-3.6-flash"
 python -m policy_assistant.app
 ```
 
 The gateway must be running with a Gemini provider configured
 (`PROVIDER_GEMINI_API_KEY=<your free key>`, `MODEL_ROUTES=gemini-*:gemini`) —
 see the root `README.md` and `gateway/README.md`.
+
+**Model names go stale fast** — Google both adds and deprecates `gemini-*` model
+IDs on a rolling basis, and a key's `ListModels` response can list a model that
+still 404s on an actual call ("no longer available to new users"). Don't trust
+a hardcoded model name in any doc, including this one. Check what your key can
+actually call:
+
+```bash
+curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY" \
+  | python3 -c "import json,sys; [print(m['name']) for m in json.load(sys.stdin)['models'] \
+      if 'generateContent' in m.get('supportedGenerationMethods',[])]"
+```
+
+A 404 from the gateway whose error body names a replacement model (Google does
+this) means the model ID is dead, not that the wiring is broken.
 
 ## Run with Docker
 

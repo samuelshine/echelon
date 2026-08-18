@@ -138,8 +138,8 @@ pids+=($!)
 if [ -d "$POLICY_DIR" ]; then
   echo "[5/5] starting Policy Desk demo UI on :8100"
   if [ -n "$GEMINI_API_KEY" ]; then
-    echo "       -> real LLM mode: gemini-1.5-flash-latest through the gateway's safety cascade"
-    POLICY_LLM_KEY=sk-demo POLICY_LLM_BASE=http://localhost:8080/v1 POLICY_LLM_MODEL=gemini-1.5-flash-latest
+    echo "       -> real LLM mode: gemini-3.6-flash through the gateway's safety cascade"
+    POLICY_LLM_KEY=sk-demo POLICY_LLM_BASE=http://localhost:8080/v1 POLICY_LLM_MODEL=gemini-3.6-flash
   else
     echo "       -> GEMINI_API_KEY not set: local extractive mode, no LLM call (see policy_assistant/README.md)"
     POLICY_LLM_KEY="" POLICY_LLM_BASE="" POLICY_LLM_MODEL=""

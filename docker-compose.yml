@@ -11,7 +11,7 @@ services:
       # not directly at OpenAI. Override to bypass Echelon for comparison.
       LLM_API_KEY: ${LLM_API_KEY:-sk-demo}
       LLM_BASE_URL: ${LLM_BASE_URL:-http://gateway:8080/v1}
-      LLM_MODEL: ${LLM_MODEL:-gemini-1.5-flash-latest}
+      LLM_MODEL: ${LLM_MODEL:-gemini-3.6-flash}
       POLICY_DATA_DIR: /data
       PORT: "8100"
     depends_on:

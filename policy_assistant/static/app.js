@@ -255,7 +255,14 @@ async function submitQuestion(question) {
   elements.stream.classList.add("active");
   addUserMessage(text);
   addTyping();
-  state.messages.push({ role: "user", content: text });
+  // History sent with the *next* question is state.messages.slice(-7, -1), so
+  // pushing here (before the excluded last slot) never affects this request's
+  // own scan -- it only affects future turns. That is exactly why a turn that
+  // gets rejected must be un-pushed on failure: left in place, a blocked
+  // injection attempt (or anything else the safety cascade rejected) keeps
+  // riding along as history and can trip the same rule on every later message
+  // in the conversation, with no visible reason why.
+  const pushedIndex = state.messages.push({ role: "user", content: text }) - 1;
   elements.input.value = "";
   resizeInput();
   scrollBottom();
@@ -275,6 +282,7 @@ async function submitQuestion(question) {
   } catch (error) {
     document.querySelector("#typingMessage")?.remove();
     addAssistantMessage({ answer: `I couldn't complete that request. ${error.message}`, sources: [], mode: "error", model: "—", latency_ms: 0 });
+    state.messages.splice(pushedIndex, 1);
   } finally {
     state.busy = false;
     updateSendState();

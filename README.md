@@ -5,6 +5,11 @@ target LLM. Echelon evaluates prompts before they reach the model, scans respons
 before they leave the trust boundary, and provides the auth, rate-limit, and credit
 controls needed to run model access safely — behind an OpenAI-compatible API.
 
+The `demo_backend` branch also includes **[Echelon Policy Desk](policy_assistant/README.md)**,
+a policy-review RAG chatbot with a cited chat UI, local document indexing, and an
+OpenAI-compatible LLM connection. It runs independently on port `8100` and does
+not change the existing security gateway behavior.
+
 This is the consolidated monorepo. The three services previously lived on separate
 branches (`rnd`, `backend`, `frontend`) and are merged here as subdirectories with
 their history preserved.

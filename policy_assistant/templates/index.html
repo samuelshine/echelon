@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#18221f" />
+    <meta name="description" content="Ask grounded questions across your company policies." />
+    <title>Echelon Policy Desk</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="library" id="library">
+        <div class="brand-row">
+          <a class="brand" href="/" aria-label="Echelon Policy Desk home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32"><path d="M6 8.5 16 3l10 5.5v15L16 29 6 23.5v-15Z"/><path d="m10.5 16 3.4 3.5 7.8-8"/></svg>
+            </span>
+            <span><strong>Echelon</strong><small>Policy Desk</small></span>
+          </a>
+          <button class="icon-button mobile-close" id="closeLibrary" aria-label="Close policy library">
+            <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+
+        <button class="new-chat" id="newChat">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          New conversation
+          <kbd>⌘ K</kbd>
+        </button>
+
+        <section class="library-section">
+          <div class="section-heading">
+            <span>Policy library</span>
+            <button class="text-button" id="selectAll">Select all</button>
+          </div>
+          <div class="document-list" id="documentList" aria-live="polite">
+            <div class="document-skeleton"></div>
+            <div class="document-skeleton short"></div>
+          </div>
+        </section>
+
+        <div class="library-footer">
+          <label class="upload-zone" id="uploadZone" for="fileInput">
+            <input id="fileInput" type="file" accept=".pdf,.docx,.txt,.md,.markdown" multiple />
+            <span class="upload-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+            </span>
+            <span><strong>Add policies</strong><small>PDF, DOCX, TXT or MD · 12 MB max</small></span>
+          </label>
+          <div class="privacy-note">
+            <svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v10H6z"/></svg>
+            <span>Indexing stays local. Only retrieved excerpts go to your configured LLM.</span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="scrim" id="scrim"></div>
+
+      <main class="workspace">
+        <header class="topbar">
+          <button class="icon-button mobile-menu" id="openLibrary" aria-label="Open policy library">
+            <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div class="conversation-title">
+            <span class="eyebrow">Workspace</span>
+            <h1>Policy review</h1>
+          </div>
+          <div class="status-cluster">
+            <div class="grounded-status">
+              <span class="pulse-dot"></span>
+              <span id="modeLabel">Checking system…</span>
+            </div>
+            <div class="avatar" title="You">JS</div>
+          </div>
+        </header>
+
+        <section class="conversation" id="conversation">
+          <div class="welcome" id="welcome">
+            <div class="welcome-orbit" aria-hidden="true">
+              <span class="orbit-ring"></span>
+              <span class="orbit-core">
+                <svg viewBox="0 0 32 32"><path d="M6 8.5 16 3l10 5.5v15L16 29 6 23.5v-15Z"/><path d="M11 12h10M11 16h7M11 20h5"/></svg>
+              </span>
+            </div>
+            <p class="welcome-kicker">Grounded policy intelligence</p>
+            <h2>Ask the handbook.<br /><em>Get the evidence.</em></h2>
+            <p class="welcome-copy">Review company guidance with answers tied directly to the policy language—not guesswork.</p>
+            <div class="suggestions" aria-label="Suggested questions">
+              <button class="suggestion" data-question="How many paid time off days do employees receive, and do unused days carry over?">
+                <span class="suggestion-icon coral"><svg viewBox="0 0 24 24"><path d="M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/></svg></span>
+                <span><strong>Understand leave</strong><small>How does PTO carry-over work?</small></span>
+                <svg class="arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+              <button class="suggestion" data-question="Can I work remotely from another country, and which approvals do I need?">
+                <span class="suggestion-icon mint"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span>
+                <span><strong>Check remote work</strong><small>Can I work from another country?</small></span>
+                <svg class="arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+              <button class="suggestion" data-question="What should I do if I accidentally expose a company credential?">
+                <span class="suggestion-icon lavender"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5.2 3.3 8.3 8 10 4.7-1.7 8-4.8 8-10V6l-8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg></span>
+                <span><strong>Handle an incident</strong><small>What if a credential is exposed?</small></span>
+                <svg class="arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="message-stream" id="messageStream" aria-live="polite"></div>
+        </section>
+
+        <footer class="composer-wrap">
+          <form class="composer" id="chatForm">
+            <textarea id="questionInput" rows="1" maxlength="4000" placeholder="Ask a question about your policies…" aria-label="Policy question"></textarea>
+            <button class="send-button" id="sendButton" type="submit" aria-label="Send question" disabled>
+              <svg viewBox="0 0 24 24"><path d="m5 12 14-7-4 14-3-6-7-1Z"/><path d="m12 13 7-8"/></svg>
+            </button>
+          </form>
+          <div class="composer-meta">
+            <span id="contextLabel">Loading policy context…</span>
+            <span>Answers include source citations</span>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <div class="source-panel" id="sourcePanel" role="dialog" aria-modal="true" aria-labelledby="sourceTitle" hidden>
+      <div class="source-backdrop" data-close-source></div>
+      <article class="source-sheet">
+        <header>
+          <div><span class="eyebrow">Source excerpt</span><h2 id="sourceTitle">Policy evidence</h2></div>
+          <button class="icon-button" data-close-source aria-label="Close source"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        </header>
+        <div class="source-details" id="sourceDetails"></div>
+      </article>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="assertive"></div>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  </body>
+</html>

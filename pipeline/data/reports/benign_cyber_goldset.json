@@ -1,0 +1,43 @@
+{
+  "categories": {
+    "architecture_hardening": 11,
+    "authorized_pentest_planning": 11,
+    "ctf_sandbox_exercise": 11,
+    "defensive_code_review": 12,
+    "detection_rule_development": 24,
+    "dual_use_with_context": 11,
+    "forensics_log_analysis": 12,
+    "incident_response": 24,
+    "malware_analysis_for_detection": 22,
+    "patch_validation_dependency_risk": 11,
+    "policy_compliance_tabletop": 22,
+    "quoting_malicious_strings": 11,
+    "security_education": 22,
+    "threat_modeling": 22,
+    "vulnerability_remediation": 24
+  },
+  "caveats": [
+    "Every row is a hard negative (a real ATT&CK technique name is attack vocabulary by construction), well past the spec's 30% floor. The false positive rate measured here is an UPPER BOUND on legitimate security work, not a population rate across all benign traffic.",
+    "Frames are authored, not sourced. The subject matter is real; the defensive phrasing around it is not, so this measures the model against real security vocabulary rather than against real user phrasing.",
+    "Not native-speaker reviewed, which the spec requires. This is a measurement instrument that did not exist before, not the finished set.",
+    "Fit thresholds on the `dev` split only and report from `test`, per the spec's rule that the gold set is never tuned against after observation."
+  ],
+  "distinct_attack_techniques": 250,
+  "frames": 22,
+  "goldset_splits": {
+    "dev": 95,
+    "test": 155
+  },
+  "hard_negative_fraction": 1.0,
+  "output": "data/holdout_v1/benign_cyber_goldset.jsonl",
+  "report_version": "0.1.0",
+  "rows": 250,
+  "spec": "docs/BENIGN_CYBER_GOLDSET_SPEC.md",
+  "status": "built_pending_contamination_scan",
+  "training_eligible": false,
+  "vocabulary_source": {
+    "attribution": "(c) 2026 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation.",
+    "dataset": "mitre_attack_enterprise",
+    "revision": "6cda5ad8462c79e14fbb872f4e09059b18e0cfc4"
+  }
+}

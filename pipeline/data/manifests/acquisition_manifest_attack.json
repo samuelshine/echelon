@@ -1,0 +1,28 @@
+{
+  "acquired_at": "2026-08-18T14:01:04.521757+00:00",
+  "manifest_version": "0.1.0",
+  "registry_version": "0.4.0",
+  "sources": [
+    {
+      "artifacts": [
+        {
+          "bytes": 53835637,
+          "path": "enterprise-attack/enterprise-attack-19.2.json",
+          "sha256": "dc1639caa5501d720e280cf1cbd8fbe009884a0c9b3e6e9ed9d0c25166c3d8f4"
+        }
+      ],
+      "host": "github",
+      "id": "mitre_attack_enterprise",
+      "license_evidence": {
+        "bytes": 1354,
+        "path": "LICENSE.txt",
+        "sha256": "738144f7fb054722a4ef9d3367c51710341dc12fc574c6ac3a41daaaecd8bf5e"
+      },
+      "license_spdx": "MITRE-ATTACK-Terms-of-Use",
+      "repo_id": "mitre-attack/attack-stix-data",
+      "repository_api_license": "NOASSERTION",
+      "revision": "6cda5ad8462c79e14fbb872f4e09059b18e0cfc4",
+      "role": "benign_control"
+    }
+  ]
+}

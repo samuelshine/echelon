@@ -1,0 +1,27 @@
+{
+  "clean_label_occurrences": {
+    "benign": 250
+  },
+  "clean_rows": 250,
+  "clean_rows_by_source": {
+    "echelon_benign_cyber_goldset": 250
+  },
+  "contaminated_label_occurrences": {},
+  "contaminated_rows": 0,
+  "contamination_reasons": {},
+  "corpus": "data/normalized_v2/eligible_reviewed_v07.jsonl",
+  "corpus_rows": 41712,
+  "cosine_threshold": 0.94,
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_model_revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "holdout": "data/holdout_v1/benign_cyber_goldset.jsonl",
+  "holdout_rows": 250,
+  "report_version": "0.1.0",
+  "similarity_percentiles": {
+    "100": 0.8569,
+    "50": 0.7617,
+    "90": 0.8006,
+    "99": 0.8239
+  },
+  "status": "scanned"
+}

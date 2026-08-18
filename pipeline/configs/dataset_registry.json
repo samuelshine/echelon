@@ -1,9 +1,18 @@
 {
-  "registry_version": "0.3.0",
+  "registry_version": "0.5.0",
   "policy": {
     "gold_language": "en",
-    "allowed_roles": ["train_candidate", "evaluation_only", "benign_control"],
-    "required_review_states": ["pending", "approved", "rejected", "blocked_gated"],
+    "allowed_roles": [
+      "train_candidate",
+      "evaluation_only",
+      "benign_control"
+    ],
+    "required_review_states": [
+      "pending",
+      "approved",
+      "rejected",
+      "blocked_gated"
+    ],
     "review_state_meanings": {
       "blocked_gated": "License and provenance vetted and acceptable, but the source is gated. Acquisition requires a human to accept the publisher's terms and supply a token; never bypass gating."
     },
@@ -20,8 +29,12 @@
       "id": "deepset_prompt_injections",
       "uri": "hf://datasets/deepset/prompt-injections",
       "role": "train_candidate",
-      "threat_coverage": ["prompt_injection"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "4f61ecb038e9c3fb77e21034b22511b523772cdd",
       "license_spdx": null,
       "review_state": "rejected",
@@ -32,8 +45,13 @@
       "id": "neuralchemy_prompt_injection",
       "uri": "hf://datasets/neuralchemy/Prompt-injection-dataset",
       "role": "train_candidate",
-      "threat_coverage": ["prompt_injection", "adversarial_obfuscation"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection",
+        "adversarial_obfuscation"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "7d70432dfcf47a821612cbf9d34e9d9e3ad20e75",
       "license_spdx": "Apache-2.0",
       "review_state": "approved",
@@ -50,8 +68,12 @@
       "id": "rossja_prompt_injection_index",
       "uri": "github://rossja/prompt-injection-datasets",
       "role": "train_candidate",
-      "threat_coverage": ["prompt_injection"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": null,
       "license_spdx": null,
       "review_state": "pending",
@@ -62,8 +84,12 @@
       "id": "jackhhao_jailbreak_classification",
       "uri": "hf://datasets/jackhhao/jailbreak-classification",
       "role": "train_candidate",
-      "threat_coverage": ["prompt_injection"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "2f2ceeb39658696fd3f462403562b6eea5306287",
       "license_spdx": "Apache-2.0",
       "review_state": "approved",
@@ -79,8 +105,13 @@
       "id": "tensor_trust",
       "uri": "web://tensortrust.ai/paper",
       "role": "train_candidate",
-      "threat_coverage": ["prompt_injection", "system_prompt_leakage"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection",
+        "system_prompt_leakage"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "4de2b2fe01ba0cb6fbf7cbb9f1a3fabaf8157372",
       "license_spdx": null,
       "review_state": "rejected",
@@ -91,8 +122,14 @@
       "id": "hackaprompt",
       "uri": "hf://datasets/hackaprompt/hackaprompt-dataset",
       "role": "train_candidate",
-      "threat_coverage": ["prompt_injection", "system_prompt_leakage", "adversarial_obfuscation"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection",
+        "system_prompt_leakage",
+        "adversarial_obfuscation"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "25b87fbedfb86840abaf8cd09af7a029208a971a",
       "license_spdx": "MIT",
       "review_state": "blocked_gated",
@@ -103,17 +140,29 @@
       "id": "wildguardmix",
       "uri": "hf://datasets/allenai/wildguardmix",
       "role": "train_candidate",
-      "threat_coverage": ["prompt_injection", "malicious_code", "toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection",
+        "malicious_code",
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "d29c47f41c8b51348b5c8e8c81c039b3132b66d1",
       "license_spdx": "ODC-By-1.0",
       "review_state": "blocked_gated",
       "holdout": false,
       "notes": "Vetted 2026-08-13; gated (`gated: auto`), so acquisition needs a human to accept the publisher's terms and supply HF_TOKEN, then --allow-gated. Terms were accepted and the source acquired 2026-08-13. review_state stays blocked_gated because the gate is a property of the source, not of our review: a fresh checkout still needs a token. Ingestion is deliberately narrow (see scripts/normalize_wildguard.py) -- `cyberattack` -> malicious_code and `benign` -> benign only; response columns are never read; the `adversarial` flag is recorded but not mapped to a label, since 20,567 such rows would swamp a prompt_injection category holding 2,866 real ones; copyright_violations excluded as HarmBench's copyright slice was. Note the prompt/response fan-out: 86,759 rows carry only ~47,852 distinct prompts, so any ingestion must deduplicate on prompt text before sampling or quotas silently fill with repeats.",
-      "artifacts": ["train/wildguard_train.parquet", "test/wildguard_test.parquet"],
+      "artifacts": [
+        "train/wildguard_train.parquet",
+        "test/wildguard_test.parquet"
+      ],
       "ingestion_filter": {
         "field": "subcategory",
-        "allow": ["cyberattack", "benign"],
+        "allow": [
+          "cyberattack",
+          "benign"
+        ],
         "reason": "targets the malicious_code gap and the matched-benign-control requirement; the other harmful subcategories would land in toxicity_harm, which already has 15,520 real rows and is not the failing category"
       }
     },
@@ -121,52 +170,86 @@
       "id": "catqa_english",
       "uri": "hf://datasets/declare-lab/CategoricalHarmfulQA",
       "role": "train_candidate",
-      "threat_coverage": ["malicious_code", "toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "malicious_code",
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "321e068b391b7d1aeeb882ac468356a9513c9167",
       "license_spdx": "Apache-2.0",
       "review_state": "approved",
       "holdout": false,
       "notes": "Approved 2026-08-13. Apache-2.0, ungated, purpose-built for its paper rather than aggregated from other corpora, so it carries no laundered-license or held-out-contamination risk. 550 English rows across 11 categories x 5 subcategories; the `Malware Viruses` category supplies 50 real malicious_code prompts. English file only -- Chinese and Vietnamese are outside the Tier 1 scope. Small, but these are the first real malicious_code training rows this corpus has ever had.",
-      "artifacts": ["README.md", "data/catqa_english.json"]
+      "artifacts": [
+        "README.md",
+        "data/catqa_english.json"
+      ]
     },
     {
       "id": "jailbreakv_redteam_2k",
       "uri": "hf://datasets/JailbreakV-28K/JailBreakV-28k",
       "role": "train_candidate",
-      "threat_coverage": ["malicious_code", "toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "malicious_code",
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "f949ca582fff13d396ac8fce59596afafb2b78d3",
       "license_spdx": "MIT",
       "review_state": "approved",
       "holdout": false,
       "ingestion_filter": {
         "field": "from",
-        "allow": ["GPT Generate", "Question Set", "Handcraft", "GPT Rewrite"],
+        "allow": [
+          "GPT Generate",
+          "Question Set",
+          "Handcraft",
+          "GPT Rewrite"
+        ],
         "reason": "excludes rows the publisher attributes to BeaverTails (CC-BY-NC, rejected by this registry), AdvBench (overlaps the frozen holdout), and hh-rlhf"
       },
       "notes": "Approved 2026-08-13 for the RedTeam_2K question set ONLY, and only under the mandatory ingestion_filter above. The repository is MIT and ungated, but RedTeam_2K is an aggregate: its own `from` column attributes 558 of 2000 rows to BeaverTails (which this registry rejected as CC-BY-NC) and 67 to AdvBench (which overlaps the frozen JailbreakBench/HarmBench holdout). Ingesting it wholesale would launder a license this project deliberately excluded and contaminate the evaluation set. Normalization must therefore keep only rows whose publisher-declared `from` is GPT Generate, Question Set, Handcraft, or GPT Rewrite, and the result must still pass a contamination scan against the holdout set. Multimodal figstep images and the 28K attack-template file are excluded.",
-      "artifacts": ["JailBreakV_28K/RedTeam_2K.csv"]
+      "artifacts": [
+        "JailBreakV_28K/RedTeam_2K.csv"
+      ]
     },
     {
       "id": "aegis_safety_2",
       "uri": "hf://datasets/nvidia/Aegis-AI-Content-Safety-Dataset-2.0",
       "role": "train_candidate",
-      "threat_coverage": ["malicious_code", "toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "malicious_code",
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "d86bb8bedff51d25ac834ab7838f1cc61acb7a2c",
       "license_spdx": "CC-BY-4.0",
       "review_state": "approved",
       "holdout": false,
       "notes": "Approved. Human prompt safety labels; retain category granularity and exclude response-derived shortcuts.",
-      "artifacts": ["README.md", "train.json", "validation.json", "test.json"]
+      "artifacts": [
+        "README.md",
+        "train.json",
+        "validation.json",
+        "test.json"
+      ]
     },
     {
       "id": "toxic_chat",
       "uri": "hf://datasets/lmsys/toxic-chat",
       "role": "train_candidate",
-      "threat_coverage": ["toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": null,
       "license_spdx": null,
       "review_state": "rejected",
@@ -177,8 +260,13 @@
       "id": "beavertails",
       "uri": "hf://datasets/PKU-Alignment/BeaverTails",
       "role": "train_candidate",
-      "threat_coverage": ["malicious_code", "toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "malicious_code",
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": null,
       "license_spdx": null,
       "review_state": "rejected",
@@ -189,21 +277,33 @@
       "id": "do_not_answer",
       "uri": "hf://datasets/LibrAI/do-not-answer",
       "role": "train_candidate",
-      "threat_coverage": ["malicious_code", "toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "malicious_code",
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "74e74f2e4507ef256fe536f78a776f4a1ff67955",
       "license_spdx": "Apache-2.0",
       "review_state": "approved",
       "holdout": false,
       "notes": "Approved. Retain risk-area taxonomy and ingest questions only; never use model response columns as prompt features.",
-      "artifacts": ["README.md", "data_en.csv"]
+      "artifacts": [
+        "README.md",
+        "data_en.csv"
+      ]
     },
     {
       "id": "echelon_benign_cyber",
       "uri": "local://data/curated/benign_cyber",
       "role": "benign_control",
-      "threat_coverage": ["benign"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "benign"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": null,
       "license_spdx": null,
       "review_state": "pending",
@@ -214,21 +314,36 @@
       "id": "jailbreakbench",
       "uri": "hf://datasets/JailbreakBench/JBB-Behaviors",
       "role": "evaluation_only",
-      "threat_coverage": ["prompt_injection", "adversarial_obfuscation"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection",
+        "adversarial_obfuscation"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "886acc352a31533ffbcf4ef22c744658688086fc",
       "license_spdx": "MIT",
       "review_state": "approved",
       "holdout": true,
       "notes": "Approved 2026-08-12 for held-out evaluation only, never training. URI corrected from github://JailbreakBench/jailbreakbench (the harness repo) to the dataset repository that actually publishes the behaviours. Ships matched harmful and benign behaviour sets, so it supplies real benign controls as well as attacks. Contamination scan against the training corpus is mandatory before any number is reported.",
-      "artifacts": ["README.md", "data/harmful-behaviors.csv", "data/benign-behaviors.csv"]
+      "artifacts": [
+        "README.md",
+        "data/harmful-behaviors.csv",
+        "data/benign-behaviors.csv"
+      ]
     },
     {
       "id": "harmbench",
       "uri": "github://centerforaisafety/HarmBench",
       "role": "evaluation_only",
-      "threat_coverage": ["prompt_injection", "malicious_code", "toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "prompt_injection",
+        "malicious_code",
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "8e1604d1171fe8a48d8febecd22f600e462bdcdd",
       "license_spdx": "MIT",
       "review_state": "approved",
@@ -244,21 +359,35 @@
       "id": "strongreject",
       "uri": "github://alexandrasouly/strongreject",
       "role": "evaluation_only",
-      "threat_coverage": ["malicious_code", "toxicity_harm"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "malicious_code",
+        "toxicity_harm"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "f7cad6c17e624e21d8df2278e918ae1dddb4cb56",
       "license_spdx": "MIT",
       "review_state": "approved",
       "holdout": true,
       "notes": "Approved 2026-08-12 for held-out evaluation only. URI corrected from github://dsbowen/strong_reject, which publishes the evaluation code and loads its data from this repository at runtime; pinning the code repo would not have pinned the data. Carries a per-item category field usable for slicing.",
-      "artifacts": ["README.md", "strongreject_dataset/strongreject_dataset.csv"]
+      "artifacts": [
+        "README.md",
+        "strongreject_dataset/strongreject_dataset.csv"
+      ]
     },
     {
       "id": "cyberseceval",
       "uri": "github://meta-llama/PurpleLlama",
       "role": "evaluation_only",
-      "threat_coverage": ["malicious_code", "prompt_injection", "benign"],
-      "languages": ["en"],
+      "threat_coverage": [
+        "malicious_code",
+        "prompt_injection",
+        "benign"
+      ],
+      "languages": [
+        "en"
+      ],
       "revision": "e36f132f4c4b952515a03b8bdb1275738a1fa28b",
       "license_spdx": "MIT",
       "license_path": "CybersecurityBenchmarks/LICENSE",
@@ -269,6 +398,45 @@
         "CybersecurityBenchmarks/README.md",
         "CybersecurityBenchmarks/datasets/mitre/mitre_benchmark_100_per_category_with_augmentation.json",
         "CybersecurityBenchmarks/datasets/prompt_injection/prompt_injection.json"
+      ]
+    },
+    {
+      "id": "mitre_attack_enterprise",
+      "uri": "github://mitre-attack/attack-stix-data",
+      "role": "benign_control",
+      "threat_coverage": [
+        "benign"
+      ],
+      "languages": [
+        "en"
+      ],
+      "revision": "6cda5ad8462c79e14fbb872f4e09059b18e0cfc4",
+      "license_spdx": "MITRE-ATTACK-Terms-of-Use",
+      "license_path": "LICENSE.txt",
+      "review_state": "approved",
+      "holdout": true,
+      "notes": "Approved 2026-08-13 as the vocabulary source for the defensive-cyber benign gold set (docs/BENIGN_CYBER_GOLDSET_SPEC.md). Not a prompt corpus: only technique names and IDs are used, as the SUBJECT MATTER of hand-written defensive frames, so each gold prompt is about a different real adversary technique instead of a paraphrase of the same few ideas. Licensing is a custom MITRE grant (royalty-free for research/development/commercial use, attribution required) which GitHub reports as NOASSERTION, so license_path pins the governing file for hashing as evidence rather than trusting the repository label. Attribution: \u00a9 2026 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation.",
+      "artifacts": [
+        "enterprise-attack/enterprise-attack-19.2.json"
+      ]
+    },
+    {
+      "id": "oasst1_assistant_responses",
+      "uri": "hf://datasets/OpenAssistant/oasst1",
+      "role": "benign_control",
+      "threat_coverage": [
+        "benign"
+      ],
+      "languages": [
+        "en"
+      ],
+      "revision": "fdf72ae0827c1cda404aff25b6603abec9e3399b",
+      "license_spdx": "Apache-2.0",
+      "review_state": "approved",
+      "holdout": false,
+      "notes": "Approved 2026-08-18 to fix a measured egress defect. The response model's benign class is 100% WildGuardMix, whose benign rows are answers to adversarial prompts -- refusals and safety-hedged prose. The model consequently learned that a benign response *sounds like a refusal* and scores ordinary assistant output as toxic (0.687 on a 145-word order-status reply, 0.859 on an eight-word one, against 0.011 for a short refusal: register, not length). oasst1 supplies the missing register -- real human-written assistant replies on ordinary topics, Apache-2.0 and ungated. Ingest ASSISTANT messages only, English only, excluding deleted rows and anything contributors flagged; these become benign response controls, never prompts.",
+      "artifacts": [
+        "2023-04-12_oasst_ready.messages.jsonl.gz"
       ]
     }
   ]

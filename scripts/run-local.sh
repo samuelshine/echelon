@@ -3,11 +3,18 @@
 # Points the gateway at a fake upstream so no OpenAI key is required.
 #
 # In the monorepo the defaults resolve to ./pipeline ./gateway ./console.
-#   PY                   - python interpreter with pipeline deps (torch/transformers/flask)
-#   ECHELON_OLLAMA_MODEL - local Ollama judge model (e.g. qwen2.5:14b); unset -> mock judge
-#   CONSOLE_TOKEN        - operator credential for /v1/console/*; defaults to a local dev value.
-#                          The gateway refuses to start without it, because those routes mint
-#                          API keys and edit the security cascade's own thresholds.
+#   PY                     - python interpreter with pipeline deps (torch/transformers/flask)
+#   ECHELON_OLLAMA_MODEL   - local Ollama judge model (e.g. qwen2.5:14b); unset -> mock judge
+#   CONSOLE_TOKEN          - operator credential for /v1/console/*; defaults to a local dev value.
+#                            The gateway refuses to start without it, because those routes mint
+#                            API keys and edit the security cascade's own thresholds.
+#   GEMINI_API_KEY         - free Gemini API key (https://aistudio.google.com/apikey). When set,
+#                            the Policy Desk demo UI (policy_assistant/, :8100) routes real
+#                            gemini-* requests through the gateway's safety cascade to the real
+#                            Gemini API. Unset -> Policy Desk still starts, in local extractive
+#                            mode (no LLM call at all -- see policy_assistant/README.md).
+#   POLICY_ASSISTANT_PY    - python interpreter for policy_assistant (needs Flask + pypdf,
+#                            requirements.txt, no torch); defaults to $PY.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -17,6 +24,10 @@ CONSOLE_DIR="${CONSOLE_DIR:-$HERE/console}"
 PY="${PY:-python3}"
 OLLAMA_MODEL="${ECHELON_OLLAMA_MODEL:-}"
 CONSOLE_TOKEN="${CONSOLE_TOKEN:-local-dev-operator-token}"
+
+POLICY_DIR="${POLICY_DIR:-$HERE/policy_assistant}"
+POLICY_PY="${POLICY_ASSISTANT_PY:-$PY}"
+GEMINI_API_KEY="${GEMINI_API_KEY:-}"
 
 pids=()
 cleanup() { kill "${pids[@]}" 2>/dev/null || true; }
@@ -109,6 +120,9 @@ ML_BASE_URL=http://127.0.0.1:8099/classify JUDGE_BASE_URL=http://127.0.0.1:8099/
 EGRESS_ML_BASE_URL=http://127.0.0.1:8099/classify_response EGRESS_JUDGE_BASE_URL=http://127.0.0.1:8099/judge_response \
 UPSTREAM_BASE_URL=http://127.0.0.1:9100 ECHELON_API_KEYS=sk-demo:acme:key_live:pro \
 CONSOLE_TOKEN="$CONSOLE_TOKEN" \
+PROVIDER_GEMINI_BASE_URL=https://generativelanguage.googleapis.com \
+PROVIDER_GEMINI_API_KEY="$GEMINI_API_KEY" \
+MODEL_ROUTES="gemini-*:gemini" DEFAULT_PROVIDER=openai \
 HTTP_ADDR=:8080 SECURITY_FAIL_CLOSED=true \
 RATE_LIMIT_REQUESTS="${RATE_LIMIT_REQUESTS:-10}" RATE_LIMIT_BURST="${RATE_LIMIT_BURST:-10}" \
 ML_TIMEOUT=2s JUDGE_TIMEOUT=15s EGRESS_TIMEOUT=16s UPSTREAM_TIMEOUT=15s \
@@ -121,6 +135,22 @@ echo "[4/4] starting console on :3000"
     NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN="$CONSOLE_TOKEN" npm run dev ) &
 pids+=($!)
 
+if [ -d "$POLICY_DIR" ]; then
+  echo "[5/5] starting Policy Desk demo UI on :8100"
+  if [ -n "$GEMINI_API_KEY" ]; then
+    echo "       -> real LLM mode: gemini-1.5-flash-latest through the gateway's safety cascade"
+    POLICY_LLM_KEY=sk-demo POLICY_LLM_BASE=http://localhost:8080/v1 POLICY_LLM_MODEL=gemini-1.5-flash-latest
+  else
+    echo "       -> GEMINI_API_KEY not set: local extractive mode, no LLM call (see policy_assistant/README.md)"
+    POLICY_LLM_KEY="" POLICY_LLM_BASE="" POLICY_LLM_MODEL=""
+  fi
+  ( cd "$HERE" && \
+    LLM_BASE_URL="$POLICY_LLM_BASE" LLM_API_KEY="$POLICY_LLM_KEY" LLM_MODEL="$POLICY_LLM_MODEL" \
+    POLICY_DATA_DIR="$POLICY_DIR/runtime" PORT=8100 \
+    "$POLICY_PY" -m policy_assistant.app ) &
+  pids+=($!)
+fi
+
 echo "waiting for services..."
 for _ in $(seq 1 60); do
   curl -sf localhost:8099/health >/dev/null 2>&1 && curl -sf localhost:8080/healthz >/dev/null 2>&1 && break
@@ -128,9 +158,17 @@ for _ in $(seq 1 60); do
 done
 echo
 echo "Echelon is up:"
-echo "  console : http://localhost:3000"
-echo "  gateway : http://localhost:8080  (OpenAI-compatible, Bearer sk-demo)"
+echo "  console      : http://localhost:3000  (ops dashboard)"
+echo "  gateway      : http://localhost:8080  (OpenAI-compatible, Bearer sk-demo)"
 echo "  console API is operator-only: Bearer $CONSOLE_TOKEN"
+if [ -d "$POLICY_DIR" ]; then
+  echo "  policy desk  : http://localhost:8100  (end-user chat UI -> gateway -> Gemini)"
+  if [ -z "$GEMINI_API_KEY" ]; then
+    echo "                 GEMINI_API_KEY not set -> local extractive mode, no real LLM call."
+    echo "                 Get a free key: https://aistudio.google.com/apikey, then rerun with"
+    echo "                 GEMINI_API_KEY=... ./scripts/run-local.sh"
+  fi
+fi
 echo "  drive demo traffic: scripts/demo-drive.sh"
 echo "Ctrl-C to stop."
 wait

@@ -36,6 +36,28 @@ python -m policy_assistant.app
 
 `LLM_BASE_URL` defaults to `https://api.openai.com/v1`. Set it to another OpenAI-compatible `/v1` endpoint if needed. The key remains server-side and is never returned to the browser.
 
+### Routing through the Echelon gateway (recommended for this repo's demo)
+
+`./scripts/run-local.sh` (repo root) does this automatically when `GEMINI_API_KEY`
+is set: it points `LLM_BASE_URL` at the local Echelon gateway
+(`http://localhost:8080/v1`) instead of directly at a provider, so every
+question and answer passes through the ingress/egress safety cascade before and
+after the real LLM call. `LLM_API_KEY` in that mode is a tenant key the gateway
+recognizes (`sk-demo`), not the provider key — the provider key
+(`GEMINI_API_KEY`) is configured on the gateway itself
+(`PROVIDER_GEMINI_API_KEY`), never here. To wire it manually:
+
+```bash
+export LLM_BASE_URL="http://localhost:8080/v1"
+export LLM_API_KEY="sk-demo"          # a tenant key the gateway's ECHELON_API_KEYS recognizes
+export LLM_MODEL="gemini-1.5-flash-latest"
+python -m policy_assistant.app
+```
+
+The gateway must be running with a Gemini provider configured
+(`PROVIDER_GEMINI_API_KEY=<your free key>`, `MODEL_ROUTES=gemini-*:gemini`) —
+see the root `README.md` and `gateway/README.md`.
+
 ## Run with Docker
 
 From the repository root:

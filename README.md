@@ -57,8 +57,24 @@ PIPELINE_DIR=pipeline GATEWAY_DIR=gateway CONSOLE_DIR=console \
 ./scripts/demo-drive.sh
 
 # or containerized:
-docker compose up --build   # console :3000, gateway :8080
+docker compose up --build   # console :3000, gateway :8080, policy desk :8100
 ```
+
+**Policy Desk** (`policy_assistant/`, port 8100) is the end-user-facing half of the
+demo: a real chat UI (upload a policy doc, ask questions, get cited answers) that
+calls the gateway's OpenAI-compatible API rather than an LLM directly — so every
+question and answer passes through the same ingress/egress safety cascade the
+console shows telemetry for. Point it at a real LLM with a free Gemini key:
+
+```bash
+# get a free key: https://aistudio.google.com/apikey
+GEMINI_API_KEY=... PY=/path/to/py3.13-venv/bin/python ./scripts/run-local.sh
+# -> http://localhost:8100, routed through http://localhost:8080/v1 (gateway)
+```
+
+Without `GEMINI_API_KEY` it still runs, in local extractive mode (no LLM call —
+matching sentences from the uploaded document, no safety cascade involved since
+there is no outbound call to scan). See `policy_assistant/README.md`.
 
 ## Status
 

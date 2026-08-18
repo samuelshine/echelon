@@ -397,3 +397,77 @@ Also carried as known, documented gaps rather than silently left unmentioned
 authentication on `/v1/console/*`; per-key `rateLimitRpm` is display/budget
 metadata only, not independently enforced; `STREAM_FAST_MODE`'s per-chunk PII
 scanning can miss a pattern split across a chunk boundary.
+
+## Ingress adjudication + console sign-in (2026-08-19)
+
+Two structural changes, both driven by measurement rather than design taste.
+
+### The cascade was letting non-judging layers decide
+
+L1 (regex) and L2 (classifier) could each terminate a request alone. That is
+correct for evidence that is conclusive by construction and wrong for
+everything else, because a regex cannot read intent and the classifier is
+measurably weakest on exactly the text it most often over-flags.
+
+An end-to-end sweep through the live gateway using 140 prompts from five
+published benchmarks (`scripts/verify/e2e_prompt_sweep.py`) found **every**
+benign false positive came from the classifier hard-blocking with no judge
+consulted — legitimate defensive-security work like *"design a tabletop
+exercise around an adversary using SMB/Windows Admin Shares"*.
+
+L1 rules are now split by evidence type: **structural** markers (`<system>`
+tags, injected `system:` turns) still block immediately, because they are
+artifacts of the prompt's form and essentially never appear in legitimate
+text. **Lexical** matches return the new internal `core.ActionEscalate`, and
+the cascade routes them to the judge with the finding attached. The classifier
+does the same above its block threshold. `ML_CERTAIN_BLOCK_THRESHOLD`
+(default 0 = always adjudicate) caps judge load when needed, and with no judge
+configured a flagged prompt still blocks — nothing falls through.
+
+Measured, before → after: benign defensive-security work 0.75 → 0.85 correct;
+benign false positives 6/40 → 4/40; malicious stopped 57/100 → 54/100 (three
+ambiguous dual-use prompts). **Benign traffic latency is unchanged at 0.02s
+median** — only already-suspicious prompts pay the ~2s adjudication cost,
+which is when accuracy should win over speed.
+
+`ActionEscalate` is internal and always resolved before `Evaluate` returns.
+The gateway additionally now blocks on anything that is not an explicit allow,
+so a future leak fails closed; previously it matched `ActionBlock` exactly and
+would have forwarded an unrecognised action to the model.
+
+### Telemetry was describing the wrong things
+
+Three separate accuracy bugs, all found by cross-checking the console against
+what the gateway actually did rather than trusting the UI:
+
+- **Allowed requests recorded no ingress event at all.** `recordEvent` fired on
+  an ingress *block* but not an ingress *allow*, and the only other event had
+  its direction overwritten to `egress` once an egress pipeline was wired. So
+  for every request that was not blocked at ingress — nearly all of them —
+  ingress ran but left no trace. Fixed by recording a non-terminal ingress-pass
+  event; `PromptEvent.Terminal` keeps `Summary` counting one API call as one
+  call rather than two.
+- **Every layer was labelled with the request's final verdict.** A response
+  where PII was masked and a later scanner blocked showed four identical
+  "block" rows, crediting the PII scanner with a rejection it did not make.
+  `core.Finding` now carries the deciding layer's own `Action`.
+- **Egress excerpts showed the provider envelope**, not the answer that was
+  judged.
+
+`ECHELON_SHOW_EXCERPTS` (default off) makes telemetry content-free by default,
+which is what allows the console to be operated without granting access to user
+prompts; the flag trades that away deliberately for local demos.
+
+### Console sign-in
+
+The console now requires a token, verified against the gateway and held in
+`sessionStorage`; a 401 clears it and returns to the login screen. It is a
+shared operator credential, not a per-user identity system, and the UI says so.
+
+### Still open
+
+`prompt_injection` remains the weakest head end-to-end (CyberSecEval injection
+0.10–0.20 correct). Much of that slice is *indirect* injection that is only an
+attack relative to a system prompt the gateway scores separately, so the number
+understates and overstates in different places — but it is not good, and it is
+the next thing worth attacking.

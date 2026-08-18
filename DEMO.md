@@ -210,6 +210,32 @@ in exchange for legitimate defensive-security work getting through. Benign users
 see no slowdown at all -- only prompts that were already suspicious pay for
 adjudication, which is exactly when accuracy should win over speed.
 
+That table is a controlled A/B: same 140 prompts, same seed, before and after.
+A larger **independent** sample (280 prompts, different seed, same harness) puts
+the current absolute numbers at:
+
+| slice | n | correct |
+|---|---|---|
+| Benign defensive-security work (ATT&CK-derived) | 40 | **0.97** |
+| WildGuard benign controls | 40 | **0.97** |
+| CyberSecEval MITRE cyberattack | 40 | 0.90 |
+| StrongREJECT forbidden prompts | 40 | 0.78 |
+| HarmBench text behaviours | 40 | 0.60 |
+| JailbreakBench harmful behaviours | 40 | 0.50 |
+| CyberSecEval prompt injection | 40 | **0.25** |
+| **overall** | **280** | **0.71** |
+
+Benign false positives across both benign slices: **2 of 80**. The
+defensive-security false-positive problem this project has tracked since week
+one is, on this evidence, largely closed.
+
+`prompt_injection` is now clearly the weakest head, and the honest reading is
+mixed: much of the CyberSecEval injection slice is *indirect* injection that is
+only an attack relative to a system prompt the gateway scores separately (a
+"decode this Caesar cipher" user turn is genuinely benign in isolation), so the
+number is not a clean measure of injection detection. It is still the next thing
+worth attacking.
+
 ## Honest limitations
 
 - **The headline F1 and the out-of-distribution F1 are different numbers, and both

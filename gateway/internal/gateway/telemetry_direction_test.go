@@ -167,3 +167,47 @@ func TestExcerptsRedactedByDefault(t *testing.T) {
 		})
 	}
 }
+
+// TestEgressExcerptShowsTheAnswerNotTheEnvelope: an operator reading the audit
+// log needs the answer that was judged, not the provider's JSON wrapper.
+func TestEgressExcerptShowsTheAnswerNotTheEnvelope(t *testing.T) {
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"id":"cmpl-1","choices":[{"message":{"role":"assistant","content":"Your order ships Tuesday."}}]}`))
+	}))
+	defer upstream.Close()
+	upstreamURL, _ := url.Parse(upstream.URL)
+
+	store := telemetry.NewStore(16)
+	handler := gateway.New(gateway.Options{
+		Config: config.Config{
+			UpstreamBaseURL: upstreamURL, MaxRequestBytes: 1 << 20, ShowExcerpts: true,
+		},
+		KeyStore:       keystore.NewMemoryStore(nil),
+		Ingress:        allowIngress{},
+		Egress:         allowEgress{},
+		Telemetry:      store,
+		UpstreamRouter: testRouter(upstream.URL, "", http.DefaultTransport),
+	}).Routes()
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions",
+		strings.NewReader(`{"model":"gpt-4o-mini","messages":[{"role":"user","content":"when does my order ship"}]}`))
+	req.Header.Set("Content-Type", "application/json")
+	handler.ServeHTTP(httptest.NewRecorder(), req)
+
+	var egressEvent *telemetry.PromptEvent
+	events := store.Events(10)
+	for i := range events {
+		if events[i].Direction == "egress" {
+			egressEvent = &events[i]
+		}
+	}
+	if egressEvent == nil {
+		t.Fatal("no egress event recorded")
+	}
+	if !strings.Contains(egressEvent.Excerpt, "Your order ships Tuesday.") {
+		t.Errorf("excerpt = %q, want the assistant's answer", egressEvent.Excerpt)
+	}
+	if strings.Contains(egressEvent.Excerpt, `"choices"`) {
+		t.Errorf("excerpt still contains the provider envelope: %q", egressEvent.Excerpt)
+	}
+}

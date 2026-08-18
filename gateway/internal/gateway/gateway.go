@@ -621,6 +621,14 @@ func (g *Gateway) excerpt(text string) string {
 	if !g.cfg.ShowExcerpts {
 		return redacted
 	}
+	// An egress excerpt arrives as the whole provider envelope. Showing an
+	// operator `{"id":"cmpl","choices":[{"message":{"role":...` tells them
+	// nothing about the answer that was judged, so pull out the assistant text
+	// when the body is chat-completion shaped. Non-completion bodies (a provider
+	// error, /v1/responses) fall through unchanged rather than being dropped.
+	if assistant := egress.ExtractAssistantText([]byte(text)); assistant != "" {
+		text = assistant
+	}
 	trimmed := strings.TrimSpace(text)
 	if trimmed == "" {
 		return redacted

@@ -851,8 +851,13 @@ func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, star
 		if category == "clean" {
 			category = mapCategory(layer, f.Code)
 		}
+		// Report what this layer decided, not what the request ended up doing.
+		layerVerdict := finalVerdict
+		if f.Action != 0 {
+			layerVerdict = mapVerdict(f.Action)
+		}
 		layers = append(layers, telemetry.LayerResult{
-			Layer: layer, Verdict: finalVerdict, Score: round4(f.Confidence),
+			Layer: layer, Verdict: layerVerdict, Score: round4(f.Confidence),
 			Threshold: g.cfg.Pipeline.MLBlockThreshold, Model: f.Layer,
 			Detail: map[string]any{"code": f.Code, "message": f.Message},
 		})

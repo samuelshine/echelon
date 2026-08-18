@@ -37,6 +37,14 @@ type Finding struct {
 	Message    string            `json:"message,omitempty"`
 	Confidence float64           `json:"confidence,omitempty"`
 	Metadata   map[string]string `json:"metadata,omitempty"`
+	// Action is what THIS layer decided, which is not always what the request
+	// ended up doing. A pipeline accumulates findings from several scanners and
+	// returns one verdict, so without this the console can only label every
+	// finding with the final outcome -- reporting "PII · block" for a scanner
+	// that masked the response and let it through, while a later scanner was
+	// the one that actually blocked. Zero means "unset": consumers fall back to
+	// the overall verdict, which is correct for single-layer decisions.
+	Action Action `json:"action,omitempty"`
 }
 
 // Verdict is the aggregate security decision for one direction.

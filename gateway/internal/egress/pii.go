@@ -56,8 +56,12 @@ func (s *PIIScanner) Scan(ctx context.Context, response core.ModelResponse) (cor
 		if !matched {
 			continue
 		}
+		action := core.ActionRedact
+		if s.mode == PIIBlock {
+			action = core.ActionBlock
+		}
 		findings = append(findings, core.Finding{
-			Layer: s.Name(), Code: pattern.code,
+			Layer: s.Name(), Code: pattern.code, Action: action,
 			Message: "response contained sensitive data", Confidence: 1,
 		})
 		if s.mode == PIIBlock {

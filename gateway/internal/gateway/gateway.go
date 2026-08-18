@@ -387,7 +387,12 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 				writeError(w, http.StatusForbidden, "security_unavailable", "ingress security is unavailable")
 				return
 			}
-			if verdict.Action == core.ActionBlock {
+			// Fail closed on anything that is not an explicit allow. ActionEscalate
+			// is internal to the cascade and is always resolved before Evaluate
+			// returns, so reaching here with one means a bug -- and the safe
+			// interpretation of "a security layer did not clear this" is to block,
+			// not to forward it to the model.
+			if verdict.Action != core.ActionAllow {
 				span.SetStatus(codes.Error, "ingress_blocked")
 				g.recordEvent(identity, verdict, start, nil, "", "ingress", true)
 				writeError(w, http.StatusForbidden, findingCode(verdict, "ingress_blocked"), "prompt blocked by ingress policy")

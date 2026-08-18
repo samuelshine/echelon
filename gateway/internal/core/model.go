@@ -19,6 +19,14 @@ const (
 	ActionAllow Action = iota + 1
 	ActionBlock
 	ActionRedact
+	// ActionEscalate is an INTERNAL, non-terminal action: a layer reporting
+	// "I found something, but I cannot judge intent from it alone". Only the
+	// ingress cascade consumes it, by routing to the LLM judge with the
+	// escalating layer's findings attached as evidence. It must never reach the
+	// gateway's response path -- Cascade.Evaluate always resolves it into
+	// Allow/Block before returning, and the gateway additionally treats any
+	// non-Allow action as a block so a future leak fails closed, not open.
+	ActionEscalate
 )
 
 // Finding is evidence produced by one plugin. Evidence must be safe to log and
@@ -49,6 +57,12 @@ func Allow() Verdict { return Verdict{Action: ActionAllow} }
 
 func Block(findings ...Finding) Verdict {
 	return Verdict{Action: ActionBlock, Findings: findings}
+}
+
+// Escalate marks evidence that needs adjudication rather than a decision. See
+// ActionEscalate: non-terminal, resolved by the cascade before it returns.
+func Escalate(findings ...Finding) Verdict {
+	return Verdict{Action: ActionEscalate, Findings: findings}
 }
 
 // Prompt is the canonical input passed through ingress plugins.

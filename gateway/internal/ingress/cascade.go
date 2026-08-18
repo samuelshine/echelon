@@ -86,7 +86,20 @@ func (c *Cascade) Evaluate(ctx context.Context, prompt core.Prompt) (core.Verdic
 		verdict.Duration = time.Since(started)
 		return verdict, nil
 	}
+	// A lexical heuristic hit is evidence, not a verdict: carry it forward so the
+	// judge can weigh it, and remember that it fired so an ambiguous-but-flagged
+	// prompt still reaches the judge even when the classifier scores it low.
+	heuristicEvidence := []core.Finding(nil)
+	if verdict.Action == core.ActionEscalate {
+		heuristicEvidence = verdict.Findings
+	}
 	if c.classifier == nil {
+		// No classifier to corroborate with. Without a judge there is nothing left
+		// that can read intent, so fail safe on the evidence we have.
+		if len(heuristicEvidence) > 0 {
+			resolved, err := c.adjudicate(ctx, prompt, heuristicEvidence, started)
+			return resolved, err
+		}
 		verdict.Duration = time.Since(started)
 		return verdict, nil
 	}
@@ -108,24 +121,41 @@ func (c *Cascade) Evaluate(ctx context.Context, prompt core.Prompt) (core.Verdic
 	}
 	judgeThreshold, blockThreshold := c.Thresholds()
 	if probability >= blockThreshold {
-		blocked := core.Block(finding)
+		blocked := core.Block(append(heuristicEvidence, finding)...)
 		blocked.Duration = time.Since(started)
 		return blocked, nil
 	}
-	if probability < judgeThreshold {
+	if probability < judgeThreshold && len(heuristicEvidence) == 0 {
 		allowed := core.Allow()
 		allowed.Duration = time.Since(started)
 		return allowed, nil
 	}
+	// Either the classifier is uncertain, or the heuristic flagged something the
+	// classifier did not corroborate. Both are exactly the "needs intent" case.
+	evidence := heuristicEvidence
+	if probability >= judgeThreshold {
+		evidence = append(evidence, finding)
+	}
+	return c.adjudicate(ctx, prompt, evidence, started)
+}
+
+// adjudicate hands the accumulated evidence to the LLM judge, which is the only
+// layer that can read intent. The judge's own verdict decides; the evidence that
+// got us here is preserved on a block so telemetry still shows which layer first
+// flagged the prompt. When no judge is configured this fails per the pipeline's
+// fail-closed setting rather than silently allowing flagged text through.
+func (c *Cascade) adjudicate(ctx context.Context, prompt core.Prompt, evidence []core.Finding, started time.Time) (core.Verdict, error) {
 	if c.judge == nil {
 		return c.stageFailure("llm_judge", started, errors.New("ambiguous classification requires an unavailable judge"))
 	}
-
-	verdict, err = evaluateWithTimeout(ctx, c.config.JudgeTimeout, func(stageCtx context.Context) (core.Verdict, error) {
+	verdict, err := evaluateWithTimeout(ctx, c.config.JudgeTimeout, func(stageCtx context.Context) (core.Verdict, error) {
 		return c.judge.Judge(stageCtx, prompt)
 	})
 	if err != nil {
 		return c.stageFailure(c.judge.Name(), started, err)
+	}
+	if verdict.Action == core.ActionBlock {
+		verdict.Findings = append(append([]core.Finding(nil), evidence...), verdict.Findings...)
 	}
 	verdict.Duration = time.Since(started)
 	return verdict, nil

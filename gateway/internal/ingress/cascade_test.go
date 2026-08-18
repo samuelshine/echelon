@@ -141,3 +141,107 @@ func (f *fakeJudge) Judge(context.Context, core.Prompt) (core.Verdict, error) {
 	}
 	return core.Allow(), nil
 }
+
+// escalateLayer stands in for the real heuristic's lexical-match path.
+type escalateLayer struct{}
+
+func (escalateLayer) Name() string { return "heuristic" }
+func (escalateLayer) Evaluate(context.Context, core.Prompt) (core.Verdict, error) {
+	return core.Escalate(core.Finding{
+		Layer: "heuristic", Code: "instruction_override", Confidence: 0.5,
+	}), nil
+}
+
+// TestLexicalHeuristicHitReachesTheJudge is the regression test for the
+// architecture fix: a context-dependent heuristic match used to terminate the
+// request with a hard block, so the LLM judge -- the only layer that can read
+// intent -- never saw it. Legitimate security discussion that happens to use
+// attack vocabulary was rejected with no possibility of appeal.
+func TestLexicalHeuristicHitReachesTheJudge(t *testing.T) {
+	// Classifier scores it BELOW the judge threshold: on its own this prompt
+	// would have been allowed outright. The heuristic's evidence is the only
+	// reason it warrants a look, which is exactly the case that used to be
+	// decided by regex alone.
+	classifier := &fakeClassifier{probability: 0.01}
+	judge := &fakeJudge{block: false}
+	cascade, err := NewCascade(CascadeConfig{JudgeThreshold: 0.4, BlockThreshold: 0.9},
+		escalateLayer{}, classifier, judge)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	verdict, err := cascade.Evaluate(context.Background(), core.Prompt{Text: "irrelevant"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if judge.calls != 1 {
+		t.Fatalf("judge called %d times, want 1 -- a lexical heuristic hit must be "+
+			"adjudicated, not decided by the regex", judge.calls)
+	}
+	if verdict.Action != core.ActionAllow {
+		t.Fatalf("action = %v, want allow: the judge cleared it, so the cascade must "+
+			"honour that over the heuristic's suspicion (%#v)", verdict.Action, verdict)
+	}
+}
+
+// TestLexicalHeuristicHitBlocksWhenTheJudgeAgrees proves the escalation is a
+// real adjudication, not a bypass: the same evidence blocks when the judge
+// rules against it, and the heuristic's finding is preserved for telemetry.
+func TestLexicalHeuristicHitBlocksWhenTheJudgeAgrees(t *testing.T) {
+	classifier := &fakeClassifier{probability: 0.01}
+	judge := &fakeJudge{block: true}
+	cascade, err := NewCascade(CascadeConfig{JudgeThreshold: 0.4, BlockThreshold: 0.9},
+		escalateLayer{}, classifier, judge)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	verdict, err := cascade.Evaluate(context.Background(), core.Prompt{Text: "irrelevant"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if verdict.Action != core.ActionBlock {
+		t.Fatalf("action = %v, want block", verdict.Action)
+	}
+	var sawHeuristic, sawJudge bool
+	for _, f := range verdict.Findings {
+		switch f.Layer {
+		case "heuristic":
+			sawHeuristic = true
+		case "judge":
+			sawJudge = true
+		}
+	}
+	if !sawHeuristic {
+		t.Error("heuristic finding lost: telemetry must still show which layer first flagged it")
+	}
+	if !sawJudge {
+		t.Error("judge finding missing from the block verdict")
+	}
+}
+
+// TestEscalateNeverEscapesTheCascade guards the invariant that makes
+// ActionEscalate safe to add: it is internal, and must always be resolved into
+// a terminal action before Evaluate returns. A leak would reach the gateway's
+// response path, which only understands allow/block/redact.
+func TestEscalateNeverEscapesTheCascade(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		judgeBlock bool
+	}{{"judge_allows", false}, {"judge_blocks", true}} {
+		t.Run(tc.name, func(t *testing.T) {
+			cascade, err := NewCascade(CascadeConfig{JudgeThreshold: 0.4, BlockThreshold: 0.9},
+				escalateLayer{}, &fakeClassifier{probability: 0.01}, &fakeJudge{block: tc.judgeBlock})
+			if err != nil {
+				t.Fatal(err)
+			}
+			verdict, err := cascade.Evaluate(context.Background(), core.Prompt{Text: "x"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if verdict.Action == core.ActionEscalate {
+				t.Fatal("ActionEscalate escaped the cascade; the gateway cannot interpret it")
+			}
+		})
+	}
+}

@@ -78,6 +78,11 @@ type Options struct {
 	// create/update/revoke). Always wired (even when auth is disabled) so the UI
 	// works; also assigned to Authenticator when auth is enabled.
 	KeyStore keystore.Store
+	// ConsoleAuth guards every /v1/console/* route. When nil the routes are served
+	// unauthenticated, which is only reachable through an explicit opt-out in the
+	// composition root (cmd/server refuses to start otherwise) or by a test
+	// constructing a Gateway directly.
+	ConsoleAuth ConsoleAuthenticator
 	// CreditSeeder initializes a new key's tenant balance on create. Optional.
 	CreditSeeder CreditSeeder
 	// RuntimeConfigStore persists config overrides. Optional (nil => live-only).
@@ -106,6 +111,7 @@ type Gateway struct {
 	creditLedger    ports.CreditLedger
 	telemetry       *telemetry.Store
 	keyStore        keystore.Store
+	consoleAuth     ConsoleAuthenticator
 	creditSeeder    CreditSeeder
 	runtimeConfig   RuntimeConfigStore
 	creditsBudget   int64
@@ -150,6 +156,7 @@ func New(opts Options) *Gateway {
 		creditLedger:    opts.CreditLedger,
 		telemetry:       opts.Telemetry,
 		keyStore:        opts.KeyStore,
+		consoleAuth:     opts.ConsoleAuth,
 		creditSeeder:    opts.CreditSeeder,
 		runtimeConfig:   opts.RuntimeConfigStore,
 		creditsBudget:   opts.CreditsBudget,
@@ -164,24 +171,29 @@ func (g *Gateway) Routes() http.Handler {
 	mux.HandleFunc("GET /readyz", g.ready)
 	// Prometheus exposition — unauthenticated, same tier as healthz/readyz.
 	mux.Handle("GET /metrics", g.metrics.Handler())
-	mux.HandleFunc("GET /admin/config", g.configSummary)
-	mux.HandleFunc("GET /admin/guards", g.guardSummary)
+	// /admin/* is the same class as /v1/console/*: operator-only introspection of
+	// how the firewall is configured. Redacted, but still a map of the defenses.
+	mux.HandleFunc("GET /admin/config", g.requireConsoleAuth(g.configSummary))
+	mux.HandleFunc("GET /admin/guards", g.requireConsoleAuth(g.guardSummary))
 	mux.HandleFunc("POST /v1/guard/preflight", g.preflight)
 	mux.HandleFunc("POST /v1/guard/output-scan", g.outputScan)
 	mux.HandleFunc("GET /v1/models", g.models)
 	mux.HandleFunc("POST /v1/chat/completions", g.chatCompletions)
 	mux.HandleFunc("POST /v1/responses", g.responses)
-	// Console read API (B2).
-	mux.HandleFunc("GET /v1/console/summary", g.consoleSummary)
-	mux.HandleFunc("GET /v1/console/metrics", g.consoleMetrics)
-	mux.HandleFunc("GET /v1/console/events", g.consoleEvents)
-	mux.HandleFunc("GET /v1/console/events/stream", g.consoleEventsStream)
-	mux.HandleFunc("GET /v1/console/keys", g.consoleKeysHandler)
-	mux.HandleFunc("POST /v1/console/keys", g.consoleCreateKey)
-	mux.HandleFunc("PATCH /v1/console/keys/{id}", g.consoleUpdateKey)
-	mux.HandleFunc("DELETE /v1/console/keys/{id}", g.consoleRevokeKey)
-	mux.HandleFunc("GET /v1/console/config", g.consoleConfig)
-	mux.HandleFunc("PATCH /v1/console/config", g.consoleUpdateConfig)
+	// Console operator API (B2). Every route is operator-only: these mint and
+	// revoke live API keys and edit the cascade's own thresholds, so they are
+	// wrapped in requireConsoleAuth rather than registered bare.
+	console := g.requireConsoleAuth
+	mux.HandleFunc("GET /v1/console/summary", console(g.consoleSummary))
+	mux.HandleFunc("GET /v1/console/metrics", console(g.consoleMetrics))
+	mux.HandleFunc("GET /v1/console/events", console(g.consoleEvents))
+	mux.HandleFunc("GET /v1/console/events/stream", console(g.consoleEventsStream))
+	mux.HandleFunc("GET /v1/console/keys", console(g.consoleKeysHandler))
+	mux.HandleFunc("POST /v1/console/keys", console(g.consoleCreateKey))
+	mux.HandleFunc("PATCH /v1/console/keys/{id}", console(g.consoleUpdateKey))
+	mux.HandleFunc("DELETE /v1/console/keys/{id}", console(g.consoleRevokeKey))
+	mux.HandleFunc("GET /v1/console/config", console(g.consoleConfig))
+	mux.HandleFunc("PATCH /v1/console/config", console(g.consoleUpdateConfig))
 	return corsForConsole(g.withRequestLog(mux))
 }
 
@@ -566,6 +578,11 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	}
 
 	copyResponseHeaders(w.Header(), resp.Header)
+	// Egress redaction rewrites the body, so the upstream's Content-Length no longer
+	// describes what we are about to send. Left uncorrected, a shortened body makes
+	// the client read fewer bytes than promised and report a truncated transfer
+	// (curl exit 18). We always write exactly respBody here, so state its length.
+	w.Header().Set("Content-Length", strconv.Itoa(len(respBody)))
 	w.WriteHeader(resp.StatusCode)
 	_, _ = w.Write(respBody)
 }
@@ -1205,6 +1222,45 @@ func (g *Gateway) consoleUpdateConfig(w http.ResponseWriter, r *http.Request) {
 		"piiMasking", ov.PIIMasking, "policyEnforcement", ov.PolicyEnforcement, "toxicityScan", ov.ToxicityScan)
 
 	writeJSON(w, http.StatusOK, g.liveConfig())
+}
+
+// ConsoleAuthenticator verifies the operator credential for /v1/console/*.
+type ConsoleAuthenticator interface {
+	VerifyConsoleToken(credential string) bool
+}
+
+// streamRouteNeedingQueryToken is the one console route a browser reaches with
+// EventSource, which cannot set request headers. See requireConsoleAuth.
+const streamRouteNeedingQueryToken = "/v1/console/events/stream"
+
+// requireConsoleAuth rejects unauthenticated calls to the console operator API.
+//
+// A nil authenticator serves the routes open. That state is only reachable
+// deliberately: cmd/server refuses to start unless CONSOLE_TOKEN is set or
+// CONSOLE_AUTH_DISABLED explicitly opts out, and tests may construct a Gateway
+// directly to exercise handler behaviour.
+func (g *Gateway) requireConsoleAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if g.consoleAuth == nil {
+			next(w, r)
+			return
+		}
+		credential := r.Header.Get("Authorization")
+		// EventSource cannot set headers, so the SSE route -- and only that route
+		// -- also accepts the token as a query parameter. The request log records
+		// r.URL.Path without the query string, so this does not reach the logs.
+		// It is still the weaker path: a token in a URL is easier to leak through
+		// referrers or shell history than one in a header.
+		if credential == "" && r.URL.Path == streamRouteNeedingQueryToken {
+			credential = r.URL.Query().Get("access_token")
+		}
+		if !g.consoleAuth.VerifyConsoleToken(credential) {
+			writeError(w, http.StatusUnauthorized, "unauthorized",
+				"a valid console operator token is required")
+			return
+		}
+		next(w, r)
+	}
 }
 
 func corsForConsole(next http.Handler) http.Handler {

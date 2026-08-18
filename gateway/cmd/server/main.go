@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/jscyril/echelon/internal/auth"
 	"github.com/jscyril/echelon/internal/config"
 	"github.com/jscyril/echelon/internal/core"
 	"github.com/jscyril/echelon/internal/credit"
@@ -184,6 +186,12 @@ func main() {
 		}
 	}
 
+	consoleAuth, err := buildConsoleAuth(cfg, logger)
+	if err != nil {
+		logger.Error("console auth misconfigured", "error", err)
+		os.Exit(1)
+	}
+
 	app := gateway.New(gateway.Options{
 		Config:             cfg,
 		Logger:             logger,
@@ -197,6 +205,7 @@ func main() {
 		CreditLedger:       creditLedger,
 		Telemetry:          telemetryStore,
 		KeyStore:           keyStore,
+		ConsoleAuth:        consoleAuth,
 		CreditSeeder:       creditSeeder,
 		RuntimeConfigStore: runtimeStore,
 		CreditsBudget:      1_000_000,
@@ -468,4 +477,28 @@ func applyOverrides(ingressLayer ports.IngressLayer, egressScanner ports.EgressS
 			pipeline.SetScannerEnabled("response_classifier", *ov.ToxicityScan)
 		}
 	}
+}
+
+// buildConsoleAuth resolves the operator credential guarding /v1/console/*.
+//
+// Fail-closed: those routes mint and revoke live API keys and edit the security
+// cascade's own thresholds, so an unset credential is a startup error rather
+// than a permissive default. CONSOLE_AUTH_DISABLED=true is the explicit opt-out
+// for local development, and it announces itself loudly in the log so an
+// unauthenticated console can never be reached by accident or inherited from a
+// stale environment.
+func buildConsoleAuth(cfg config.Config, logger *slog.Logger) (gateway.ConsoleAuthenticator, error) {
+	if cfg.ConsoleAuth.Token != "" {
+		return auth.NewConsoleTokenAuthenticator(cfg.ConsoleAuth.Token)
+	}
+	if cfg.ConsoleAuth.Disabled {
+		logger.Warn("console operator API is UNAUTHENTICATED",
+			"reason", "CONSOLE_AUTH_DISABLED=true",
+			"impact", "anyone who can reach this gateway can mint API keys and change security thresholds",
+			"fix", "set CONSOLE_TOKEN")
+		return nil, nil
+	}
+	return nil, fmt.Errorf(
+		"CONSOLE_TOKEN is required: /v1/console/* can mint API keys and change security thresholds. " +
+			"Set CONSOLE_TOKEN, or set CONSOLE_AUTH_DISABLED=true to serve it unauthenticated for local development")
 }

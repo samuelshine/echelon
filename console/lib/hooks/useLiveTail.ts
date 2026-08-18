@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { makeEvent } from "@/lib/api/mock";
 import { promptEventSchema } from "@/lib/api/schemas";
 import type { PromptEvent } from "@/types/echelon";
+import { withConsoleToken } from "@/lib/api/client";
 
 const BASE_URL = process.env.NEXT_PUBLIC_ECHELON_API_URL?.replace(/\/$/, "");
 
@@ -57,7 +58,9 @@ export function useLiveTail({
 
     // Real transport: subscribe to the gateway's SSE feed of recorded events.
     if (BASE_URL) {
-      const source = new EventSource(`${BASE_URL}/v1/console/events/stream`);
+      const source = new EventSource(
+        withConsoleToken(`${BASE_URL}/v1/console/events/stream`),
+      );
       source.onmessage = (ev) => {
         try {
           const parsed = promptEventSchema.parse(JSON.parse(ev.data));

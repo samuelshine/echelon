@@ -33,9 +33,34 @@ import type {
 
 const BASE_URL = process.env.NEXT_PUBLIC_ECHELON_API_URL?.replace(/\/$/, "");
 
+/**
+ * Operator credential for `/v1/console/*`. Those routes mint and revoke live API
+ * keys and edit the security cascade's own thresholds, so the gateway requires a
+ * token (`CONSOLE_TOKEN`) and refuses to start without one.
+ *
+ * This is a `NEXT_PUBLIC_` value, so it ships to the browser — which is inherent
+ * to a browser-based operator console with no server-side session. It is a shared
+ * operator secret, not a per-user identity; treat it as one.
+ */
+const CONSOLE_TOKEN = process.env.NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN;
+
+export function consoleAuthHeaders(): Record<string, string> {
+  return CONSOLE_TOKEN ? { Authorization: `Bearer ${CONSOLE_TOKEN}` } : {};
+}
+
+/**
+ * EventSource cannot set request headers, so the SSE route — and only that route —
+ * carries the operator token as a query parameter instead.
+ */
+export function withConsoleToken(url: string): string {
+  if (!CONSOLE_TOKEN) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}access_token=${encodeURIComponent(CONSOLE_TOKEN)}`;
+}
+
 async function getJSON<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { Accept: "application/json" },
+    headers: { Accept: "application/json", ...consoleAuthHeaders() },
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`Echelon API ${path} -> HTTP ${res.status}`);
@@ -57,7 +82,11 @@ async function mutateJSON<T>(method: string, path: string, body?: unknown): Prom
   }
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...consoleAuthHeaders(),
+    },
     cache: "no-store",
     body: body === undefined ? undefined : JSON.stringify(body),
   });

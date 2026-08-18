@@ -62,3 +62,37 @@ func (a *StaticAPIKeyAuthenticator) Authenticate(_ context.Context, credential s
 	}
 	return matched, nil
 }
+
+// ConsoleTokenAuthenticator verifies the operator credential guarding
+// /v1/console/*. It is deliberately separate from StaticAPIKeyAuthenticator: a
+// tenant API key authenticates a caller of the proxied LLM API, and must never
+// also authorize minting keys or lowering the security cascade's own thresholds.
+// Those are operator powers, so they take an operator credential.
+//
+// This is a single shared token, not an operator identity system. It raises the
+// bar from "no authentication at all" to "possession of a secret", and that is
+// the honest description of what it provides.
+type ConsoleTokenAuthenticator struct {
+	digest [32]byte
+}
+
+// NewConsoleTokenAuthenticator hashes the token immediately; plaintext is not
+// retained. An empty token is an error rather than a permissive default, so a
+// misconfiguration cannot silently disable console authentication.
+func NewConsoleTokenAuthenticator(token string) (*ConsoleTokenAuthenticator, error) {
+	if strings.TrimSpace(token) == "" {
+		return nil, fmt.Errorf("console token must be non-empty")
+	}
+	return &ConsoleTokenAuthenticator{digest: sha256.Sum256([]byte(token))}, nil
+}
+
+// VerifyConsoleToken reports whether a credential matches, comparing in constant
+// time. The credential may carry a "Bearer " prefix.
+func (a *ConsoleTokenAuthenticator) VerifyConsoleToken(credential string) bool {
+	credential = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(credential), "Bearer "))
+	if credential == "" {
+		return false
+	}
+	candidate := sha256.Sum256([]byte(credential))
+	return subtle.ConstantTimeCompare(candidate[:], a.digest[:]) == 1
+}

@@ -83,6 +83,21 @@ type Config struct {
 	// telemetry ring buffer. Unset (the default) keeps the gateway purely
 	// in-memory with no Postgres dependency.
 	AuditDatabaseURL string
+	// ConsoleAuth guards the /v1/console/* operator API.
+	ConsoleAuth ConsoleAuthConfig
+}
+
+// ConsoleAuthConfig carries the operator credential for /v1/console/*. Those
+// routes mint and revoke live API keys and edit the security cascade's own
+// thresholds, so they are operator-only and separate from tenant API keys.
+type ConsoleAuthConfig struct {
+	// Token is the shared operator credential (CONSOLE_TOKEN).
+	Token string
+	// Disabled is an explicit, deliberately awkward opt-out (CONSOLE_AUTH_DISABLED)
+	// for local development. The server refuses to start with console routes
+	// unauthenticated unless this is set, so the insecure state can only ever be
+	// reached on purpose.
+	Disabled bool
 }
 
 func Load() (Config, error) {
@@ -137,6 +152,10 @@ func Load() (Config, error) {
 		RateLimit:        rateLimit,
 		Providers:        loadProvidersConfig(),
 		AuditDatabaseURL: strings.TrimSpace(os.Getenv("AUDIT_DATABASE_URL")),
+	}
+	cfg.ConsoleAuth.Token = strings.TrimSpace(os.Getenv("CONSOLE_TOKEN"))
+	if cfg.ConsoleAuth.Disabled, err = envBool("CONSOLE_AUTH_DISABLED", false); err != nil {
+		return Config{}, err
 	}
 	if cfg.StreamFastMode, err = envBool("STREAM_FAST_MODE", false); err != nil {
 		return Config{}, err

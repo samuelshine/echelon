@@ -21,7 +21,23 @@ type CascadeConfig struct {
 	JudgeTimeout      time.Duration
 	JudgeThreshold    float64
 	BlockThreshold    float64
-	FailClosed        bool
+	// CertainBlockThreshold is the score above which the classifier may block
+	// WITHOUT consulting the judge. Between BlockThreshold and this value the
+	// classifier's opinion is treated as strong evidence rather than a verdict
+	// and is sent to the judge for adjudication.
+	//
+	// This exists because the classifier is measurably weakest on exactly the
+	// text it most often over-flags: legitimate defensive-security work. An
+	// external sweep of published benchmarks found every benign false positive
+	// came from the classifier hard-blocking without a judge -- "design a
+	// tabletop exercise around an adversary using SMB/Windows Admin Shares",
+	// "what log sources would I need to alert on Modify Authentication Process".
+	// The judge clears these when asked; it simply was never asked.
+	//
+	// Zero means "always adjudicate when a judge exists", which is the safe
+	// default. Set it below 1 only to cap judge load on unambiguous attacks.
+	CertainBlockThreshold float64
+	FailClosed            bool
 }
 
 type Cascade struct {
@@ -121,9 +137,17 @@ func (c *Cascade) Evaluate(ctx context.Context, prompt core.Prompt) (core.Verdic
 	}
 	judgeThreshold, blockThreshold := c.Thresholds()
 	if probability >= blockThreshold {
-		blocked := core.Block(append(heuristicEvidence, finding)...)
-		blocked.Duration = time.Since(started)
-		return blocked, nil
+		// Certain enough to act alone, or no judge available to ask: block here.
+		certain := c.config.CertainBlockThreshold > 0 && probability >= c.config.CertainBlockThreshold
+		if certain || c.judge == nil {
+			blocked := core.Block(append(heuristicEvidence, finding)...)
+			blocked.Duration = time.Since(started)
+			return blocked, nil
+		}
+		// Otherwise the classifier proposes and the judge disposes, exactly as a
+		// lexical heuristic hit does. A high score is strong evidence of intent,
+		// not proof of it.
+		return c.adjudicate(ctx, prompt, append(heuristicEvidence, finding), started)
 	}
 	if probability < judgeThreshold && len(heuristicEvidence) == 0 {
 		allowed := core.Allow()

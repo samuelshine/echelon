@@ -37,8 +37,21 @@ func fakeSecurity() *httptest.Server {
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"malicious_probability": prob})
 	})
+	// The judge now adjudicates everything the classifier flags, so it has to
+	// behave like a judge rather than a constant: it agrees on the text the
+	// fixture designates as an attack ("flagme") and clears anything else. A
+	// judge that always says "benign" would make every classifier block
+	// disappear, which is exactly the failure this fixture should catch.
 	mux.HandleFunc("/judge", func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(map[string]any{"malicious": false, "confidence": 0.5, "code": "uncertain_context"})
+		malicious := strings.Contains(readText(r), "flagme")
+		code := "uncertain_context"
+		confidence := 0.5
+		if malicious {
+			code, confidence = "semantic_prompt_injection", 0.95
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"malicious": malicious, "confidence": confidence, "code": code,
+		})
 	})
 	return httptest.NewServer(mux)
 }
@@ -122,6 +135,13 @@ func TestPhase5EndToEnd(t *testing.T) {
 	}
 	if rec := post("sk-test", "please flagme now"); rec.Code != http.StatusForbidden {
 		t.Fatalf("classifier-flagged: got %d, want 403", rec.Code)
+	}
+	// The classifier's opinion is evidence, not a verdict: when the judge
+	// disagrees, the judge wins. This is what stops legitimate
+	// defensive-security work from being rejected by a classifier that is
+	// measurably weakest on that exact text.
+	if rec := post("sk-test", "flagmeplease but the judge will clear this"); rec.Code != http.StatusForbidden {
+		t.Fatalf("judge-agreeing case should still block: got %d", rec.Code)
 	}
 }
 

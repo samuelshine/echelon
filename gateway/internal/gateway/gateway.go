@@ -394,7 +394,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 			// not to forward it to the model.
 			if verdict.Action != core.ActionAllow {
 				span.SetStatus(codes.Error, "ingress_blocked")
-				g.recordEvent(identity, verdict, start, nil, "", "ingress", true)
+				g.recordEvent(identity, verdict, start, nil, "", "ingress", true, cleanPrompt)
 				writeError(w, http.StatusForbidden, findingCode(verdict, "ingress_blocked"), "prompt blocked by ingress policy")
 				return
 			}
@@ -405,7 +405,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 			// run: the classifier and judge were both called) never appeared in the
 			// console at all. Non-terminal: the request continues past this point, so
 			// it must not double-count total/blocked/latency/credits in Summary.
-			g.recordEvent(identity, verdict, start, nil, "", "ingress", false)
+			g.recordEvent(identity, verdict, start, nil, "", "ingress", false, cleanPrompt)
 		} else if g.guards != nil {
 			decision := g.guards.Check(r.Context(), guard.PromptRequest{Route: upstreamPath, Body: body, Text: promptText})
 			if !decision.Allowed {
@@ -563,7 +563,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		}
 		if verdict.Action == core.ActionBlock {
 			span.SetStatus(codes.Error, "egress_blocked")
-			g.recordEvent(identity, verdict, start, nil, providerName, direction, true)
+			g.recordEvent(identity, verdict, start, nil, providerName, direction, true, string(respBody))
 			writeError(w, http.StatusForbidden, findingCode(verdict, "egress_blocked"), "response blocked by egress policy")
 			return
 		}
@@ -587,7 +587,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		attribute.String("echelon.final_verdict", mapVerdict(finalVerdict.Action)),
 	)
 
-	g.recordEvent(identity, finalVerdict, start, respBody, providerName, direction, true)
+	g.recordEvent(identity, finalVerdict, start, respBody, providerName, direction, true, string(respBody))
 
 	// Safety fix (Part A) wire-correctness: the response was produced by a
 	// non-streaming upstream call and fully egress-scanned above. If the original
@@ -608,6 +608,28 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 	w.Header().Set("Content-Length", strconv.Itoa(len(respBody)))
 	w.WriteHeader(resp.StatusCode)
 	_, _ = w.Write(respBody)
+}
+
+// excerpt returns what the console is allowed to see of the text a layer just
+// judged. Telemetry is content-free by default -- verdicts, scores and timings
+// only -- which is what makes the console safe to operate without granting
+// access to user prompts. ECHELON_SHOW_EXCERPTS trades that away deliberately
+// for local demos and debugging, where seeing WHICH prompt tripped a rule is
+// the whole point. It is never inferred from any other setting.
+func (g *Gateway) excerpt(text string) string {
+	const redacted = "[redacted]"
+	if !g.cfg.ShowExcerpts {
+		return redacted
+	}
+	trimmed := strings.TrimSpace(text)
+	if trimmed == "" {
+		return redacted
+	}
+	const limit = 160
+	if len(trimmed) > limit {
+		return trimmed[:limit] + "..."
+	}
+	return trimmed
 }
 
 func (g *Gateway) promptGuardNames() []string {
@@ -808,7 +830,7 @@ func writeContent(b *strings.Builder, value any) {
 
 // --- Console telemetry (B2) ---------------------------------------------------
 
-func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte, providerName, direction string, terminal bool) {
+func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte, providerName, direction string, terminal bool, scanned string) {
 	if g.telemetry == nil {
 		return
 	}
@@ -863,7 +885,7 @@ func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, star
 		ID: fmt.Sprintf("evt_%x", time.Now().UnixNano()), Direction: direction,
 		FinalVerdict: finalVerdict, RiskScore: round4(risk), Category: category,
 		BlockedAtLayer: blocked, Layers: layers, Tokens: telemetry.Tokens{In: in, Out: out},
-		LatencyOverheadUs: latencyUs, APIKeyID: apiKey, Excerpt: "[redacted]",
+		LatencyOverheadUs: latencyUs, APIKeyID: apiKey, Excerpt: g.excerpt(scanned),
 		Provider: providerName, Terminal: terminal,
 	})
 }

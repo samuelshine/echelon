@@ -28,8 +28,13 @@ type PipelineConfig struct {
 	EgressMLBaseURL    *url.URL
 	EgressJudgeBaseURL *url.URL
 	MLBlockThreshold   float64
-	MLJudgeThreshold   float64
-	FailClosed         bool
+	// MLCertainBlockThreshold: at or above this the classifier blocks without
+	// asking the LLM judge. Default 0 = always adjudicate when a judge exists,
+	// which is what keeps legitimate defensive-security work from being rejected
+	// by a classifier that is measurably weakest on exactly that text.
+	MLCertainBlockThreshold float64
+	MLJudgeThreshold        float64
+	FailClosed              bool
 }
 
 type RateLimitConfig struct {
@@ -85,6 +90,13 @@ type Config struct {
 	AuditDatabaseURL string
 	// ConsoleAuth guards the /v1/console/* operator API.
 	ConsoleAuth ConsoleAuthConfig
+	// ShowExcerpts reveals a truncated prompt/response excerpt in console
+	// telemetry instead of the default "[redacted]". Off by default and
+	// intended for local demos and debugging only: telemetry is otherwise
+	// content-free by design, which is what lets the console be operated
+	// without granting access to user prompts. Turning this on changes that
+	// property, so it is opt-in and never inferred from any other setting.
+	ShowExcerpts bool
 }
 
 // ConsoleAuthConfig carries the operator credential for /v1/console/*. Those
@@ -153,6 +165,9 @@ func Load() (Config, error) {
 		Providers:        loadProvidersConfig(),
 		AuditDatabaseURL: strings.TrimSpace(os.Getenv("AUDIT_DATABASE_URL")),
 	}
+	if cfg.ShowExcerpts, err = envBool("ECHELON_SHOW_EXCERPTS", false); err != nil {
+		return Config{}, err
+	}
 	cfg.ConsoleAuth.Token = strings.TrimSpace(os.Getenv("CONSOLE_TOKEN"))
 	if cfg.ConsoleAuth.Disabled, err = envBool("CONSOLE_AUTH_DISABLED", false); err != nil {
 		return Config{}, err
@@ -207,6 +222,9 @@ func loadPipelineConfig() (PipelineConfig, error) {
 		return PipelineConfig{}, err
 	}
 	if cfg.EgressJudgeBaseURL, err = optionalURL("EGRESS_JUDGE_BASE_URL"); err != nil {
+		return PipelineConfig{}, err
+	}
+	if cfg.MLCertainBlockThreshold, err = envProbability("ML_CERTAIN_BLOCK_THRESHOLD", 0); err != nil {
 		return PipelineConfig{}, err
 	}
 	if cfg.MLBlockThreshold, err = envProbability("ML_BLOCK_THRESHOLD", 0.90); err != nil {

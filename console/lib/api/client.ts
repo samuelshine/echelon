@@ -13,6 +13,7 @@ import {
   promptEventSchema,
 } from "@/lib/api/schemas";
 import { applyFilters, type LogFilterState } from "@/lib/logs";
+import { clearSessionToken, getEffectiveConsoleToken } from "@/lib/auth/session";
 import type {
   ApiKey,
   DashboardSummary,
@@ -38,14 +39,17 @@ const BASE_URL = process.env.NEXT_PUBLIC_ECHELON_API_URL?.replace(/\/$/, "");
  * keys and edit the security cascade's own thresholds, so the gateway requires a
  * token (`CONSOLE_TOKEN`) and refuses to start without one.
  *
- * This is a `NEXT_PUBLIC_` value, so it ships to the browser — which is inherent
- * to a browser-based operator console with no server-side session. It is a shared
- * operator secret, not a per-user identity; treat it as one.
+ * The token itself comes from lib/auth/session.ts: the operator's logged-in
+ * session token if the login screen has verified one this browser session, else
+ * the `NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN` build-time fallback (see that module's
+ * doc comment for why the fallback exists and how sign-out suppresses it). Either
+ * way it is a single shared operator secret, not a per-user identity — a
+ * `NEXT_PUBLIC_` env var ships to every browser's JS bundle, so nothing server-side
+ * ever stops a leaked token from being reused until it is rotated.
  */
-const CONSOLE_TOKEN = process.env.NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN;
-
 export function consoleAuthHeaders(): Record<string, string> {
-  return CONSOLE_TOKEN ? { Authorization: `Bearer ${CONSOLE_TOKEN}` } : {};
+  const token = getEffectiveConsoleToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 /**
@@ -53,9 +57,36 @@ export function consoleAuthHeaders(): Record<string, string> {
  * carries the operator token as a query parameter instead.
  */
 export function withConsoleToken(url: string): string {
-  if (!CONSOLE_TOKEN) return url;
+  const token = getEffectiveConsoleToken();
+  if (!token) return url;
   const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}access_token=${encodeURIComponent(CONSOLE_TOKEN)}`;
+  return `${url}${separator}access_token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Verifies a candidate operator token against the gateway, for the login screen
+ * only. Deliberately bypasses consoleAuthHeaders()/the stored session — the token
+ * under test is passed explicitly, so a bad guess here can never clobber (or even
+ * read) whatever session is currently active. `GET /v1/console/summary` is used
+ * as the check because it's a cheap, always-present console route: 200 means the
+ * token is good, 401 means the gateway rejected it, anything else (including a
+ * network failure) means we couldn't reach the gateway to find out either way.
+ */
+export type ConsoleTokenVerification = "valid" | "invalid" | "unreachable";
+
+export async function verifyConsoleToken(token: string): Promise<ConsoleTokenVerification> {
+  if (!BASE_URL) return "unreachable";
+  try {
+    const res = await fetch(`${BASE_URL}/v1/console/summary`, {
+      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (res.ok) return "valid";
+    if (res.status === 401) return "invalid";
+    return "unreachable";
+  } catch {
+    return "unreachable";
+  }
 }
 
 async function getJSON<T>(path: string): Promise<T> {
@@ -63,6 +94,13 @@ async function getJSON<T>(path: string): Promise<T> {
     headers: { Accept: "application/json", ...consoleAuthHeaders() },
     cache: "no-store",
   });
+  if (res.status === 401) {
+    // The token was rejected — revoked or rotated server-side. Drop the session
+    // so the app falls back to the login screen; whatever fallback this specific
+    // caller already has (mock data below, or a thrown error for mutations)
+    // still runs unchanged.
+    clearSessionToken();
+  }
   if (!res.ok) throw new Error(`Echelon API ${path} -> HTTP ${res.status}`);
   return (await res.json()) as T;
 }
@@ -90,6 +128,7 @@ async function mutateJSON<T>(method: string, path: string, body?: unknown): Prom
     cache: "no-store",
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+  if (res.status === 401) clearSessionToken();
   if (!res.ok) throw new Error(`Echelon API ${method} ${path} -> HTTP ${res.status}`);
   return (await res.json()) as T;
 }

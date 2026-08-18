@@ -107,3 +107,63 @@ func TestAllowedRequestRecordsBothDirections(t *testing.T) {
 		t.Errorf("got %d events for one API call, want exactly 2 (ingress-pass + final)", len(events))
 	}
 }
+
+// TestExcerptsRedactedByDefault pins the privacy property the console depends
+// on: telemetry carries verdicts, not content, so operating the dashboard never
+// grants access to user prompts. The dev flag that trades this away must be
+// opt-in and must never be inferred from any other setting.
+func TestExcerptsRedactedByDefault(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		show        bool
+		wantExcerpt string
+	}{
+		{name: "default_redacts", show: false, wantExcerpt: "[redacted]"},
+		{name: "opt_in_reveals", show: true, wantExcerpt: "tell me about the leave policy"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte(`{"id":"c","choices":[{"message":{"content":"ok"}}]}`))
+			}))
+			defer upstream.Close()
+			upstreamURL, _ := url.Parse(upstream.URL)
+
+			store := telemetry.NewStore(16)
+			handler := gateway.New(gateway.Options{
+				Config: config.Config{
+					UpstreamBaseURL: upstreamURL, MaxRequestBytes: 1 << 20,
+					ShowExcerpts: tc.show,
+				},
+				KeyStore:       keystore.NewMemoryStore(nil),
+				Ingress:        allowIngress{},
+				Telemetry:      store,
+				UpstreamRouter: testRouter(upstream.URL, "", http.DefaultTransport),
+			}).Routes()
+
+			req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions",
+				strings.NewReader(`{"model":"gpt-4o-mini","messages":[{"role":"user","content":"tell me about the leave policy"}]}`))
+			req.Header.Set("Content-Type", "application/json")
+			handler.ServeHTTP(httptest.NewRecorder(), req)
+
+			events := store.Events(10)
+			if len(events) == 0 {
+				t.Fatal("no telemetry recorded")
+			}
+			var ingress *telemetry.PromptEvent
+			for i := range events {
+				if events[i].Direction == "ingress" {
+					ingress = &events[i]
+				}
+			}
+			if ingress == nil {
+				t.Fatal("no ingress event recorded")
+			}
+			if !strings.Contains(ingress.Excerpt, tc.wantExcerpt) {
+				t.Errorf("excerpt = %q, want it to contain %q", ingress.Excerpt, tc.wantExcerpt)
+			}
+			if !tc.show && strings.Contains(ingress.Excerpt, "leave policy") {
+				t.Errorf("prompt text leaked into telemetry with the flag off: %q", ingress.Excerpt)
+			}
+		})
+	}
+}

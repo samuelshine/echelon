@@ -223,7 +223,7 @@ func (g *Gateway) streamFast(w http.ResponseWriter, r *http.Request, p fastStrea
 					// Record as blocked, same as the buffered path does for a block.
 					// Do NOT proceed to the deferred ML scan — there is nothing more
 					// to protect against once forwarding has stopped.
-					g.recordEvent(p.identity, core.Verdict{Action: core.ActionBlock, Findings: verdict.Findings}, p.start, []byte(accumulated.String()), p.providerName, "egress", true)
+					g.recordEvent(p.identity, core.Verdict{Action: core.ActionBlock, Findings: verdict.Findings}, p.start, []byte(accumulated.String()), p.providerName, "egress", true, accumulated.String())
 					return
 				case core.ActionRedact:
 					id := sseChunkID(data)
@@ -262,7 +262,7 @@ func (g *Gateway) finishFastStream(w http.ResponseWriter, r *http.Request, p fas
 	if redacted {
 		verdict = core.Verdict{Action: core.ActionRedact, Findings: findings}
 	}
-	g.recordEvent(p.identity, verdict, p.start, []byte(accumulated.String()), p.providerName, "egress", true)
+	g.recordEvent(p.identity, verdict, p.start, []byte(accumulated.String()), p.providerName, "egress", true, accumulated.String())
 
 	if !g.egressMLEnabled || pipeline == nil {
 		return

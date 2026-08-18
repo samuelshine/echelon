@@ -20,7 +20,13 @@ func TestCascadeGating(t *testing.T) {
 		{name: "low confidence allows", probability: 0.10, wantAction: core.ActionAllow},
 		{name: "ambiguous invokes allowing judge", probability: 0.70, wantAction: core.ActionAllow, wantJudge: 1},
 		{name: "ambiguous invokes blocking judge", probability: 0.70, judgeBlock: true, wantAction: core.ActionBlock, wantJudge: 1},
-		{name: "high confidence blocks without judge", probability: 0.95, wantAction: core.ActionBlock},
+		// A high score no longer decides alone: it is evidence sent to the judge,
+		// whose verdict wins. With CertainBlockThreshold unset (the default) even
+		// 0.95 is adjudicated -- see TestClassifierBlockBandIsAdjudicated for why.
+		{name: "high confidence is adjudicated, judge clears", probability: 0.95,
+			wantAction: core.ActionAllow, wantJudge: 1},
+		{name: "high confidence is adjudicated, judge agrees", probability: 0.95,
+			judgeBlock: true, wantAction: core.ActionBlock, wantJudge: 1},
 	}
 
 	for _, tt := range tests {
@@ -243,5 +249,73 @@ func TestEscalateNeverEscapesTheCascade(t *testing.T) {
 				t.Fatal("ActionEscalate escaped the cascade; the gateway cannot interpret it")
 			}
 		})
+	}
+}
+
+// TestClassifierBlockBandIsAdjudicated is the second half of "regex proposes,
+// LLM disposes": the classifier used to hard-block on its own above the block
+// threshold. An external sweep across published benchmarks found EVERY benign
+// false positive came from that path -- legitimate defensive-security work
+// ("design a tabletop exercise around an adversary using SMB/Windows Admin
+// Shares") rejected by the layer measurably weakest on that exact text, with no
+// judge consulted. The judge clears them when asked; it was never asked.
+func TestClassifierBlockBandIsAdjudicated(t *testing.T) {
+	judge := &fakeJudge{block: false}
+	cascade, err := NewCascade(
+		CascadeConfig{JudgeThreshold: 0.4, BlockThreshold: 0.9},
+		allowLayer{}, &fakeClassifier{probability: 0.95}, judge)
+	if err != nil {
+		t.Fatal(err)
+	}
+	verdict, err := cascade.Evaluate(context.Background(), core.Prompt{Text: "x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if judge.calls != 1 {
+		t.Fatalf("judge called %d times, want 1: a classifier score above the block "+
+			"threshold is strong evidence, not a verdict", judge.calls)
+	}
+	if verdict.Action != core.ActionAllow {
+		t.Fatalf("action = %v, want allow -- the judge cleared it", verdict.Action)
+	}
+}
+
+// TestCertainScoreBlocksWithoutTheJudge proves the escape hatch works, so an
+// unambiguous attack does not have to pay for an LLM call.
+func TestCertainScoreBlocksWithoutTheJudge(t *testing.T) {
+	judge := &fakeJudge{block: false}
+	cascade, err := NewCascade(
+		CascadeConfig{JudgeThreshold: 0.4, BlockThreshold: 0.9, CertainBlockThreshold: 0.99},
+		allowLayer{}, &fakeClassifier{probability: 0.999}, judge)
+	if err != nil {
+		t.Fatal(err)
+	}
+	verdict, err := cascade.Evaluate(context.Background(), core.Prompt{Text: "x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if judge.calls != 0 {
+		t.Fatalf("judge called %d times, want 0 above the certainty threshold", judge.calls)
+	}
+	if verdict.Action != core.ActionBlock {
+		t.Fatalf("action = %v, want block", verdict.Action)
+	}
+}
+
+// TestClassifierBlocksWhenNoJudgeIsConfigured: with nothing able to adjudicate,
+// a high score must still stop the request rather than fall through.
+func TestClassifierBlocksWhenNoJudgeIsConfigured(t *testing.T) {
+	cascade, err := NewCascade(
+		CascadeConfig{JudgeThreshold: 0.4, BlockThreshold: 0.9},
+		allowLayer{}, &fakeClassifier{probability: 0.95}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	verdict, err := cascade.Evaluate(context.Background(), core.Prompt{Text: "x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if verdict.Action != core.ActionBlock {
+		t.Fatalf("action = %v, want block when no judge exists to ask", verdict.Action)
 	}
 }

@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { NAV_ITEMS } from "@/components/nav";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/components/auth-provider";
 import { cn } from "@/lib/cn";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   return (
     <aside className="flex w-[248px] shrink-0 flex-col border-r border-[var(--color-line)] bg-[var(--color-surface)]">
@@ -93,6 +96,14 @@ export function Sidebar() {
             <kbd className="rounded border border-[var(--color-line-strong)] px-1">K</kbd>
           </span>
         </div>
+        <button
+          type="button"
+          onClick={logout}
+          className="mt-1 flex w-full items-center gap-2 rounded-[var(--radius)] px-2 py-1.5 text-xs text-[var(--color-muted)] hover:bg-[var(--color-surface-sunken)]"
+        >
+          <LogOut size={14} />
+          Sign out
+        </button>
       </div>
     </aside>
   );

@@ -328,12 +328,13 @@ func buildIngress(cfg config.Config, client *http.Client, logger *slog.Logger) p
 		}
 	}
 	cascade, err := ingress.NewCascade(ingress.CascadeConfig{
-		HeuristicTimeout:  cfg.Pipeline.HeuristicTimeout,
-		ClassifierTimeout: cfg.Pipeline.MLTimeout,
-		JudgeTimeout:      cfg.Pipeline.JudgeTimeout,
-		JudgeThreshold:    cfg.Pipeline.MLJudgeThreshold,
-		BlockThreshold:    cfg.Pipeline.MLBlockThreshold,
-		FailClosed:        cfg.Pipeline.FailClosed,
+		HeuristicTimeout:      cfg.Pipeline.HeuristicTimeout,
+		ClassifierTimeout:     cfg.Pipeline.MLTimeout,
+		JudgeTimeout:          cfg.Pipeline.JudgeTimeout,
+		JudgeThreshold:        cfg.Pipeline.MLJudgeThreshold,
+		BlockThreshold:        cfg.Pipeline.MLBlockThreshold,
+		CertainBlockThreshold: cfg.Pipeline.MLCertainBlockThreshold,
+		FailClosed:            cfg.Pipeline.FailClosed,
 	}, ingress.NewHeuristic(), classifier, judge)
 	if err != nil {
 		logger.Error("ingress cascade build failed; falling back to prototype guards", "error", err)

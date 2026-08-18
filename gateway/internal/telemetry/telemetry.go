@@ -44,6 +44,13 @@ type PromptEvent struct {
 	APIKeyID          string        `json:"apiKeyId"`
 	Provider          string        `json:"provider,omitempty"`
 	Excerpt           string        `json:"excerpt"`
+	// Terminal marks whether this event represents the end of request handling
+	// for its call (a block, or the final post-egress/passthrough outcome).
+	// json:"-" so it never reaches the wire shape or the console's schema -- it
+	// exists purely to stop Summary from double-counting a single API call that
+	// now produces two events for an allowed request (an ingress-pass record
+	// plus the final one; see recordEvent in internal/gateway).
+	Terminal bool `json:"-"`
 }
 
 // Sink is an optional durable destination for events. It is deliberately local
@@ -351,7 +358,7 @@ func (s *Store) Subscribe() (<-chan PromptEvent, func()) {
 func (s *Store) Summary(creditsBudget int64) map[string]any {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	total := len(s.events)
+	total := 0
 	blocked := 0
 	var latencySum int64
 	var credits int64
@@ -360,7 +367,6 @@ func (s *Store) Summary(creditsBudget int64) map[string]any {
 	for i := range s.events {
 		e := &s.events[i]
 		if e.FinalVerdict == "block" {
-			blocked++
 			if e.BlockedAtLayer != "" {
 				if e.Direction == "egress" {
 					caughtEgress[e.BlockedAtLayer]++
@@ -368,6 +374,17 @@ func (s *Store) Summary(creditsBudget int64) map[string]any {
 					caught[e.BlockedAtLayer]++
 				}
 			}
+		}
+		// total/blocked/latency/credits describe API calls, not telemetry rows: an
+		// allowed request now records both an ingress-pass event and a final event,
+		// so only the terminal one counts here or these KPIs would double for every
+		// call that passes ingress (see PromptEvent.terminal).
+		if !e.Terminal {
+			continue
+		}
+		total++
+		if e.FinalVerdict == "block" {
+			blocked++
 		}
 		latencySum += e.LatencyOverheadUs
 		credits += int64(e.Tokens.In + e.Tokens.Out)

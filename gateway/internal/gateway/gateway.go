@@ -388,10 +388,18 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 			}
 			if verdict.Action == core.ActionBlock {
 				span.SetStatus(codes.Error, "ingress_blocked")
-				g.recordEvent(identity, verdict, start, nil, "", "ingress")
+				g.recordEvent(identity, verdict, start, nil, "", "ingress", true)
 				writeError(w, http.StatusForbidden, findingCode(verdict, "ingress_blocked"), "prompt blocked by ingress policy")
 				return
 			}
+			// Ingress allowed the request through. This was previously never recorded:
+			// the only other recordEvent call for this request is the final one below,
+			// whose `direction` gets overwritten to "egress" the moment an egress
+			// pipeline is configured -- so an allowed request's ingress scan (which did
+			// run: the classifier and judge were both called) never appeared in the
+			// console at all. Non-terminal: the request continues past this point, so
+			// it must not double-count total/blocked/latency/credits in Summary.
+			g.recordEvent(identity, verdict, start, nil, "", "ingress", false)
 		} else if g.guards != nil {
 			decision := g.guards.Check(r.Context(), guard.PromptRequest{Route: upstreamPath, Body: body, Text: promptText})
 			if !decision.Allowed {
@@ -540,7 +548,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		}
 		if verdict.Action == core.ActionBlock {
 			span.SetStatus(codes.Error, "egress_blocked")
-			g.recordEvent(identity, verdict, start, nil, providerName, direction)
+			g.recordEvent(identity, verdict, start, nil, providerName, direction, true)
 			writeError(w, http.StatusForbidden, findingCode(verdict, "egress_blocked"), "response blocked by egress policy")
 			return
 		}
@@ -564,7 +572,7 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 		attribute.String("echelon.final_verdict", mapVerdict(finalVerdict.Action)),
 	)
 
-	g.recordEvent(identity, finalVerdict, start, respBody, providerName, direction)
+	g.recordEvent(identity, finalVerdict, start, respBody, providerName, direction, true)
 
 	// Safety fix (Part A) wire-correctness: the response was produced by a
 	// non-streaming upstream call and fully egress-scanned above. If the original
@@ -770,7 +778,7 @@ func writeContent(b *strings.Builder, value any) {
 
 // --- Console telemetry (B2) ---------------------------------------------------
 
-func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte, providerName, direction string) {
+func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, start time.Time, respBody []byte, providerName, direction string, terminal bool) {
 	if g.telemetry == nil {
 		return
 	}
@@ -826,7 +834,7 @@ func (g *Gateway) recordEvent(identity core.Identity, verdict core.Verdict, star
 		FinalVerdict: finalVerdict, RiskScore: round4(risk), Category: category,
 		BlockedAtLayer: blocked, Layers: layers, Tokens: telemetry.Tokens{In: in, Out: out},
 		LatencyOverheadUs: latencyUs, APIKeyID: apiKey, Excerpt: "[redacted]",
-		Provider: providerName,
+		Provider: providerName, Terminal: terminal,
 	})
 }
 

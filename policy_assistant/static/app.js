@@ -38,6 +38,16 @@ async function api(path, options = {}) {
   return response.json();
 }
 
+// A request the security cascade refused is not an "extractive demo" answer and
+// did not take 0 ms of model time. Labelling it that way told the operator the
+// wrong story about what just happened -- the two states look identical in the
+// UI but mean completely different things.
+function modeLabelFor(mode) {
+  if (mode === "llm") return "LLM grounded";
+  if (mode === "error") return "Blocked by Echelon";
+  return "Extractive demo";
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -242,7 +252,7 @@ function addAssistantMessage(result) {
       <div class="message-role">Policy assistant</div>
       <div class="answer-copy">${renderAnswer(result.answer, result.sources, messageId)}</div>
       ${sourceChips ? `<div class="source-strip">${sourceChips}</div>` : ""}
-      <div class="answer-meta"><span class="mode-chip">${result.mode === "llm" ? "LLM grounded" : "Extractive demo"}</span><span>${result.latency_ms} ms</span><span>${escapeHtml(result.model)}</span></div>
+      <div class="answer-meta"><span class="mode-chip">${modeLabelFor(result.mode)}</span>${result.mode === "error" ? "" : `<span>${result.latency_ms} ms</span><span>${escapeHtml(result.model)}</span>`}</div>
     </div>`;
   elements.stream.append(message);
 }

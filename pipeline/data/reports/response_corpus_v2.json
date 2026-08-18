@@ -1,0 +1,22 @@
+{
+  "addition_rows": 6000,
+  "base_rows": 37622,
+  "labels": {
+    "benign": 35248,
+    "malicious_code": 446,
+    "toxicity_harm": 7915
+  },
+  "merged_rows": 43609,
+  "output": "data/normalized_v2/response_train_v2.jsonl",
+  "output_sha256": "e6620a3b8595a6a4bdfcd8b3c8984248bbd366aa720e629dc8cf7edf600a7f8e",
+  "purpose": "add the ordinary-assistant-output register the benign class lacked",
+  "report_version": "0.1.0",
+  "skipped": {
+    "dup_text": 13
+  },
+  "sources": {
+    "oasst1_benign_response": 5987,
+    "wildguardmix_response": 37622
+  },
+  "status": "merged_pending_split"
+}

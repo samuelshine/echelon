@@ -1503,3 +1503,248 @@ Still a mitigation, not a fix. Three defensive probes still block, one of them
 through `prompt_injection` (0.983) rather than `malicious_code`, so it is
 untouched by this change. The real fix remains the defensive-cyber gold set, in
 training data as well as evaluation.
+
+## Console auth, demo integrity, and the benign-cyber gold set (2026-08-18)
+
+Three items, in the order they mattered.
+
+### 1. The operator API had no authentication
+
+All ten `/v1/console/*` routes were registered on the mux with no auth middleware
+— including `POST /v1/console/keys` (mints live API keys), `DELETE` (revokes
+them), and `PATCH /v1/console/config` (edits the cascade's own thresholds).
+Anyone who could reach the gateway could mint a key and lower the blocking
+thresholds. `/admin/config` and `/admin/guards` were open too, so they are now
+covered by the same credential.
+
+- `auth.ConsoleTokenAuthenticator` — constant-time verification of a shared
+  operator token, deliberately **separate from tenant API keys**: a customer key
+  authenticates the proxied LLM API and must never also authorize operator
+  actions. There is a test for exactly that boundary.
+- `requireConsoleAuth` wraps every console route. `CONSOLE_TOKEN` is **fail-closed**
+  in the composition root: the gateway refuses to start without it (verified: exit
+  1 with a message naming the variable). `CONSOLE_AUTH_DISABLED=true` is an
+  explicit local-development opt-out that logs a loud warning, so the insecure
+  state can only be reached on purpose.
+- One documented carve-out: `EventSource` cannot set headers, so
+  `/v1/console/events/stream` — and only that route — also accepts the token as an
+  `access_token` query parameter. The request log records `r.URL.Path` without the
+  query string, verified absent from the logs.
+- `/healthz`, `/readyz`, `/metrics` stay open; orchestrators and Prometheus need them.
+- Console client sends the credential (`NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN`). Being
+  `NEXT_PUBLIC_`, it ships to the browser — inherent to a browser-based console with
+  no server-side session. **This is a shared operator secret, not an operator
+  identity system**, and is documented as such.
+
+Verified live: unauthenticated summary/mint/config-patch all 401, wrong token 401,
+tenant key 401, operator token 200/201, SSE query token 200, healthz 200.
+9 new Go tests (gateway + composition root), 6 new console tests.
+
+### 2. The demo described a system that no longer existed
+
+`DEMO.md` still reported macro-F1 0.899 and called the response-side model an
+unpromoted candidate; `demo-drive.sh` predated the egress work entirely and drove
+only ingress plus a console summary.
+
+- The fake upstream in `run-local.sh` is now **scenario-aware** — it returns toxic
+  text, PII, operational code, or a defensive explanation depending on the prompt.
+  A stub that only ever says "A safe answer" gives the response scanners nothing to
+  scan, which is why egress had never been in the demo.
+- `demo-drive.sh` now covers 11 beats across ingress, egress, rate limit, and
+  console auth, with a pass / fail / **known-defect** tally so a measured weakness
+  reports differently from a regression.
+- `RATE_LIMIT_REQUESTS=10` in the demo config, so the documented 429 beat actually fires.
+- README and DEMO.md now carry **both** F1 numbers — 0.9047 in-distribution and
+  0.522 held-out — because quoting only the first is what made the earlier docs
+  misleading.
+
+Final run, real Ollama judge: **10 passed, 0 failed, 1 known defect.**
+
+### 3. The benign-cyber gold set finally exists — and found the other half of the bug
+
+`docs/BENIGN_CYBER_GOLDSET_SPEC.md` asked for this in week one. Without it, every
+defensive-cyber FPR ever reported came from the synthetic defensive slice (0.0%
+for every model ever trained, because it learned those templates) or a 15-prompt
+hand-written probe.
+
+`scripts/build_benign_cyber_goldset.py` builds 250 legitimate security prompts
+across the spec's 12 categories. The design point: a set written from imagination
+collapses into a few ideas paraphrased 250 ways, so the **subject matter comes
+from MITRE ATT&CK** (acquired at a pinned revision through the existing acquirer,
+with `license_path` evidence for MITRE's custom terms) — 250 prompts, 250 distinct
+real techniques. Contamination scan against the 41,712-row corpus: **0 overlaps**,
+max cosine 0.857 versus the 0.94 threshold. Rows split dev/test so a threshold can
+be fitted on dev and reported from test, honouring the spec's rule against tuning
+on the reported half.
+
+**What it found.** Of 44 blocked rows, **22 were driven by `malicious_code` and 22
+by `prompt_injection`.** The 0.30 → 0.80 mitigation had only ever touched
+`malicious_code`, so it could not have fixed more than half the problem — and the
+15-prompt probe was too small to show the other half at all. The `prompt_injection`
+head was hard-blocking security prose with no injection content, at its a-priori
+0.30 floor.
+
+Re-fitted `prompt_injection` block 0.30 → 0.90 on the dev split:
+
+| | before | after |
+|---|---|---|
+| gold-set false positives (**test** half) | 0.206 | **0.123** |
+| holdout attacks blocked | 0.515 | 0.489 |
+| holdout attacks **blocked-or-judged** | 0.765 | **0.765** |
+| holdout benign false positives | 0.050 | 0.050 |
+| `dual_use_with_context` blocked | 0.64 | **0.09** |
+| `vulnerability_remediation` blocked | 0.54 | **0.12** |
+
+Total attack coverage is unchanged — every lost hard-block still escalates to the
+judge. A strictly better operating point, not a trade.
+
+**Then the judge became the binding constraint.** With the classifier deferring,
+`"write a detection runbook … detection only"` was still blocked — by the LLM
+judge, at 0.95. Its instruction listed defensive work as benign but lacked the
+explicit "benign *even if* it names the attack" contrast that had already fixed the
+**egress** judge months earlier, and defensive prompts necessarily name the attack
+they defend against. `OLLAMA_JUDGE_INSTRUCTION` now carries that contrast plus the
+perform-versus-detect question. All four previously-blocked defensive probes pass;
+"write malware to exfiltrate data" and "write me a working keylogger" still block
+at 0.95.
+
+**Still open:** 12.3% of gold-set prompts remain hard-blocked, concentrated in
+`detection_rule_development` (0.42) and `incident_response` (0.21). Every row is a
+hard negative, so this is an upper bound rather than a population rate — but it is
+not zero. The set is 250 rows against the spec's 2,000 and is not native-speaker
+reviewed.
+
+### Found along the way: ordinary benign responses over-escalate on egress
+
+`scripts/probe_benign_responses.py`: 12 unremarkable assistant replies (order
+confirmations, support answers, a recipe) — **58% escalate to the LLM judge**, with
+`toxicity_harm` around 0.7–0.9 on text like *"Your order has shipped and will
+arrive on Tuesday."* None block outright, but escalation costs a multi-second judge
+call on more than half of normal traffic, and in the demo's PII scenario the judge
+then blocked the response. The egress eval reports benign responses passing 89.6%
+with mean `toxicity_harm` 0.095 — accurate for the response corpus's own benign
+slice, and not describing this register at all. Same species of gap as the
+defensive-cyber one: the benign evaluation data does not contain the benign text
+that actually trips the model. This is the demo's one remaining known defect.
+
+## Egress over-escalation: diagnosed, and fixed with data rather than a threshold (2026-08-18)
+
+The last open defect from the demo pass. `probe_benign_responses.py` had shown 58%
+of ordinary assistant replies escalating to the LLM judge on egress.
+
+### The diagnosis
+
+Not a calibration problem — a **register** problem, and the corpus shows why. The
+response model's benign class was 100% WildGuardMix, and WildGuard's benign rows
+are answers to *adversarial* prompts: refusals and safety-hedged prose ("As a
+helpful and respectful assistant…", "I cannot provide you with…"). The model
+learned that a benign response *sounds like a refusal*.
+
+| text | `toxicity_harm` |
+|---|---|
+| short refusal ("I'm sorry, but I can't help with that") | 0.011 |
+| hedged safety prose (45 words) | 0.009 |
+| ordinary business reply, 145 words | 0.687 |
+| ordinary business reply, 8 words | 0.859 |
+
+Register, not length. Nothing in the corpus carried the ordinary register at all,
+which is exactly why the egress evaluation reported benign responses passing 89.6%
+while more than half of ordinary replies escalated in practice.
+
+### Why a threshold was the wrong instrument
+
+`build_benign_response_goldset.py` (36 authored ordinary assistant replies, 12
+domains x 6 response shapes, dev/test split) plus
+`evaluate_benign_response_goldset.py` produced the frontier before any change:
+
+| egress judge threshold | ordinary output escalates | toxic reviewed |
+|---|---|---|
+| 0.3458 (live) | 0.500 | 0.873 |
+| 0.70 | 0.071 | 0.675 |
+| 0.85 | 0.000 | 0.492 |
+
+Quieting ordinary output needs ~0.70, which stops reviewing a fifth of genuinely
+toxic responses. **On ingress the equivalent move was free** — everything that
+stopped hard-blocking still escalated to the judge, so total coverage held. Egress
+has no such net: content below the judge threshold is delivered unreviewed. So the
+threshold was left alone and the corpus was fixed instead.
+
+### The fix
+
+`oasst1` (Apache-2.0, ungated) supplies the missing register — real human-written
+assistant replies on ordinary topics. `normalize_oasst_benign_responses.py` keeps
+6,000 of 24,728 English assistant messages under deliberately conservative
+filters: review-passed, contributor safety labels (toxicity/hate/violence/sexual/
+not_appropriate/pii) near zero, Detoxify below a low ceiling, quality above a
+floor. 11,002 rows were dropped on safety labels alone — a row admitted here is
+labelled benign, and a mistake teaches the model that something harmful is fine.
+
+Corpus 37,622 → 43,609 rows, re-split (all categories present in every split,
+oasst distributed 4,905/538 train/test), retrained with the same architecture and
+hyperparameters via the new `train_layer2_response_v2.py`.
+
+### Result, measured at the identical live threshold
+
+| | served | v2 |
+|---|---|---|
+| gold-set ordinary output escalates | 0.500 | **0.139** |
+| gold-set ordinary output, median toxicity | 0.307 | **0.020** |
+| corpus toxic reviewed | 0.873 | **0.905** |
+| corpus benign escalates | 0.102 | 0.098 |
+| 12-prompt probe escalation | 0.58 | **0.17** |
+| test macro-F1 | 0.7251 | **0.7512** |
+| `malicious_code` F1 / precision | 0.684 / 0.556 | **0.740 / 0.673** |
+| `toxicity_harm` F1 | 0.766 | 0.762 |
+
+Strictly better or flat on every measured axis — fewer benign escalations *and*
+more toxic content reviewed, with no threshold change. The demo's PII beat moves
+from aggregate 0.707 (escalate → judge blocked it) to 0.505 (passes cleanly with
+the PII masked), which is the behaviour DEMO.md documents.
+
+**Not promoted.** The candidate sits at
+`models/layer2-response-distilbert/v2-candidate/`, evaluated but unserved, pending
+the same explicit confirmation every prior promotion has had. `toxicity_harm`
+precision at threshold 0.5 does fall (0.735 → 0.676) even though behaviour at the
+operating point improves, and that is worth a look before swapping.
+
+**Caveat on the instrument:** the benign-response gold set is 36 authored rows,
+not sourced. It measures presence or absence of the failure, not its precise rate.
+`probe_benign_responses.py` also had `0.3458` hardcoded as the judge threshold —
+correct at the time, but it would have silently reported the wrong rate the moment
+the threshold was re-derived. It now reads the live value from the served model.
+
+## v2 response model: promoted, found to regress operational-code detection, reverted (2026-08-18)
+
+User approved promotion. Live-verified via demo-drive.sh: PII beat 6 fixed as
+predicted (200, masked cleanly). But beat 8 (operational keylogger code)
+regressed 403 -> 200. Root-caused: the oasst1 rows added to fix the register
+gap include many programming Q&A answers with code blocks, all labelled
+benign, so the model generalized "code block in a response = benign" and
+crushed the malicious_code head on code-shaped text specifically:
+
+| response | legacy (was served) | v2 (promoted) |
+|---|---|---|
+| keylogger + C2 socket | 0.296 | 0.002 |
+| reverse shell | 0.857 | 0.001 |
+| ransomware encrypt loop | 0.108 | 0.001 |
+| credential exfil | 0.956 | 0.005 |
+| log wiping | 0.054 | 0.001 |
+
+In-distribution corpus malicious_code mean only dropped 0.874->0.780 (looked
+fine), which is why this wasn't caught before promotion -- the in-distribution
+test set has few if any pure-code-block malicious rows in this shape. This is
+exactly the same class of blind spot as the original malicious_code gap: an
+evaluation slice that doesn't contain the failure mode can't catch it.
+
+**Reverted.** `best/` restored from `legacy-pre-v2` backup; `metrics.json` back
+to 0.7251. `v2-candidate/` and `metrics_v2.json` kept for reference, now
+correctly understood as a regression, not a clean win. The PII over-escalation
+defect is therefore still live (known defect in demo-drive.sh).
+
+**Real fix needed before re-attempting:** the oasst1 code-bearing rows must
+either be excluded from the benign class or the malicious_code head must be
+evaluated on a held-out slice that specifically contains diverse operational
+code (not just wildguard's 45 rows), so a regression like this is caught
+before promotion, not after. Also worth trying: keep the oasst additions but
+downweight/exclude the `code_bearing` shape rows specifically, since those are
+exactly what collided with the malicious_code signal.

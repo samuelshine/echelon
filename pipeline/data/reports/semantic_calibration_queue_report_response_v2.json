@@ -1,0 +1,36 @@
+{
+  "available_candidates": {
+    "0.90-0.92/benign_benign": 12089,
+    "0.90-0.92/malicious_malicious": 668,
+    "0.90-0.92/mixed_safety": 560,
+    "0.92-0.94/benign_benign": 7043,
+    "0.92-0.94/malicious_malicious": 244,
+    "0.92-0.94/mixed_safety": 169,
+    "0.94-0.96/benign_benign": 3574,
+    "0.94-0.96/malicious_malicious": 31,
+    "0.94-0.96/mixed_safety": 33,
+    "0.96-0.98/benign_benign": 1084,
+    "0.96-0.98/malicious_malicious": 4,
+    "0.96-0.98/mixed_safety": 4,
+    "0.98-1.00/benign_benign": 248
+  },
+  "bands": [
+    "0.90-0.92",
+    "0.92-0.94",
+    "0.94-0.96",
+    "0.96-0.98",
+    "0.98-1.00"
+  ],
+  "pair_kinds": [
+    "benign_benign",
+    "malicious_malicious",
+    "mixed_safety"
+  ],
+  "queue_pairs": 338,
+  "report_version": "0.1.0",
+  "required_judgments": [
+    "semantic_relation",
+    "safety_relation"
+  ],
+  "target_per_band_and_pair_kind": 30
+}

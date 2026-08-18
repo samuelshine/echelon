@@ -1,0 +1,50 @@
+{
+  "base_model": "distilbert-base-uncased",
+  "categories": [
+    "toxicity_harm",
+    "malicious_code"
+  ],
+  "device": "mps",
+  "max_length": 256,
+  "batch_size": 16,
+  "epochs": 3,
+  "lr": 3e-05,
+  "seed": 42,
+  "split_root": "data/splits_response_v2",
+  "rows": {
+    "train": 34832,
+    "validation": 4355,
+    "test": 4355
+  },
+  "best_val_macro_f1": 0.7356,
+  "calibration_temperatures": {
+    "toxicity_harm": 1.4,
+    "malicious_code": 1.1
+  },
+  "test": {
+    "per_category": {
+      "toxicity_harm": {
+        "support": 789,
+        "precision": 0.6758,
+        "recall": 0.8745,
+        "f1": 0.7624,
+        "brier": 0.0675
+      },
+      "malicious_code": {
+        "support": 45,
+        "precision": 0.6727,
+        "recall": 0.8222,
+        "f1": 0.74,
+        "brier": 0.0052
+      }
+    },
+    "macro_f1": 0.7512,
+    "benign_rows": 3521,
+    "benign_toxicity_mean": 0.1037,
+    "ordinary_register_rows": 538,
+    "ordinary_register_toxicity_mean": 0.0613,
+    "ordinary_register_fpr_at_0.5": 0.039,
+    "refusal_register_toxicity_mean": 0.1114
+  },
+  "purpose": "adds oasst1 ordinary assistant output to a benign class that was 100% WildGuard refusal-shaped safety prose; see scripts/normalize_oasst_benign_responses.py"
+}

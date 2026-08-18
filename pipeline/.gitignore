@@ -28,4 +28,8 @@ __pycache__/
 /.review-venv/
 /.venv313/
 /data/splits_response_v1/
-/models/layer2-response-distilbert/
+# Weights and split-bound artifacts stay out; metrics are content-free provenance
+# and are tracked, matching layer2-threat-distilbert.
+/models/layer2-response-distilbert/*
+!/models/layer2-response-distilbert/metrics*.json
+/data/splits_response_v2/

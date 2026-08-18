@@ -245,11 +245,7 @@ co-located monorepo layout (`pipeline/`, `gateway/`, `console/`); see
   0.905, and test macro-F1 rises 0.725 → 0.751. The PII beat moves from a judge
   escalation that blocked to a clean 200 with the PII masked.
 
-  **The candidate is not promoted** — it sits at
-  `models/layer2-response-distilbert/v2-candidate/`, evaluated but unserved, so the
-  demo's PII beat still shows the old behaviour until it is swapped.
-  `toxicity_harm` precision at threshold 0.5 falls 0.735 → 0.676 even though
-  behaviour at the operating point improves, which is worth a look first.
+  **Promoted, then reverted.** Live demo verification confirmed the PII fix (beat 6 went from escalate-then-block to a clean 200 with PII masked), but also surfaced a severe regression: on hand-written operational code (keylogger, reverse shell, ransomware, credential exfil, log wiping) the `malicious_code` score collapsed to ~0.001-0.005 across the board, versus 0.05-0.96 on the model it replaced. The oasst1 additions include many code-bearing benign answers, and the model generalized "code block = benign response" -- exactly the wrong lesson for the egress path's core job. In-distribution the corpus metric barely moved (0.874->0.780 mean), which is why it wasn't caught before promotion. Reverted; `best/` is the original model again. The PII over-escalation defect is therefore still live -- see `CURRENT_PROGRESS.md`'s "v2 response model" entry for the full postmortem and what a real fix needs.
 
 - **The code-shape floor is still live, and has not been re-examined since the
   response model shipped.** `_apply_code_shape_floor` in `service/security_api.py`

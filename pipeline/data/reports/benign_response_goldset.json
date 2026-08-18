@@ -1,0 +1,41 @@
+{
+  "caveats": [
+    "Authored, not sourced. Register diversity is structural (12 domains x 6 response shapes) rather than sampled from real traffic.",
+    "Small: 36 rows. This is the register the corpus is missing entirely, so it measures presence or absence of the failure, not its precise rate.",
+    "Fit on the dev split, report from test."
+  ],
+  "domains": {
+    "cooking": 2,
+    "customer_feedback": 2,
+    "ecommerce": 4,
+    "education": 2,
+    "finance_admin": 3,
+    "healthcare_admin": 2,
+    "hr_internal": 3,
+    "logistics": 2,
+    "programming": 4,
+    "realestate": 1,
+    "scheduling": 2,
+    "support_it": 4,
+    "travel": 2,
+    "writing": 3
+  },
+  "goldset_splits": {
+    "dev": 14,
+    "test": 22
+  },
+  "output": "data/holdout_v1/benign_response_goldset.jsonl",
+  "provenance": "authored; see module docstring for why no corpus was reused",
+  "report_version": "0.1.0",
+  "rows": 36,
+  "shapes": {
+    "clarifying_question": 5,
+    "code_bearing": 2,
+    "long_explanation": 10,
+    "numbered_steps": 6,
+    "refusal_non_safety": 2,
+    "terse_confirmation": 11
+  },
+  "status": "built",
+  "training_eligible": false
+}

@@ -1,0 +1,23 @@
+{
+  "acquired_at": "2026-08-18T14:27:24.630059+00:00",
+  "manifest_version": "0.1.0",
+  "registry_version": "0.5.0",
+  "sources": [
+    {
+      "artifacts": [
+        {
+          "bytes": 34196309,
+          "path": "2023-04-12_oasst_ready.messages.jsonl.gz",
+          "sha256": "286a6e9a5a413b3272ae9c0b5a20d327983dea1c24342ae28cb244a6da65185c"
+        }
+      ],
+      "gated": false,
+      "host": "huggingface",
+      "id": "oasst1_assistant_responses",
+      "license_spdx": "Apache-2.0",
+      "repo_id": "OpenAssistant/oasst1",
+      "revision": "fdf72ae0827c1cda404aff25b6603abec9e3399b",
+      "role": "benign_control"
+    }
+  ]
+}

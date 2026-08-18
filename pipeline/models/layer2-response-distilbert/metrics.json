@@ -1,0 +1,51 @@
+{
+  "base_model": "distilbert-base-uncased",
+  "categories": [
+    "toxicity_harm",
+    "malicious_code"
+  ],
+  "device": "mps",
+  "max_length": 256,
+  "batch_size": 16,
+  "epochs": 3,
+  "lr": 3e-05,
+  "seed": 42,
+  "dataset_sha256": "f60fdecace95214afd3e72a1a5ac88de60e71ab5daa00e287835a4e841f27318",
+  "rows": {
+    "train": 30041,
+    "validation": 3757,
+    "test": 3757
+  },
+  "best_val_macro_f1": 0.7396,
+  "calibration_temperatures": {
+    "toxicity_harm": 1.75,
+    "malicious_code": 1.35
+  },
+  "test": {
+    "per_category": {
+      "toxicity_harm": {
+        "support": 789,
+        "precision": 0.7349,
+        "recall": 0.801,
+        "f1": 0.7665,
+        "brier": 0.0688
+      },
+      "malicious_code": {
+        "support": 45,
+        "precision": 0.5556,
+        "recall": 0.8889,
+        "f1": 0.6838,
+        "brier": 0.0082
+      }
+    },
+    "macro_f1": 0.7251,
+    "benign_rows": 2923,
+    "benign_fpr_at_0.5": 0.0773,
+    "benign_fpr_at_0.9": 0.0086,
+    "defensive_cyber_slice_rows": 0,
+    "defensive_cyber_fpr_at_0.5": null,
+    "malicious_code_matched_control_rows": 0,
+    "malicious_code_matched_control_fpr_at_0.5": null
+  },
+  "provenance_note": "labels include AI-assisted provisional review: v0.2's 152-conflict expert adjudication, and v0.3's full-coverage AI dual review (scripts/ai_reviewers_v03.py)"
+}

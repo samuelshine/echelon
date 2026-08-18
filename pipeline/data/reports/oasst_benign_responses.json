@@ -1,0 +1,33 @@
+{
+  "eligible_after_filters": 10685,
+  "filters": {
+    "max_detoxify": 0.1,
+    "max_safety_label": 0.1,
+    "min_quality": 0.5,
+    "min_words": 5
+  },
+  "limit": 6000,
+  "output": "data/normalized_v2/oasst_benign_responses.jsonl",
+  "purpose": "supply the ordinary-assistant-output register the benign class lacks",
+  "report_version": "0.1.0",
+  "rows": 6000,
+  "rows_dropped": {
+    "deleted_or_unreviewed": 1068,
+    "detoxify": 113,
+    "low_quality": 1965,
+    "not_assistant": 33170,
+    "not_english": 30342,
+    "safety_label": 11002,
+    "too_short": 493
+  },
+  "source": {
+    "dataset": "oasst1_assistant_responses",
+    "license_spdx": "Apache-2.0",
+    "revision": "fdf72ae0827c1cda404aff25b6603abec9e3399b"
+  },
+  "status": "normalized_pending_merge",
+  "word_count": {
+    "p50": 140,
+    "p90": 308
+  }
+}

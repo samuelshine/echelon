@@ -57,8 +57,21 @@ docker compose up --build   # console :3000, gateway :8080
 
 ## Status
 
-All core modules are built and wired end-to-end (verified live): auth, rate-limit,
-three-fold ingress cascade with a trained multi-label classifier and a local Ollama
-LLM judge, egress scanning, console telemetry, and the management UI. Known
-limitations (model precision on sparse categories, in-memory state, provisional
-AI-assisted review labels) are documented in [DEMO.md](DEMO.md).
+All core modules are built and wired end-to-end, re-verified live 2026-08-18 with
+the real Ollama judge (`scripts/run-local.sh` + `scripts/demo-drive.sh`: 9 passed,
+0 failed, 2 known defects): auth, rate-limit, three-fold ingress cascade with a
+trained multi-label classifier, egress scanning with a dedicated response-side
+model, console telemetry, and the management UI. The `/v1/console/*` and `/admin/*`
+operator APIs require an operator credential (`CONSOLE_TOKEN`); the gateway refuses
+to start without one.
+
+Detection quality is reported two ways on purpose: the served ingress model scores
+**macro-F1 0.9047 in-distribution** and **0.522 on a held-out set** built from four
+frozen benchmarks it never trained on. The second number is the honest estimate of
+production behaviour, and the gap between them is why the held-out set exists.
+
+Two open defects are measured and tracked rather than papered over — legitimate
+defensive-security prompts still get blocked, and ordinary benign responses
+over-escalate to the LLM judge. Both, along with in-memory state and the
+provisional AI-assisted review labels, are documented in [DEMO.md](DEMO.md) under
+"Honest limitations", with reproducible probes under `pipeline/scripts/probe_*.py`.

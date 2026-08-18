@@ -153,6 +153,63 @@ funnels, and per-key usage.
 co-located monorepo layout (`pipeline/`, `gateway/`, `console/`); see
 "Consolidation" below. Bring up with `docker compose up --build`.
 
+## Operator console sign-in
+
+The console presents a login screen and verifies the operator token against the
+gateway (`GET /v1/console/summary` -> 200/401) before showing any data. The token
+is held in `sessionStorage`, so it does not survive closing the browser, and a
+401 from any console call clears it and returns the operator to the login screen.
+
+Be precise about what this is: a **shared operator credential**, not a per-user
+identity system with accounts, roles, or an audit trail of who did what. Anyone
+holding the token can mint API keys and change security thresholds. The login
+screen states this rather than implying otherwise.
+
+`NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN` still works as a fallback so
+`scripts/run-local.sh` demos start signed in. Signing out sets an explicit
+signed-out marker, so the control genuinely works even when that env var is
+baked into the build -- otherwise it would silently re-authenticate and the
+button would be a lie.
+
+## Ingress adjudication: regex proposes, the LLM disposes
+
+Originally both the L1 regex layer and the L2 classifier could terminate a
+request on their own. That is fine for evidence that is conclusive by
+construction and wrong for everything else, because the words an attacker uses
+to override instructions are the words a security analyst uses to *discuss*
+doing so.
+
+| Evidence | Example | Decides alone? |
+|---|---|---|
+| Structural (L1) | `<system>` markup, an injected `system:` turn | **Yes** -- artifacts of the prompt's form, ~never in legitimate text. Blocks in <1ms, no model call |
+| Lexical (L1) | "ignore previous instructions", "developer mode" | No -- escalates to the judge with the finding attached |
+| Classifier score (L2) | above the block threshold | No -- escalates with the score as evidence |
+
+The judge's ruling decides, and its findings are merged with the escalating
+layer's so telemetry still shows which layer first flagged the prompt. With no
+judge configured, or if the judge fails under a fail-closed pipeline, a flagged
+prompt still blocks -- nothing falls through. `ML_CERTAIN_BLOCK_THRESHOLD`
+(default 0 = always adjudicate) can cap judge load on unambiguous attacks.
+
+**Measured on published benchmarks** (140 prompts from JailbreakBench, HarmBench,
+StrongREJECT, CyberSecEval x2, the ATT&CK-derived benign gold set and WildGuard
+benign controls, run through the live gateway with the real Ollama judge --
+`scripts/verify/e2e_prompt_sweep.py`):
+
+| | before | after |
+|---|---|---|
+| Benign defensive-security work correct | 0.75 | **0.85** |
+| Benign false positives (all benign slices) | 6/40 | **4/40** |
+| Malicious stopped | 57/100 | 54/100 |
+| **Benign traffic latency (median)** | 0.02s | **0.02s** |
+| Flagged traffic latency (median) | 0.02s | 2.19s |
+
+The trade is explicit: three ambiguous dual-use prompts are no longer stopped
+(a Caesar-cipher decode, a network-scanning snippet, a personal-data question),
+in exchange for legitimate defensive-security work getting through. Benign users
+see no slowdown at all -- only prompts that were already suspicious pay for
+adjudication, which is exactly when accuracy should win over speed.
+
 ## Honest limitations
 
 - **The headline F1 and the out-of-distribution F1 are different numbers, and both

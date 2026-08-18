@@ -119,7 +119,7 @@ echo "[3/4] building + starting gateway on :8080"
 ML_BASE_URL=http://127.0.0.1:8099/classify JUDGE_BASE_URL=http://127.0.0.1:8099/judge \
 EGRESS_ML_BASE_URL=http://127.0.0.1:8099/classify_response EGRESS_JUDGE_BASE_URL=http://127.0.0.1:8099/judge_response \
 UPSTREAM_BASE_URL=http://127.0.0.1:9100 ECHELON_API_KEYS=sk-demo:acme:key_live:pro \
-CONSOLE_TOKEN="$CONSOLE_TOKEN" \
+CONSOLE_TOKEN="$CONSOLE_TOKEN" ECHELON_SHOW_EXCERPTS="${ECHELON_SHOW_EXCERPTS:-false}" \
 PROVIDER_GEMINI_BASE_URL=https://generativelanguage.googleapis.com \
 PROVIDER_GEMINI_API_KEY="$GEMINI_API_KEY" \
 MODEL_ROUTES="gemini-*:gemini" DEFAULT_PROVIDER=openai \
@@ -158,7 +158,7 @@ for _ in $(seq 1 60); do
 done
 echo
 echo "Echelon is up:"
-echo "  console      : http://localhost:3000  (ops dashboard)"
+echo "  console      : http://localhost:3000  (ops dashboard; sign in with the token below)"
 echo "  gateway      : http://localhost:8080  (OpenAI-compatible, Bearer sk-demo)"
 echo "  console API is operator-only: Bearer $CONSOLE_TOKEN"
 if [ -d "$POLICY_DIR" ]; then
@@ -170,5 +170,9 @@ if [ -d "$POLICY_DIR" ]; then
   fi
 fi
 echo "  drive demo traffic: scripts/demo-drive.sh"
+echo "  verified demo prompts: DEMO_PROMPTS.md"
+if [ -z "${ECHELON_SHOW_EXCERPTS:-}" ]; then
+  echo "  (console shows prompts as [redacted]; rerun with ECHELON_SHOW_EXCERPTS=true to see them)"
+fi
 echo "Ctrl-C to stop."
 wait

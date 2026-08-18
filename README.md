@@ -86,10 +86,26 @@ model, console telemetry, and the management UI. The `/v1/console/*` and `/admin
 operator APIs require an operator credential (`CONSOLE_TOKEN`); the gateway refuses
 to start without one.
 
+The operator console requires a sign-in: it presents a login screen, verifies the
+operator token against the gateway, and holds it in `sessionStorage` for that tab
+only. It is a shared operator credential, not a per-user identity system, and the
+UI says so rather than implying otherwise.
+
 Detection quality is reported two ways on purpose: the served ingress model scores
 **macro-F1 0.9047 in-distribution** and **0.522 on a held-out set** built from four
 frozen benchmarks it never trained on. The second number is the honest estimate of
 production behaviour, and the gap between them is why the held-out set exists.
+
+**Ingress adjudication.** Neither the regex layer nor the classifier decides
+alone any more. Structural injection markers (`<system>` tags, injected role
+turns) still block instantly -- they are artifacts of the prompt's form and
+essentially never appear in legitimate text. Everything else, including a
+classifier score above the block threshold, is passed to the LLM judge as
+evidence, because the vocabulary of an attack is also the vocabulary of the
+security work this firewall exists to protect. Measured on published benchmarks:
+false positives on legitimate defensive-security prompts fell from 25% to 15%,
+and benign traffic sees no added latency (only flagged prompts pay for
+adjudication). See `DEMO_PROMPTS.md` for a verified walkthrough.
 
 Two open defects are measured and tracked rather than papered over — legitimate
 defensive-security prompts still get blocked, and ordinary benign responses

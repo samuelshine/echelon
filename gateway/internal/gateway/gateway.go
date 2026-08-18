@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -487,7 +488,16 @@ func (g *Gateway) proxyLLM(w http.ResponseWriter, r *http.Request, upstreamPath 
 			creditHeld = false
 		}
 		span.SetStatus(codes.Error, "upstream_unavailable")
-		writeError(w, http.StatusBadGateway, "upstream_unavailable", err.Error())
+		// The client-facing message must never be the raw transport error: for a
+		// DNS failure, refused connection, or timeout that text names internal
+		// hostnames/ports and layers Go's own error-wrapping prose on top, which
+		// is neither clean nor something an end user (or even most operators) can
+		// act on. It also used to be a dead end for debugging, since the raw
+		// error only ever reached whichever client saw the HTTP response -- never
+		// the server's own logs. Now it goes to both, in the right place: a clean
+		// category to the client, the full detail to the log.
+		g.logger.Error("upstream call failed", "route", upstreamPath, "provider", providerName, "error", err)
+		writeError(w, http.StatusBadGateway, "upstream_unavailable", describeUpstreamError(err))
 		return
 	}
 	defer resp.Body.Close()
@@ -679,6 +689,21 @@ func collectStrings(builder *strings.Builder, value any) {
 			collectStrings(builder, item)
 		}
 	}
+}
+
+// describeUpstreamError turns a transport-level failure into a clean,
+// user-safe category. The raw error (DNS, TCP, TLS, timeout detail, and Go's
+// own wrapping prose around all of it) is logged by the caller, never
+// returned here -- this is what reaches the client.
+func describeUpstreamError(err error) string {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "the upstream language model timed out"
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return "the upstream language model timed out"
+	}
+	return "the upstream language model could not be reached"
 }
 
 func readLimited(reader io.Reader, limit int64) ([]byte, error) {

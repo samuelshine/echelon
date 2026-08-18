@@ -27,6 +27,38 @@ Rules:
 """
 
 
+def _describe_http_error(exc: "urllib.error.HTTPError") -> str:
+    """Surface the real reason for a failed call, not a guess from the status code alone.
+
+    Both the gateway's own errors ({"error": {"code": "...", "message": "..."}})
+    and provider errors passed through it (including Gemini's native shape, whose
+    `code` is an int rather than a string) carry a human-readable `error.message`.
+    Guessing from the HTTP status code alone actively misleads: a 403 from the
+    gateway's own ingress/egress safety cascade previously reported as "The LLM
+    API key was rejected. Check LLM_API_KEY." -- which sent operators looking at
+    the wrong problem entirely for a request the security cascade blocked on
+    purpose. Falls back to a generic, still-accurate message only when the body
+    genuinely carries no usable detail (e.g. a plain-text error from a proxy).
+    """
+    try:
+        body = exc.read()
+    except Exception:
+        body = b""
+    detail = None
+    try:
+        parsed = json.loads(body.decode("utf-8"))
+        candidate = parsed.get("error", {}).get("message")
+        if isinstance(candidate, str) and candidate.strip():
+            detail = candidate.strip()
+    except (ValueError, AttributeError, UnicodeDecodeError):
+        pass
+    if detail:
+        return detail
+    if exc.code == 429:
+        return "The language model is rate-limited. Please retry shortly."
+    return f"The language model request failed (HTTP {exc.code})."
+
+
 @dataclass(frozen=True)
 class Answer:
     text: str
@@ -100,13 +132,7 @@ class PolicyLLM:
                 raise LLMError("The language model returned an empty answer.")
             return Answer(content.strip(), "llm", self.settings.llm_model)
         except urllib.error.HTTPError as exc:
-            if exc.code in {401, 403}:
-                message = "The LLM API key was rejected. Check LLM_API_KEY."
-            elif exc.code == 429:
-                message = "The language model is rate-limited. Please retry shortly."
-            else:
-                message = f"The language model request failed (HTTP {exc.code})."
-            raise LLMError(message) from exc
+            raise LLMError(_describe_http_error(exc)) from exc
         except (urllib.error.URLError, TimeoutError) as exc:
             raise LLMError("The language model could not be reached. Check LLM_BASE_URL and network access.") from exc
         except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/auth-provider";
+import { devFallbackToken } from "@/lib/auth/session";
 
 /**
  * Gate shown to any unauthenticated visitor in place of the dashboard (see
@@ -15,6 +16,11 @@ import { useAuth } from "@/components/auth-provider";
 export function LoginScreen() {
   const { login } = useAuth();
   const [token, setToken] = useState("");
+  // Present only in a local build that baked NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN
+  // in (i.e. scripts/run-local.sh). A real deployment leaves that unset, so
+  // this whole affordance disappears rather than being something to remember
+  // to turn off.
+  const devToken = devFallbackToken();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -96,6 +102,26 @@ export function LoginScreen() {
             {pending ? "Verifying…" : "Sign in"}
           </button>
         </form>
+
+        {devToken ? (
+          <div className="mt-4 rounded-[var(--radius)] border border-dashed border-[var(--color-line-strong)] px-3 py-2.5">
+            <div className="eyebrow text-[var(--color-muted)]">Local development</div>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--color-muted)]">
+              This build has a demo token baked in, so it is already readable in
+              the page source. Use it to sign back in:
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setToken(devToken);
+                setError(null);
+              }}
+              className="mt-2 w-full truncate rounded-[var(--radius-sm)] bg-[var(--color-surface-sunken)] px-2 py-1.5 text-left font-[family-name:var(--font-mono)] text-xs text-[var(--color-ink-soft)] hover:bg-[var(--color-brand-wash)]"
+            >
+              {devToken}
+            </button>
+          </div>
+        ) : null}
 
         <p className="mt-4 text-center text-xs text-[var(--color-faint)]">
           Held only for this browser tab session — closing the browser signs you out.

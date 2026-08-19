@@ -140,3 +140,17 @@ export function isAuthenticated(): boolean {
 export function hasEnvFallbackToken(): boolean {
   return ENV_FALLBACK_TOKEN !== null;
 }
+
+/**
+ * The build-time token, for the login screen's local-development shortcut only.
+ *
+ * Exposing a credential in the UI is normally indefensible. It is acceptable
+ * *here and only here* because this value is already public: `NEXT_PUBLIC_` env
+ * vars are inlined into the JavaScript bundle at build time, so anyone loading
+ * the page can already read it. Returning it does not leak anything the browser
+ * did not already have. A deployment that does not set the env var -- which is
+ * the only correct way to run this in production -- gets null and no shortcut.
+ */
+export function devFallbackToken(): string | null {
+  return ENV_FALLBACK_TOKEN;
+}

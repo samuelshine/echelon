@@ -150,3 +150,19 @@ describe("env-var fallback", () => {
     expect(second.getEffectiveConsoleToken()).toBeNull();
   });
 });
+
+describe("devFallbackToken", () => {
+  it("returns the baked-in token so the login screen can offer it in local dev", async () => {
+    process.env.NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN = "local-dev-operator-token";
+    vi.resetModules();
+    const { devFallbackToken } = await import("./session");
+    expect(devFallbackToken()).toBe("local-dev-operator-token");
+  });
+
+  it("returns null when no token was baked in, so the shortcut disappears in a real deployment", async () => {
+    delete process.env.NEXT_PUBLIC_ECHELON_CONSOLE_TOKEN;
+    vi.resetModules();
+    const { devFallbackToken } = await import("./session");
+    expect(devFallbackToken()).toBeNull();
+  });
+});

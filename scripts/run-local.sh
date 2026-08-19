@@ -33,6 +33,25 @@ pids=()
 cleanup() { kill "${pids[@]}" 2>/dev/null || true; }
 trap cleanup EXIT
 
+# Refuse to start on top of a previous run. Without this the failure is silent
+# and deeply confusing: the Python services print "Address already in use" and
+# die, Next.js quietly moves to :3001, and you are left with a stack that is
+# half old processes and half new ones -- so the console on :3000 is served by
+# a build that predates whatever you just changed, and nothing looks wrong.
+ports_in_use=""
+for port in 3000 8080 8099 8100 9100; do
+  if lsof -ti:"$port" >/dev/null 2>&1; then
+    ports_in_use="$ports_in_use $port"
+  fi
+done
+if [ -n "$ports_in_use" ]; then
+  echo "error: these ports are already in use:$ports_in_use" >&2
+  echo "       a previous ./scripts/run-local.sh is probably still running." >&2
+  echo "       stop it, or free them with:" >&2
+  echo "         lsof -ti:${ports_in_use// /,} | xargs kill" >&2
+  exit 1
+fi
+
 echo "[1/4] fake upstream LLM on :9100 (scenario-aware, so egress can be demoed)"
 "$PY" - <<'PYEOF' &
 """Stand-in upstream LLM.
